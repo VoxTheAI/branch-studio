@@ -3964,6 +3964,16 @@ html.vf-reading .vf-read{display:block}
 .vf-chip.focus .vf-chip-mid{justify-content:center;gap:2px}
 .vf-chip.focus .vf-pos{font:500 11px/1.2 system-ui,sans-serif;opacity:.7}
 
+/* ===== v5: reorder arrows side by side in a compact top-right tool row ===== */
+.vf-mvrow{position:absolute;top:4px;right:4px;z-index:2;display:flex;gap:8px}
+.vf-mvrow .vf-mv{position:static !important;margin:0 !important;border-radius:12px !important}
+.vf-mv:disabled{opacity:.28;background:transparent;color:inherit}
+.vf-node.lv0 .vf-card-head{height:52px;right:112px;overflow:hidden}
+.vf-node.lv0 .vf-body{top:52px;bottom:12px;left:16px;right:16px}
+.vf-chip.focus{padding:0 108px 0 14px}
+.vf-chip.focus .vf-mvrow{top:50%;margin-top:-22px;right:6px}
+.vf-chip.focus .vf-chip-mid{min-width:0}
+
 </style>
 </head>
 <body>
@@ -4441,7 +4451,8 @@ function vfSetActive(on){
 }
 
 // ---- rendering ----
-function vfMoveBtn(which,pos,show,label,ic){return `<button type="button" class="vf-mv ${pos}" data-move="${which}" aria-label="${label}"${show?'':' hidden'}>${icon(ic)}</button>`}
+function vfMoveBtn(which,pos,show,label,ic){return `<button type="button" class="vf-mv ${pos}" data-move="${which}" aria-label="${label}"${show?'':' disabled aria-disabled="true"'}>${icon(ic)}</button>`}
+function vfMoveRow(label,a,b){return `<div class="vf-mvrow" role="group" aria-label="${label}">${a}${b}</div>`}
 // move the focused note (or focused parent) one slot among its siblings; existing move + undo code
 function vfMoveFocused(delta){
   let r=locate(doc().selectedId);if(!r)return;
@@ -4457,8 +4468,7 @@ function vfNodeHTML(item,level,idx,total,ctx={}){
     return `<div class="vf-node lv0" data-id="${n.id}" data-level="0" data-depth="${d}" style="--d:${dd}">
       <div class="vf-card" data-focus-card>
         <div class="vf-card-head"><span class="vf-depth">${vfDepthLabel(d)}</span><span class="vf-pos">${idx}/${total-1}</span></div>
-        ${vfMoveBtn('prev','up',ctx.mvPrev,'Move note up','mvUp')}
-        ${vfMoveBtn('next','down',ctx.mvNext,'Move note down','mvDown')}
+        ${vfMoveRow('Reorder note',vfMoveBtn('prev','up',ctx.mvPrev,'Move note up','mvUp'),vfMoveBtn('next','down',ctx.mvNext,'Move note down','mvDown'))}
         <div class="vf-body">
           <div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-edit-id="${n.id}">${writingHTML(n.text)}</div>
           <div class="vf-images">${imageHTML(n)}</div>
@@ -4487,12 +4497,11 @@ function vfRenderRow(ri,root,rootFocused){
     let peek=i===ri-1?'prev':i===ri+1?'next':'';
     if(cur&&rootFocused){
       return `<div class="vf-chip cur focus" role="group" data-root="${n.id}" data-land="${n.id}" data-i="${i}" aria-current="true" data-focus-card>
-        ${vfMoveBtn('prev','left',i>0,'Move topic left','mvLeft')}
         <div class="vf-chip-mid">
           <div class="vf-chip-top"><div class="note-editor vf-chip-title" contenteditable="true" spellcheck="true" data-placeholder="Topic…" data-edit-id="${n.id}">${writingHTML(n.text)}</div></div>
           <span class="vf-pos">–/${countDocNodes(n.children||[])}</span>
         </div>
-        ${vfMoveBtn('next','right',i<roots.length-1,'Move topic right','mvRight')}
+        ${vfMoveRow('Reorder topic',vfMoveBtn('prev','left',i>0,'Move topic left','mvLeft'),vfMoveBtn('next','right',i<roots.length-1,'Move topic right','mvRight'))}
       </div>`;
     }
     let sub=cur?vfCount(n):(land.id!==n.id?vfPlain(land):vfCount(n));
