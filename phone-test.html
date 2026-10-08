@@ -3607,11 +3607,11 @@ html[data-size="phone"] #branchPane{scroll-padding-inline-start:14px}
 <style id="custom-style"></style>
 
 <style id="vf-css">
-/* Vertical focus-node layout — phone test only */
+/* Vertical focus-node layout — phone test */
 html.vf-on, html.vf-on body{height:100%;overflow:hidden;background:#0b0d14}
 html.vf-on .app{display:none !important}
 html.vf-on .restore-chip,html.vf-on #phoneBar,html.vf-on #helpChip{display:none !important}
-html.vf-on .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:200}
+html.vf-on .toast{bottom:calc(108px + env(safe-area-inset-bottom,0px));z-index:200;right:12px;left:12px}
 
 .vf-shell{
   position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
@@ -3629,42 +3629,60 @@ html.vf-on .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:20
 }
 
 .vf-top{
-  position:absolute;left:0;right:0;top:0;z-index:5;
-  height:48px;padding:0 10px;padding-top:env(safe-area-inset-top,0px);
-  display:flex;align-items:center;gap:8px;
-  background:linear-gradient(to bottom,rgba(18,20,28,.92),rgba(18,20,28,0));
-  pointer-events:none;
+  position:absolute;left:0;right:0;top:0;z-index:8;
+  min-height:48px;padding:4px 6px;padding-top:max(4px,env(safe-area-inset-top,0px));
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  background:linear-gradient(to bottom,rgba(18,20,28,.96) 70%,rgba(18,20,28,0));
 }
-.vf-top button{pointer-events:auto;min-width:44px;min-height:44px;border:0;background:transparent;color:inherit;border-radius:10px;display:grid;place-items:center}
-.vf-top .vf-crumb{flex:1;min-width:0;font-size:12px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.vf-top button,.vf-views button{
+  min-width:44px;min-height:44px;border:0;background:transparent;color:inherit;
+  border-radius:10px;display:grid;place-items:center;padding:0 6px;font:600 12px/1 system-ui,sans-serif;
+}
+.vf-views{
+  display:flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
+  background:color-mix(in srgb,var(--panel,#1a1d28) 80%,transparent);border:1px solid var(--line,#2a2e3d);
+}
+.vf-views button{min-width:0;height:38px;min-height:38px;padding:0 10px;opacity:.7;gap:4px;display:flex;align-items:center}
+.vf-views button .bi{font-size:14px}
+.vf-views button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent,#8b7cf7) 28%,transparent);opacity:1;color:#fff}
+.vf-crumb{flex:1;min-width:0;font-size:11px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
 
 .vf-stage{
-  position:absolute;left:0;right:0;top:0;bottom:calc(48px + env(safe-area-inset-bottom,0px));
+  position:absolute;left:0;right:0;top:52px;
+  bottom:calc(96px + env(safe-area-inset-bottom,0px));
   overflow:hidden;
 }
+html.vf-reading .vf-stage{display:none}
 .vf-center-line{position:absolute;left:12px;right:12px;top:50%;height:0;pointer-events:none;opacity:0}
 
-/* Parent / child fading edges */
 .vf-edge{
   position:absolute;top:50%;transform:translateY(-50%);
   width:28px;height:120px;border-radius:14px;
   background:color-mix(in srgb,var(--panel,#1a1d28) 70%,transparent);
   border:1px solid color-mix(in srgb,var(--line,#2a2e3d) 50%,transparent);
   opacity:.35;pointer-events:none;z-index:2;
-  transition:opacity .25s ease-out,transform .25s ease-out;
+  transition:opacity .25s ease-out;
 }
 .vf-edge.parent{left:-14px;mask-image:linear-gradient(to right,transparent,#000 55%);-webkit-mask-image:linear-gradient(to right,transparent,#000 55%)}
 .vf-edge.child{right:-14px;mask-image:linear-gradient(to left,transparent,#000 55%);-webkit-mask-image:linear-gradient(to left,transparent,#000 55%)}
 .vf-edge.empty{opacity:0}
 .vf-edge.has{opacity:.45}
-.vf-arrow-hint{
-  position:absolute;top:50%;z-index:3;width:44px;height:44px;margin-top:-22px;
-  display:grid;place-items:center;color:var(--accent,#8b7cf7);opacity:.55;pointer-events:none;
-  font-size:18px;
+
+/* Chevron affordances — 44px hits */
+.vf-chev{
+  position:absolute;z-index:5;width:44px;height:44px;border:0;border-radius:22px;
+  display:grid;place-items:center;padding:0;
+  background:color-mix(in srgb,var(--panel,#1a1d28) 55%,transparent);
+  color:color-mix(in srgb,var(--accent,#8b7cf7) 70%,#fff);
+  opacity:.42;pointer-events:auto;
 }
-.vf-arrow-hint.left{left:2px}
-.vf-arrow-hint.right{right:2px}
-.vf-arrow-hint[hidden]{display:none}
+.vf-chev .bi{font-size:16px;pointer-events:none}
+.vf-chev:active{opacity:.85}
+.vf-chev[hidden]{display:none !important}
+.vf-chev.up{left:50%;top:4px;margin-left:-22px}
+.vf-chev.down{left:50%;bottom:4px;margin-left:-22px}
+.vf-chev.left{left:2px;top:50%;margin-top:-22px}
+.vf-chev.right{right:2px;top:50%;margin-top:-22px}
 
 .vf-stack{position:absolute;inset:0;pointer-events:none}
 .vf-above,.vf-below{
@@ -3683,29 +3701,20 @@ html.vf-on .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:20
   display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;
 }
 .vf-node{
-  position:relative;flex:0 0 auto;
-  width:min(86%,320px);
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:auto;
+  position:relative;flex:0 0 auto;width:min(86%,320px);
+  display:flex;align-items:center;justify-content:center;pointer-events:auto;
   transition:height .25s ease-out,opacity .25s ease-out,transform .25s ease-out,width .25s ease-out,margin .25s ease-out;
   will-change:transform,opacity,height;
 }
 .vf-node .vf-hit{position:absolute;inset:0;min-height:44px;min-width:44px;z-index:1}
 html.vf-reduced .vf-node{transition:opacity .2s linear}
 
-/* Level 0 — focus card */
-.vf-node.lv0{
-  height:168px;width:min(90%,340px);z-index:4;opacity:1;
-  margin:6px 0;
-}
+.vf-node.lv0{height:168px;width:min(90%,340px);z-index:4;opacity:1;margin:6px 0}
 .vf-node.lv0 .vf-card{
-  width:100%;height:100%;
-  background:var(--panel,#1a1d28);
-  border:2px solid var(--accent,#8b7cf7);
-  border-radius:16px;
+  width:100%;height:100%;background:var(--panel,#1a1d28);
+  border:2px solid var(--accent,#8b7cf7);border-radius:16px;
   box-shadow:0 0 0 4px color-mix(in srgb,var(--accent,#8b7cf7) 22%,transparent),0 12px 28px rgba(0,0,0,.35);
-  padding:12px 14px;overflow:hidden;
-  display:flex;flex-direction:column;gap:6px;
+  padding:12px 14px;overflow:hidden;display:flex;flex-direction:column;gap:6px;
   user-select:text;-webkit-user-select:text;touch-action:manipulation;
 }
 .vf-node.lv0 .vf-card.dragging{opacity:.85;transform:scale(1.02)}
@@ -3718,58 +3727,26 @@ html.vf-reduced .vf-node{transition:opacity .2s linear}
 .vf-node.lv0 .vf-images{max-height:64px;overflow:hidden}
 .vf-node.lv0 .vf-images img{max-height:60px;border-radius:6px}
 
-/* Level 1 — faded one-line card */
 .vf-node.lv1{height:52px;opacity:.42;margin:4px 0;z-index:3}
 .vf-node.lv1 .vf-card{
-  width:100%;height:44px;padding:0 14px;
-  background:var(--panel,#1a1d28);border:1px solid var(--line,#2a2e3d);
-  border-radius:12px;display:flex;align-items:center;
-  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  width:100%;height:44px;padding:0 14px;background:var(--panel,#1a1d28);border:1px solid var(--line,#2a2e3d);
+  border-radius:12px;display:flex;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
   font-size:14px;pointer-events:none;
 }
 .vf-node.lv1 .vf-hit{pointer-events:auto;cursor:pointer}
 
-/* Level 2 — icon-only square */
 .vf-node.lv2{height:48px;opacity:.7;margin:2px 0;z-index:2;width:48px}
 .vf-node.lv2 .vf-icon{
   width:40px;height:40px;border-radius:12px;
   background:color-mix(in srgb,var(--panel,#1a1d28) 90%,var(--accent,#8b7cf7));
-  border:1px solid var(--line,#2a2e3d);
-  display:grid;place-items:center;font-size:18px;pointer-events:none;color:var(--text,#e8eaf2);
+  border:1px solid var(--line,#2a2e3d);display:grid;place-items:center;font-size:18px;pointer-events:none;color:var(--text,#e8eaf2);
 }
 .vf-node.lv2 .vf-hit{pointer-events:auto}
 
-/* Level 3+ — dots */
 .vf-node.lv3{height:44px;opacity:.55;margin:0;z-index:1;width:44px}
-.vf-node.lv3 .vf-dot{
-  width:10px;height:10px;border-radius:50%;
-  background:color-mix(in srgb,var(--text,#e8eaf2) 55%,transparent);
-  pointer-events:none;
-}
+.vf-node.lv3 .vf-dot{width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--text,#e8eaf2) 55%,transparent);pointer-events:none}
 .vf-node.lv3 .vf-hit{pointer-events:auto}
 
-.vf-node.entering{opacity:0;transform:scale(.92)}
-.vf-node.leaving{opacity:0;transform:scale(.9);pointer-events:none}
-
-/* Bottom bar */
-.vf-bar{
-  position:absolute;left:0;right:0;bottom:0;z-index:6;
-  height:calc(48px + env(safe-area-inset-bottom,0px));
-  padding-bottom:env(safe-area-inset-bottom,0px);
-  display:flex;align-items:stretch;justify-content:space-around;
-  background:color-mix(in srgb,var(--panel,#1a1d28) 94%,transparent);
-  border-top:1px solid var(--line,#2a2e3d);
-  backdrop-filter:blur(10px);
-}
-.vf-bar button{
-  flex:1;min-height:48px;border:0;background:transparent;color:inherit;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  font:600 11px/1 system-ui,sans-serif;opacity:.92;
-}
-.vf-bar button .bi{font-size:18px}
-.vf-bar button:active{opacity:.55}
-
-/* Column slide for parent/child nav */
 .vf-stage.slide-left .vf-stack{animation:vfSlideFromLeft .25s ease-out}
 .vf-stage.slide-right .vf-stack{animation:vfSlideFromRight .25s ease-out}
 @keyframes vfSlideFromLeft{from{transform:translateX(-28%);opacity:.5}to{transform:none;opacity:1}}
@@ -3777,6 +3754,78 @@ html.vf-reduced .vf-node{transition:opacity .2s linear}
 html.vf-reduced .vf-stage.slide-left .vf-stack,
 html.vf-reduced .vf-stage.slide-right .vf-stack{animation:vfFade .2s linear}
 @keyframes vfFade{from{opacity:0}to{opacity:1}}
+
+/* Bottom bar — two rows so every key action stays labelled */
+.vf-bar-wrap{
+  position:absolute;left:0;right:0;bottom:0;z-index:6;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:color-mix(in srgb,var(--panel,#1a1d28) 96%,transparent);
+  border-top:1px solid var(--line,#2a2e3d);backdrop-filter:blur(10px);
+}
+.vf-bar{
+  display:flex;align-items:stretch;justify-content:space-around;
+  height:48px;gap:0;
+}
+.vf-bar.row2{height:48px;border-top:1px solid color-mix(in srgb,var(--line,#2a2e3d) 55%,transparent)}
+.vf-bar button{
+  flex:1;min-width:0;min-height:48px;border:0;background:transparent;color:inherit;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font:600 10px/1.1 system-ui,sans-serif;opacity:.92;padding:2px 2px;overflow:hidden;
+}
+.vf-bar button span{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;
+}
+.vf-bar button .bi{font-size:17px;pointer-events:none;line-height:1}
+.vf-bar button:active{opacity:.55}
+.vf-bar button.danger{color:#f0a0a8}
+.vf-bar .vf-sep{
+  flex:0 0 1px;align-self:center;height:28px;width:1px;
+  background:var(--line,#2a2e3d);margin:0 2px;
+}
+html.vf-reading .vf-bar-wrap{display:none}
+
+/* First-run hint */
+.vf-hint{
+  position:absolute;left:12px;right:12px;bottom:calc(108px + env(safe-area-inset-bottom,0px));z-index:9;
+  background:color-mix(in srgb,var(--panel,#1a1d28) 94%,var(--accent,#8b7cf7));
+  border:1px solid color-mix(in srgb,var(--accent,#8b7cf7) 45%,var(--line,#2a2e3d));
+  border-radius:14px;padding:12px 12px 12px 14px;display:flex;gap:10px;align-items:flex-start;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);font:500 13px/1.4 system-ui,sans-serif;
+}
+.vf-hint[hidden]{display:none !important}
+.vf-hint p{margin:0;flex:1;opacity:.95}
+.vf-hint button{
+  flex:0 0 auto;min-width:44px;min-height:44px;border:0;border-radius:10px;
+  background:color-mix(in srgb,var(--accent,#8b7cf7) 25%,transparent);color:inherit;
+  display:grid;place-items:center;
+}
+
+/* Reading mode pane inside frame */
+.vf-read{
+  display:none;position:absolute;left:0;right:0;top:52px;bottom:0;
+  overflow:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+  padding:8px 12px 24px;user-select:text;-webkit-user-select:text;
+}
+html.vf-reading .vf-read{display:block}
+.vf-read .read-wrap{max-width:100%;margin:0;padding:8px 4px 32px}
+.vf-read .read-title{font-size:22px;font-weight:700;outline:none;margin-bottom:16px;padding:8px 4px}
+.vf-read .read-node,.vf-read .read-block{position:relative}
+.vf-read .read-head,.vf-read .read-block{
+  padding:8px 10px;border-radius:12px;border:1px solid transparent;margin:2px 0;
+}
+.vf-read .read-node.selected>.read-head,.vf-read .read-block.selected{
+  border-color:color-mix(in srgb,var(--accent,#8b7cf7) 55%,transparent);
+  background:color-mix(in srgb,var(--accent,#8b7cf7) 10%,transparent);
+}
+.vf-read .read-editor{outline:none;min-height:22px;white-space:pre-wrap;font:500 15px/1.5 system-ui,sans-serif}
+.vf-read .read-node.depth-0>.read-head .read-editor{font-size:18px;font-weight:700}
+.vf-read .read-node.depth-1>.read-head .read-editor{font-size:16px;font-weight:650}
+.vf-read .read-children{margin-left:14px;border-left:2px solid color-mix(in srgb,var(--line,#2a2e3d) 80%,transparent);padding-left:8px}
+.vf-read .vf-jump{
+  position:absolute;right:4px;top:4px;min-width:44px;min-height:44px;border:0;border-radius:10px;
+  background:transparent;color:var(--accent,#8b7cf7);opacity:.55;display:grid;place-items:center;
+}
+.vf-read .read-head:hover .vf-jump,.vf-read .read-block:hover .vf-jump{opacity:.9}
 
 .vf-drag-ghost{
   position:fixed;z-index:40;pointer-events:none;
@@ -4124,35 +4173,39 @@ init();
 </script>
 
 <script id="vf-js">
-/* Vertical focus-node prototype (phone test). Reuses existing tree/storage/undo/editor. */
+/* Vertical focus-node prototype (phone test). Reuses tree/storage/undo/editor. */
 (function(){
 'use strict';
 const VF={
   active:true,
+  view:'focus', // 'focus' | 'reading'
   animating:false,
   reduced:false,
   ready:false,
-  dir:null, // 'left'|'right'|null for column slide
+  dir:null,
   longPress:null,
   drag:null,
   pointers:new Map(),
   suppressClick:false,
-  H:{0:168,1:52,2:48,3:44}
+  H:{0:168,1:52,2:48,3:44},
+  HINT_KEY:'branch-studio-vf-hint-v1'
 };
 
-function vfReduced(){
-  try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}
-}
+function vfReduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 function vfNodeType(n){
   if(n.images&&n.images.length)return 'photo';
   if(/\$/.test(n.text||''))return 'math';
   if(n.children&&n.children.length)return 'branch';
   return 'file';
 }
-function vfPlain(n){
-  return String(n.text||'').replace(/\$\$[\s\S]*?\$\$|\$[^$\n]*\$/g,'').replace(/\s+/g,' ').trim()||'Untitled';
-}
+function vfPlain(n){return String(n.text||'').replace(/\$\$[\s\S]*?\$\$|\$[^$\n]*\$/g,'').replace(/\s+/g,' ').trim()||'Untitled'}
 function vfLevel(dist){return dist<=0?0:dist===1?1:dist===2?2:3}
+function vfHintSeen(){try{return localStorage.getItem(VF.HINT_KEY)==='1'}catch(e){return false}}
+function vfDismissHint(){
+  try{localStorage.setItem(VF.HINT_KEY,'1')}catch(e){}
+  let h=$('#vfHint');if(h)h.hidden=true;
+}
+
 function vfEnsureShell(){
   let shell=$('#vfShell');
   if(shell)return shell;
@@ -4163,64 +4216,104 @@ function vfEnsureShell(){
     <div class="vf-top">
       <button type="button" id="vfUndo" title="Undo" aria-label="Undo">${icon('undo')}</button>
       <button type="button" id="vfRedo" title="Redo" aria-label="Redo">${icon('redo')}</button>
+      <div class="vf-views" role="group" aria-label="View">
+        <button type="button" data-vf-view="focus" aria-pressed="true">${icon('branch')}<span>Focus</span></button>
+        <button type="button" data-vf-view="reading" aria-pressed="false">${icon('book')}<span>Reading</span></button>
+        <button type="button" data-vf-view="classic" aria-pressed="false">${icon('columns')}<span>Classic</span></button>
+      </div>
       <div class="vf-crumb" id="vfCrumb"></div>
-      <button type="button" id="vfSettings" title="Settings" aria-label="Settings">${icon('settings')}</button>
     </div>
     <div class="vf-stage" id="vfStage">
       <div class="vf-edge parent empty" id="vfEdgeParent" aria-hidden="true"></div>
       <div class="vf-edge child empty" id="vfEdgeChild" aria-hidden="true"></div>
-      <div class="vf-arrow-hint left" id="vfHintLeft" hidden>${icon('outdent')}</div>
-      <div class="vf-arrow-hint right" id="vfHintRight" hidden>${icon('indent')}</div>
+      <button type="button" class="vf-chev up" id="vfChevUp" aria-label="Previous sibling" hidden>${icon('arrowUp')}</button>
+      <button type="button" class="vf-chev down" id="vfChevDown" aria-label="Next sibling" hidden>${icon('arrowDown')}</button>
+      <button type="button" class="vf-chev left" id="vfChevLeft" aria-label="Parent" hidden>${icon('outdent')}</button>
+      <button type="button" class="vf-chev right" id="vfChevRight" aria-label="First child" hidden>${icon('indent')}</button>
       <div class="vf-stack" id="vfStack"></div>
     </div>
-    <nav class="vf-bar" id="vfBar" aria-label="Note actions">
-      <button type="button" data-vf="sib">${icon('plus')}<span>Sibling</span></button>
-      <button type="button" data-vf="child">${icon('child')}<span>Child</span></button>
-      <button type="button" data-vf="more">${icon('more')}<span>More</span></button>
-    </nav>
+    <div class="vf-read" id="vfRead" aria-label="Reading view"></div>
+    <div class="vf-hint" id="vfHint" hidden>
+      <p>Swipe up/down for siblings · swipe left for parent · right for children · hold the card to move. Or use the arrows.</p>
+      <button type="button" id="vfHintDismiss" aria-label="Dismiss hint">${icon('x')}</button>
+    </div>
+    <div class="vf-bar-wrap" id="vfBarWrap">
+      <nav class="vf-bar" id="vfBar" aria-label="Note actions">
+        <button type="button" data-vf="sib">${icon('plus')}<span>Sibling</span></button>
+        <button type="button" data-vf="child">${icon('child')}<span>Child</span></button>
+        <button type="button" data-vf="indent">${icon('indent')}<span>Indent</span></button>
+        <button type="button" data-vf="outdent">${icon('outdent')}<span>Outdent</span></button>
+      </nav>
+      <nav class="vf-bar row2" id="vfBar2" aria-label="More note actions">
+        <button type="button" data-vf="math">${icon('math')}<span>Maths</span></button>
+        <span class="vf-sep" aria-hidden="true"></span>
+        <button type="button" class="danger" data-vf="delete">${icon('trash')}<span>Delete</span></button>
+        <button type="button" data-vf="more">${icon('more')}<span>More</span></button>
+      </nav>
+    </div>
   </div>`;
   document.body.appendChild(shell);
   $('#vfUndo').onclick=()=>runCommand('undo');
   $('#vfRedo').onclick=()=>runCommand('redo');
-  $('#vfSettings').onclick=()=>runCommand('settings');
-  $('#vfBar').onclick=e=>{
+  $('#vfHintDismiss').onclick=()=>vfDismissHint();
+  shell.querySelectorAll('[data-vf-view]').forEach(b=>b.onclick=()=>vfSetView(b.dataset.vfView));
+  $('#vfChevUp').onclick=()=>vfGoSibling(-1);
+  $('#vfChevDown').onclick=()=>vfGoSibling(1);
+  $('#vfChevLeft').onclick=()=>vfGoParent();
+  $('#vfChevRight').onclick=()=>vfGoChild();
+  const barAct=e=>{
     let b=e.target.closest('[data-vf]');if(!b)return;
     let k=b.dataset.vf;
     if(k==='sib')runCommand('addSibling');
     else if(k==='child')runCommand('addChild');
+    else if(k==='indent')runCommand('indent');
+    else if(k==='outdent')runCommand('outdent');
+    else if(k==='math')runCommand('math');
+    else if(k==='delete')runCommand('deleteNode');
     else if(k==='more')vfOpenMore(b);
   };
+  $('#vfBar').onclick=barAct;
+  $('#vfBar2').onclick=barAct;
   vfBindGestures();
   return shell;
 }
 function vfOpenMore(anchor){
   openMenu(anchor,[
-    cmdItem('deleteNode',{label:'Delete'}),
-    {sep:1},
     cmdItem('image',{label:'Add image'}),
-    cmdItem('math',{label:'Insert maths'}),
+    cmdItem('exportMd',{label:'Export Markdown'}),
+    cmdItem('settings',{label:'Settings'}),
     {sep:1},
-    {icon:'columns',label:'Classic view',run:()=>vfSetActive(false)},
-    {icon:'branch',label:'Vertical focus',run:()=>vfSetActive(true)}
+    {icon:'question',label:'Show gesture tip',run:()=>{try{localStorage.removeItem(VF.HINT_KEY)}catch(e){};let h=$('#vfHint');if(h)h.hidden=false}},
+    {icon:'columns',label:'Classic view',run:()=>vfSetView('classic')},
+    {icon:'branch',label:'Focus view',run:()=>vfSetView('focus')}
   ],{title:'More',sheet:true});
+}
+function vfSetView(view){
+  if(view==='classic'){vfSetActive(false);return}
+  VF.view=view==='reading'?'reading':'focus';
+  document.documentElement.classList.toggle('vf-reading',VF.view==='reading');
+  vfEnsureShell();
+  $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
+  if(VF.view==='reading')vfRenderReading();
+  else vfRender({animate:false});
 }
 function vfSetActive(on){
   VF.active=!!on;
   document.documentElement.classList.toggle('vf-on',VF.active);
+  document.documentElement.classList.toggle('vf-reading',VF.active&&VF.view==='reading');
   try{sessionStorage.setItem('branch-studio-vf',VF.active?'1':'0')}catch(e){}
-  if(VF.active){vfEnsureShell();vfRender({animate:false})}
+  if(VF.active){vfEnsureShell();vfSetView(VF.view||'focus')}
   else{
     let sh=$('#vfShell');if(sh)sh.remove();
+    document.documentElement.classList.remove('vf-reading');
     renderAll();
   }
 }
 function vfVisibleWindow(list,index){
-  // Show enough nodes above/below to fill the screen: ~3 levels each way
   const maxDist=6;
-  let start=Math.max(0,index-maxDist),end=Math.min(list.length-1,index+maxDist);
-  return {start,end};
+  return {start:Math.max(0,index-maxDist),end:Math.min(list.length-1,index+maxDist)};
 }
-function vfNodeHTML(n,level,isFocus){
+function vfNodeHTML(n,level){
   if(level===0){
     return `<div class="vf-node lv0" data-id="${n.id}" data-level="0">
       <div class="vf-card" data-focus-card>
@@ -4246,10 +4339,26 @@ function vfNodeHTML(n,level,isFocus){
     <div class="vf-dot"></div>
   </div>`;
 }
+function vfUpdateChevrons(r){
+  let up=$('#vfChevUp'),down=$('#vfChevDown'),left=$('#vfChevLeft'),right=$('#vfChevRight');
+  if(!up)return;
+  up.hidden=!(r&&r.index>0);
+  down.hidden=!(r&&r.index<r.list.length-1);
+  left.hidden=!(r&&r.path.length>1);
+  right.hidden=!(r&&r.node.children&&r.node.children.length);
+}
+function vfShowHintIfNeeded(){
+  let h=$('#vfHint');if(!h)return;
+  if(VF.view!=='focus'){h.hidden=true;return}
+  h.hidden=vfHintSeen();
+}
+
 function vfRender(opts={}){
   if(!VF.active)return;
   vfEnsureShell();
   document.documentElement.classList.add('vf-on');
+  document.documentElement.classList.toggle('vf-reading',VF.view==='reading');
+  if(VF.view==='reading'){vfRenderReading();return}
   VF.reduced=vfReduced();
   document.documentElement.classList.toggle('vf-reduced',VF.reduced);
   let d=doc(),r=locate(d.selectedId);
@@ -4257,15 +4366,15 @@ function vfRender(opts={}){
     if(tree().length){d.selectedId=tree()[0].id;r=locate(d.selectedId)}
     else{
       $('#vfStack').innerHTML='<div class="vf-focus-slot"><div class="vf-node lv0"><div class="vf-card"><div class="note-editor" contenteditable="false" data-placeholder="No notes yet"></div></div></div></div>';
-      return;
+      vfUpdateChevrons(null);vfShowHintIfNeeded();return;
     }
   }
   let list=r.list,idx=r.index;
   let {start,end}=vfVisibleWindow(list,idx);
   let above='',below='',focusHtml='';
-  for(let i=start;i<idx;i++) above+=vfNodeHTML(list[i],vfLevel(idx-i),false);
-  focusHtml=vfNodeHTML(list[idx],0,true);
-  for(let i=idx+1;i<=end;i++) below+=vfNodeHTML(list[i],vfLevel(i-idx),false);
+  for(let i=start;i<idx;i++) above+=vfNodeHTML(list[i],vfLevel(idx-i));
+  focusHtml=vfNodeHTML(list[idx],0);
+  for(let i=idx+1;i<=end;i++) below+=vfNodeHTML(list[i],vfLevel(i-idx));
   let stack=$('#vfStack'),stage=$('#vfStage');
   let keepFocus=null,ae=document.activeElement;
   if(ae&&ae.classList?.contains('note-editor')&&ae.dataset.editId===d.selectedId){
@@ -4280,17 +4389,14 @@ function vfRender(opts={}){
     setTimeout(()=>stage.classList.remove('slide-left','slide-right'),280);
     VF.dir=null;
   }
-  // edges
   let parent=r.path.length>1?r.path[r.path.length-2]:null;
   let child=r.node.children&&r.node.children[0];
   let ep=$('#vfEdgeParent'),ec=$('#vfEdgeChild');
   ep.classList.toggle('empty',!parent);ep.classList.toggle('has',!!parent);
   ec.classList.toggle('empty',!child);ec.classList.toggle('has',!!child);
-  $('#vfHintLeft').hidden=!parent;
-  $('#vfHintRight').hidden=!child;
-  // crumb
+  vfUpdateChevrons(r);
   $('#vfCrumb').textContent=r.path.map(n=>vfPlain(n)).join(' › ');
-  // bind focus editor
+  $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
   bindEditors(stack);
   bindNoteTools(stack);
   stack.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{
@@ -4310,8 +4416,41 @@ function vfRender(opts={}){
     let ed=stack.querySelector(`[data-edit-id="${keepFocus.id}"]`);
     if(ed){ed.focus({preventScroll:true});try{if(keepFocus.sel){let s=getSelection();s.removeAllRanges();s.addRange(keepFocus.sel)}}catch(e){}}
   }
-  // status
+  vfShowHintIfNeeded();
   try{renderStatus()}catch(e){}
+}
+
+function vfRenderReading(){
+  vfEnsureShell();
+  document.documentElement.classList.add('vf-on','vf-reading');
+  let pane=$('#vfRead');
+  let nested=true;
+  let body=tree().map(node=>readNodeHTML(node,0)).join('');
+  pane.innerHTML=`<div class="read-wrap"><div class="read-title" contenteditable="true" spellcheck="true" id="vfReadTitle">${escapeHTML(doc().title)}</div><div id="vfReadBlocks" class="read-tree nested">${body}</div></div>`;
+  let title=$('#vfReadTitle');
+  if(title)title.addEventListener('input',e=>{
+    doc().title=e.currentTarget.innerText.replace(/\n/g,' ').trimStart();
+    doc().updatedAt=Date.now();saveState();
+  });
+  pane.querySelectorAll('[data-read-id]').forEach(b=>{
+    // jump chip
+    let head=b.querySelector(':scope > .read-head')||b;
+    if(head&&!head.querySelector('.vf-jump')){
+      let jb=document.createElement('button');
+      jb.type='button';jb.className='vf-jump';jb.title='Open in Focus';jb.innerHTML=icon('branch');
+      jb.onclick=e=>{e.stopPropagation();doc().selectedId=b.dataset.readId;saveState();vfSetView('focus')};
+      head.style.position='relative';
+      head.appendChild(jb);
+    }
+    b.addEventListener('click',e=>{
+      if(e.target.closest('[contenteditable],math-field,button'))return;
+      doc().selectedId=b.dataset.readId;saveState();vfSetView('focus');
+    });
+  });
+  bindEditors(pane,true);
+  $('#vfCrumb').textContent='Reading';
+  $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
+  let h=$('#vfHint');if(h)h.hidden=true;
 }
 
 function vfGo(id,{slide=null}={}){
@@ -4324,8 +4463,6 @@ function vfGo(id,{slide=null}={}){
   doc().selectedId=id;
   doc().updatedAt=Date.now();
   saveState();
-  // Re-render with focus locked to vertical centre (fixed level heights → no jump).
-  // New focus card gets a short zoom-in; reduced-motion uses crossfade only.
   vfRender({slide:!!slide});
   let focus=document.querySelector('#vfStack .vf-node.lv0');
   if(focus){
@@ -4343,34 +4480,28 @@ function vfGo(id,{slide=null}={}){
   }
   setTimeout(()=>{VF.animating=false},VF.reduced?80:260);
 }
-
 function vfGoParent(){
   let r=locate(doc().selectedId);if(!r||r.path.length<2)return;
-  let parent=r.path[r.path.length-2];
-  VF.dir='left';
-  vfGo(parent.id,{slide:'left'});
+  VF.dir='left';vfGo(r.path[r.path.length-2].id,{slide:'left'});
 }
 function vfGoChild(){
   let r=locate(doc().selectedId);if(!r||!r.node.children?.length)return;
-  VF.dir='right';
-  vfGo(r.node.children[0].id,{slide:'right'});
+  VF.dir='right';vfGo(r.node.children[0].id,{slide:'right'});
 }
 function vfGoSibling(dir){
   let r=locate(doc().selectedId);if(!r)return;
-  let ni=r.index+dir;
-  if(ni<0||ni>=r.list.length)return;
+  let ni=r.index+dir;if(ni<0||ni>=r.list.length)return;
   vfGo(r.list[ni].id);
 }
 
 function vfBindGestures(){
   let stage=$('#vfStage');if(!stage||stage.dataset.gest==='1')return;
   stage.dataset.gest='1';
-  stage.dataset.gest='1';
-  const LP_MS=350, TAP_MOVE=12, SWIPE=56;
+  const LP_MS=350,TAP_MOVE=12,SWIPE=56;
   stage.addEventListener('pointerdown',e=>{
     if(e.button&&e.button!==0)return;
-    if(e.target.closest('.note-editor,math-field,button,.vf-bar,.vf-top')){
-      // allow editor interaction; only track for potential long-press on focus card chrome
+    if(e.target.closest('.vf-chev,button.vf-chev'))return;
+    if(e.target.closest('.note-editor,math-field,button,.vf-bar,.vf-top,.vf-hint,.vf-read')){
       if(!e.target.closest('[data-focus-card]')||e.target.closest('.note-editor,math-field,button'))return;
     }
     stage.setPointerCapture?.(e.pointerId);
@@ -4385,26 +4516,22 @@ function vfBindGestures(){
     let p=VF.pointers.get(e.pointerId);if(!p)return;
     let dx=e.clientX-p.x,dy=e.clientY-p.y;
     if(Math.hypot(dx,dy)>TAP_MOVE){clearTimeout(VF.longPress);VF.longPress=null}
-    if(VF.drag){vfMoveDrag(e);e.preventDefault();return}
+    if(VF.drag){vfMoveDrag(e);e.preventDefault()}
   },{passive:false});
   const end=e=>{
     clearTimeout(VF.longPress);VF.longPress=null;
     let p=VF.pointers.get(e.pointerId);VF.pointers.delete(e.pointerId);
     if(VF.drag){vfEndDrag(e);return}
-    if(!p)return;
+    if(!p||VF.view!=='focus')return;
     let dx=e.clientX-p.x,dy=e.clientY-p.y,adx=Math.abs(dx),ady=Math.abs(dy);
-    if(adx<SWIPE&&ady<SWIPE)return; // tap handled by click
+    if(adx<SWIPE&&ady<SWIPE)return;
     VF.suppressClick=true;setTimeout(()=>VF.suppressClick=false,320);
-    if(adx>ady&&adx>=SWIPE){
-      if(dx<0)vfGoParent(); else vfGoChild();
-    }else if(ady>=SWIPE){
-      if(dy<0)vfGoSibling(1); else vfGoSibling(-1);
-    }
+    if(adx>ady&&adx>=SWIPE){if(dx<0)vfGoParent();else vfGoChild()}
+    else if(ady>=SWIPE){if(dy<0)vfGoSibling(1);else vfGoSibling(-1)}
   };
   stage.addEventListener('pointerup',end,{passive:true});
   stage.addEventListener('pointercancel',end,{passive:true});
 }
-
 function vfStartDrag(e){
   let r=locate(doc().selectedId);if(!r||r.list.length<2)return;
   let card=document.querySelector('[data-focus-card]');if(!card)return;
@@ -4415,9 +4542,6 @@ function vfStartDrag(e){
 function vfMoveDrag(e){
   if(!VF.drag)return;
   let dy=e.clientY-VF.drag.startY;
-  let step=VF.H[0]+12;
-  let delta=Math.round(dy/step);
-  VF.drag.preview=delta;
   let card=document.querySelector('[data-focus-card]');
   if(card)card.style.transform=`translateY(${dy}px) scale(1.02)`;
 }
@@ -4436,14 +4560,10 @@ function vfEndDrag(e){
   snapshot();
   let [node]=r.list.splice(r.index,1);
   r.list.splice(target,0,node);
-  doc().selectedId=node.id;
-  doc().updatedAt=Date.now();
-  saveState();
-  vfRender({animate:false});
-  toast('Moved');
+  doc().selectedId=node.id;doc().updatedAt=Date.now();saveState();
+  vfRender({animate:false});toast('Moved');
 }
 
-// Patch into app lifecycle
 const _renderWorkspace=typeof renderWorkspace==='function'?renderWorkspace:null;
 const _selectNode=typeof selectNode==='function'?selectNode:null;
 const _renderAll=typeof renderAll==='function'?renderAll:null;
@@ -4455,24 +4575,21 @@ window.renderWorkspace=function(){
 window.selectNode=function(id,opts){
   if(VF.active){
     if(!locate(id))return;
+    if(VF.view==='reading'){
+      doc().selectedId=id;doc().updatedAt=Date.now();saveState();vfRenderReading();
+      if(opts&&opts.focus)requestAnimationFrame(()=>document.querySelector(`#vfRead [data-read-edit="${id}"]`)?.focus({preventScroll:true}));
+      return;
+    }
     if(id===doc().selectedId){
-      if(opts&&opts.focus)requestAnimationFrame(()=>{
-        let ed=document.querySelector(`#vfStack [data-edit-id="${id}"]`);
-        ed?.focus({preventScroll:true});
-      });
+      if(opts&&opts.focus)requestAnimationFrame(()=>document.querySelector(`#vfStack [data-edit-id="${id}"]`)?.focus({preventScroll:true}));
       return;
     }
     vfGo(id);
-    if(opts&&opts.focus)setTimeout(()=>{
-      let ed=document.querySelector(`#vfStack [data-edit-id="${id}"]`);
-      ed?.focus({preventScroll:true});
-    },260);
+    if(opts&&opts.focus)setTimeout(()=>document.querySelector(`#vfStack [data-edit-id="${id}"]`)?.focus({preventScroll:true}),260);
     return;
   }
   if(_selectNode)_selectNode.apply(this,arguments);
 };
-
-// Keep classic renderAll updating VF when active
 window.renderAll=function(){
   if(VF.active){
     try{applyAppearance();applyChrome()}catch(e){}
@@ -4487,23 +4604,16 @@ function vfBoot(){
   VF.reduced=vfReduced();
   let prefer=true;
   try{let s=sessionStorage.getItem('branch-studio-vf');if(s==='0')prefer=false}catch(e){}
-  // Force phone-like chrome size hints if UI exists
   try{if(typeof UI==='object'&&UI){UI.size='phone';UI.input=UI.input||'touch'}}catch(e){}
   vfSetActive(prefer);
   VF.ready=true;
 }
-
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(vfBoot,0));
 else setTimeout(vfBoot,0);
 
-// Expose for tests
 window.VF=VF;
-window.vfGo=vfGo;
-window.vfGoParent=vfGoParent;
-window.vfGoChild=vfGoChild;
-window.vfGoSibling=vfGoSibling;
-window.vfRender=vfRender;
-window.vfSetActive=vfSetActive;
+window.vfGo=vfGo;window.vfGoParent=vfGoParent;window.vfGoChild=vfGoChild;window.vfGoSibling=vfGoSibling;
+window.vfRender=vfRender;window.vfSetActive=vfSetActive;window.vfSetView=vfSetView;window.vfDismissHint=vfDismissHint;
 })();
 
 </script>
