@@ -3947,6 +3947,23 @@ html.vf-reading .vf-read{display:block}
 .vf-chip.focus .vf-moves{height:44px;justify-content:center}
 .vf-chip .vf-pos{flex:0 0 auto}
 
+/* ===== v4: arrows inside cards REORDER (no nav chevrons) ===== */
+.vf-nav,.vf-moves{display:none !important}
+.vf-mv{position:absolute;z-index:2;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;
+  display:grid;place-items:center;color:var(--accent,#8b7cf7);background:color-mix(in srgb,var(--accent,#8b7cf7) 14%,transparent);
+  pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.vf-mv[hidden]{display:none !important}
+.vf-mv .bi{font-size:20px;pointer-events:none}
+.vf-mv:active{background:color-mix(in srgb,var(--accent,#8b7cf7) 34%,transparent)}
+.vf-node.lv0 .vf-mv.up{top:0;left:50%;margin-left:-22px;border-top-left-radius:0;border-top-right-radius:0}
+.vf-node.lv0 .vf-mv.down{bottom:0;left:50%;margin-left:-22px;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.vf-node.lv0 .vf-body{left:16px;right:16px}
+.vf-chip.focus .vf-mv{top:50%;margin-top:-22px}
+.vf-chip.focus .vf-mv.left{left:2px}
+.vf-chip.focus .vf-mv.right{right:2px}
+.vf-chip.focus .vf-chip-mid{justify-content:center;gap:2px}
+.vf-chip.focus .vf-pos{font:500 11px/1.2 system-ui,sans-serif;opacity:.7}
+
 </style>
 </head>
 <body>
@@ -4295,7 +4312,7 @@ init();
 // extra glyphs from the bundled Bootstrap Icons font (no custom SVG)
 try{Object.assign(BOOTSTRAP_ICONS,{arrowLeft:'arrow-left',arrowRight:'arrow-right',text:'card-text',list:'list-ul',
   navUp:'chevron-up',navDown:'chevron-down',navLeft:'chevron-left',navRight:'chevron-right',
-  mvUp:'arrow-bar-up',mvDown:'arrow-bar-down',mvLeft:'arrow-bar-left',mvRight:'arrow-bar-right'})}catch(e){}
+  mvUp:'arrow-up',mvDown:'arrow-down',mvLeft:'arrow-left',mvRight:'arrow-right'})}catch(e){}
 
 const VF={
   active:true,view:'focus',animating:false,reduced:false,ready:false,dir:null,
@@ -4304,7 +4321,7 @@ const VF={
   CW:240,CH:72,GAP:12,CHIP:252,  // parent row card size + pitch (all row cards identical)
   STEP:116,                      // typical sibling step used for reorder distance
   rowAnim:false,
-  HINT_KEY:'branch-studio-vf-hint-v2'
+  HINT_KEY:'branch-studio-vf-hint-v3'
 };
 
 function vfReduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
@@ -4352,7 +4369,7 @@ function vfEnsureShell(){
     </div>
     <div class="vf-read" id="vfRead" aria-label="Reading view"></div>
     <div class="vf-hint" id="vfHint" hidden>
-      <p>Swipe up/down for notes · left/right to switch topic. Or tap the arrows inside the card. Hold a card (or use its move arrows) to reorder.</p>
+      <p>Swipe up/down for notes · left/right to switch topic. The arrows inside a card move it; or hold the card and drag.</p>
       <button type="button" id="vfHintDismiss" aria-label="Dismiss hint">${icon('x')}</button>
     </div>
     <div class="vf-bar-wrap" id="vfBarWrap">
@@ -4374,15 +4391,11 @@ function vfEnsureShell(){
   $('#vfRedo').onclick=()=>runCommand('redo');
   $('#vfHintDismiss').onclick=()=>vfDismissHint();
   shell.querySelectorAll('[data-vf-view]').forEach(b=>b.onclick=()=>vfSetView(b.dataset.vfView));
-  // in-card arrows (delegated): navigation + reorder
+  // in-card arrows (delegated): reorder only; swiping navigates
   shell.addEventListener('click',e=>{
-    let b=e.target.closest('[data-nav],[data-move]');if(!b||!shell.contains(b))return;
-    e.stopPropagation();if(VF.suppressClick)return;
-    let k=b.dataset.nav||'';
-    if(k==='up')vfGoSibling(-1);else if(k==='down')vfGoSibling(1);
-    else if(k==='left')vfGoRootDelta(-1);else if(k==='right')vfGoRootDelta(1);
-    else if(b.dataset.move==='prev')runCommand('moveUp');
-    else if(b.dataset.move==='next')runCommand('moveDown');
+    let b=e.target.closest('[data-move]');if(!b||!shell.contains(b))return;
+    e.stopPropagation();e.preventDefault();if(VF.suppressClick||b.hidden||b.disabled)return;
+    vfMoveFocused(b.dataset.move==='prev'?-1:1);
   },true);
   const barAct=e=>{
     let b=e.target.closest('[data-vf]');if(!b)return;
@@ -4428,21 +4441,24 @@ function vfSetActive(on){
 }
 
 // ---- rendering ----
-function vfNavBtn(dir,show,label,ic){return `<button type="button" class="vf-nav ${dir}" data-nav="${dir}" aria-label="${label}"${show?'':' hidden'}>${icon(ic)}</button>`}
-function vfMoveBtn(which,show,label,ic){return `<button type="button" class="vf-move" data-move="${which}" aria-label="${label}"${show?'':' disabled'}>${icon(ic)}</button>`}
+function vfMoveBtn(which,pos,show,label,ic){return `<button type="button" class="vf-mv ${pos}" data-move="${which}" aria-label="${label}"${show?'':' hidden'}>${icon(ic)}</button>`}
+// move the focused note (or focused parent) one slot among its siblings; existing move + undo code
+function vfMoveFocused(delta){
+  let r=locate(doc().selectedId);if(!r)return;
+  let to=r.index+delta;if(to<0||to>=r.list.length)return;
+  let ae=document.activeElement;if(ae&&ae.classList?.contains('note-editor'))ae.blur();
+  VF.rowAnim=false;runCommand(delta<0?'moveUp':'moveDown');
+  if(doc().selectedId!==r.node.id){doc().selectedId=r.node.id;saveState()}
+  VF.rowAnim=false;vfRender({animate:false});   // re-snap in place: no slide, no jump
+}
 function vfNodeHTML(item,level,idx,total,ctx={}){
   let n=item.node,d=item.depth,dd=Math.min(d,5);
   if(level===0){
     return `<div class="vf-node lv0" data-id="${n.id}" data-level="0" data-depth="${d}" style="--d:${dd}">
       <div class="vf-card" data-focus-card>
         <div class="vf-card-head"><span class="vf-depth">${vfDepthLabel(d)}</span><span class="vf-pos">${idx}/${total-1}</span></div>
-        ${vfNavBtn('up',ctx.up,'Previous note','navUp')}
-        ${vfNavBtn('down',ctx.down,'Next note','navDown')}
-        ${vfNavBtn('left',ctx.left,'Previous topic','navLeft')}
-        ${vfNavBtn('right',ctx.right,'Next topic','navRight')}
-        <div class="vf-moves v" role="group" aria-label="Reorder">
-          ${vfMoveBtn('prev',ctx.mvPrev,'Move note up','mvUp')}${vfMoveBtn('next',ctx.mvNext,'Move note down','mvDown')}
-        </div>
+        ${vfMoveBtn('prev','up',ctx.mvPrev,'Move note up','mvUp')}
+        ${vfMoveBtn('next','down',ctx.mvNext,'Move note down','mvDown')}
         <div class="vf-body">
           <div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-edit-id="${n.id}">${writingHTML(n.text)}</div>
           <div class="vf-images">${imageHTML(n)}</div>
@@ -4471,14 +4487,12 @@ function vfRenderRow(ri,root,rootFocused){
     let peek=i===ri-1?'prev':i===ri+1?'next':'';
     if(cur&&rootFocused){
       return `<div class="vf-chip cur focus" role="group" data-root="${n.id}" data-land="${n.id}" data-i="${i}" aria-current="true" data-focus-card>
-        ${vfNavBtn('left',i>0,'Previous topic','navLeft')}
+        ${vfMoveBtn('prev','left',i>0,'Move topic left','mvLeft')}
         <div class="vf-chip-mid">
-          <div class="vf-chip-top"><div class="note-editor vf-chip-title" contenteditable="true" spellcheck="true" data-placeholder="Topic…" data-edit-id="${n.id}">${writingHTML(n.text)}</div><span class="vf-pos">–/${countDocNodes(n.children||[])}</span></div>
-          <div class="vf-moves h" role="group" aria-label="Reorder topic">
-            ${vfMoveBtn('prev',i>0,'Move topic left','mvLeft')}${vfMoveBtn('next',i<roots.length-1,'Move topic right','mvRight')}
-          </div>
+          <div class="vf-chip-top"><div class="note-editor vf-chip-title" contenteditable="true" spellcheck="true" data-placeholder="Topic…" data-edit-id="${n.id}">${writingHTML(n.text)}</div></div>
+          <span class="vf-pos">–/${countDocNodes(n.children||[])}</span>
         </div>
-        ${vfNavBtn('right',i<roots.length-1,'Next topic','navRight')}
+        ${vfMoveBtn('next','right',i<roots.length-1,'Move topic right','mvRight')}
       </div>`;
     }
     let sub=cur?vfCount(n):(land.id!==n.id?vfPlain(land):vfCount(n));
@@ -4491,7 +4505,7 @@ function vfRenderRow(ri,root,rootFocused){
   VF.rowAnim=true;
   row.querySelectorAll('.vf-chip').forEach(c=>{
     c.onclick=e=>{
-      if(e.target.closest('[data-nav],[data-move],.note-editor'))return;
+      if(e.target.closest('[data-move],.note-editor'))return;
       e.stopPropagation();if(VF.suppressClick||VF.drag)return;
       if(c.dataset.root===root.id){if(doc().selectedId!==root.id)vfGo(root.id);return}
       vfGoRootId(c.dataset.root);
@@ -4651,7 +4665,7 @@ function vfBindGestures(){
     if(VF.view!=='focus')return;
     if(e.type==='mousedown'&&e.button!==0)return;
     if(e.target.closest('.vf-bar,.vf-bar-wrap,.vf-top,.vf-hint'))return;
-    let onArrow=!!e.target.closest('[data-nav],[data-move]');
+    let onArrow=!!e.target.closest('[data-move]');
     VF.animating=false;
     let p=xy(e),inEditor=!!e.target.closest('.note-editor,math-field,[contenteditable="true"]');
     let editing=!!document.activeElement?.closest?.('.note-editor');
