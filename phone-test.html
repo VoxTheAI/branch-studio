@@ -3892,6 +3892,61 @@ html.vf-reading .vf-read{display:block}
 .vf-node.lv0 .note-editor:not(:focus){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .vf-node.lv0 .vf-card.dragging{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent,#8b7cf7) 40%,transparent),0 18px 36px rgba(0,0,0,.5)}
 
+/* ===== v3: straight axis, same-size row cards, arrows inside the focused card ===== */
+.vf-chev{display:none !important}
+.vf-rowbar{height:84px}
+.vf-row{gap:12px;padding:6px 0;height:84px;align-items:flex-start}
+.vf-chip{flex:0 0 240px;width:240px;height:72px;min-height:72px;max-height:72px;padding:6px 12px;position:relative;opacity:.55;justify-content:center}
+.vf-chip.cur{opacity:1}
+.vf-chip.focus{padding:0 44px;border:2px solid var(--accent,#8b7cf7);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent,#8b7cf7) 22%,transparent);
+  background:color-mix(in srgb,var(--accent,#8b7cf7) 16%,var(--panel,#1a1d28));display:block}
+.vf-chip-mid{height:100%;display:flex;flex-direction:column;justify-content:flex-start;min-width:0}
+.vf-chip-top{display:flex;align-items:center;gap:6px;height:26px;min-width:0}
+.vf-chip-title{flex:1;min-width:0;outline:none;font:650 13px/26px system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-user-select:text;user-select:text}
+.vf-chip-title:not(:focus){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.vf-chip-title:empty:before{content:attr(data-placeholder);opacity:.45}
+.vf-col{top:84px}
+/* one centre line, one width — no sideways depth shift */
+.vf-node{--ind:0px}
+.vf-node.lv0,.vf-node.lv1{width:min(88%,330px) !important;margin-left:0 !important;margin-right:0 !important}
+.vf-node.lv2,.vf-node.lv3{margin-left:0 !important;margin-right:0 !important}
+.vf-above,.vf-below{align-items:center !important}
+.vf-below.from-top{top:0;padding-top:10px}
+.vf-empty{margin-top:24px;width:min(88%,330px);text-align:center;font-size:13px;opacity:.6}
+/* depth shown inside the card only: badge + left accent bar */
+.vf-node.lv0 .vf-card,.vf-node.lv1 .vf-card{border-left-width:2px;position:relative}
+.vf-node.lv0 .vf-card::before,.vf-node.lv1 .vf-card::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;
+  width:calc(2px + var(--d,0) * 1.5px);border-radius:3px;background:color-mix(in srgb,var(--accent,#8b7cf7) calc(35% + var(--d,0) * 12%),transparent)}
+/* focus card: fixed height, 44px arrow zones inside its edges */
+.vf-node.lv0{height:200px}
+.vf-focus-slot{height:200px;margin-top:-100px}
+.vf-above{padding-bottom:calc(100px + 6px)}
+.vf-below:not(.from-top){padding-top:calc(100px + 6px)}
+.vf-node.lv0 .vf-card{position:relative;padding:0;display:block}
+.vf-card-head{position:absolute;left:14px;top:0;height:44px;display:flex;align-items:center;gap:8px;justify-content:flex-start}
+.vf-body{position:absolute;left:44px;right:44px;top:44px;bottom:44px;overflow:auto;display:flex;flex-direction:column}
+.vf-body .note-editor{flex:1}
+.vf-nav,.vf-move{width:44px;height:44px;min-width:44px;min-height:44px;border:0;padding:0;background:transparent;color:inherit;
+  display:grid;place-items:center;border-radius:12px;opacity:.6;pointer-events:auto}
+.vf-nav[hidden]{display:none !important}
+.vf-nav:active,.vf-move:active{opacity:1;background:color-mix(in srgb,var(--accent,#8b7cf7) 20%,transparent)}
+.vf-nav .bi,.vf-move .bi{font-size:15px;pointer-events:none}
+.vf-move{color:var(--accent,#8b7cf7);opacity:.85}
+.vf-move:disabled{opacity:.2}
+.vf-node.lv0 .vf-nav{position:absolute;z-index:2}
+.vf-node.lv0 .vf-nav.up{top:0;left:50%;margin-left:-22px}
+.vf-node.lv0 .vf-nav.down{bottom:0;left:50%;margin-left:-22px}
+.vf-node.lv0 .vf-nav.left{left:0;top:50%;margin-top:-22px}
+.vf-node.lv0 .vf-nav.right{right:0;top:50%;margin-top:-22px}
+.vf-moves{display:flex;gap:0}
+.vf-node.lv0 .vf-moves{position:absolute;top:0;right:0;z-index:2}
+.vf-chip.focus .vf-nav{position:absolute;top:50%;margin-top:-22px}
+.vf-chip.focus .vf-nav.left{left:0}
+.vf-chip.focus .vf-nav.right{right:0}
+.vf-chip.focus .vf-moves{height:44px;justify-content:center}
+.vf-chip .vf-pos{flex:0 0 auto}
+
 </style>
 </head>
 <body>
@@ -4238,13 +4293,15 @@ init();
 (function(){
 'use strict';
 // extra glyphs from the bundled Bootstrap Icons font (no custom SVG)
-try{Object.assign(BOOTSTRAP_ICONS,{arrowLeft:'arrow-left',arrowRight:'arrow-right',text:'card-text',list:'list-ul'})}catch(e){}
+try{Object.assign(BOOTSTRAP_ICONS,{arrowLeft:'arrow-left',arrowRight:'arrow-right',text:'card-text',list:'list-ul',
+  navUp:'chevron-up',navDown:'chevron-down',navLeft:'chevron-left',navRight:'chevron-right',
+  mvUp:'arrow-bar-up',mvDown:'arrow-bar-down',mvLeft:'arrow-bar-left',mvRight:'arrow-bar-right'})}catch(e){}
 
 const VF={
   active:true,view:'focus',animating:false,reduced:false,ready:false,dir:null,
   longPress:null,drag:null,pan:null,suppressClick:false,
   lastIn:Object.create(null),   // rootId -> last visited node id inside that root (session memory)
-  CHIP:112,                      // chip pitch in the parent row (104 + 8 gap)
+  CW:240,CH:72,GAP:12,CHIP:252,  // parent row card size + pitch (all row cards identical)
   STEP:116,                      // typical sibling step used for reorder distance
   rowAnim:false,
   HINT_KEY:'branch-studio-vf-hint-v2'
@@ -4289,17 +4346,13 @@ function vfEnsureShell(){
     </div>
     <div class="vf-stage" id="vfStage">
       <div class="vf-rowbar" id="vfRowBar"><div class="vf-row" id="vfRow" aria-label="Topics"></div></div>
-      <button type="button" class="vf-chev left" id="vfChevLeft" aria-label="Previous topic" hidden>${icon('arrowLeft')}</button>
-      <button type="button" class="vf-chev right" id="vfChevRight" aria-label="Next topic" hidden>${icon('arrowRight')}</button>
       <div class="vf-col" id="vfCol">
-        <button type="button" class="vf-chev up" id="vfChevUp" aria-label="Previous note" hidden>${icon('arrowUp')}</button>
-        <button type="button" class="vf-chev down" id="vfChevDown" aria-label="Next note" hidden>${icon('arrowDown')}</button>
         <div class="vf-stack" id="vfStack"></div>
       </div>
     </div>
     <div class="vf-read" id="vfRead" aria-label="Reading view"></div>
     <div class="vf-hint" id="vfHint" hidden>
-      <p>Swipe up/down to move through notes · left/right to switch topic (top row) · hold a card to reorder. Or use the arrows.</p>
+      <p>Swipe up/down for notes · left/right to switch topic. Or tap the arrows inside the card. Hold a card (or use its move arrows) to reorder.</p>
       <button type="button" id="vfHintDismiss" aria-label="Dismiss hint">${icon('x')}</button>
     </div>
     <div class="vf-bar-wrap" id="vfBarWrap">
@@ -4311,8 +4364,7 @@ function vfEnsureShell(){
       </nav>
       <nav class="vf-bar row2" id="vfBar2" aria-label="More note actions">
         <button type="button" data-vf="math">${icon('math')}<span>Maths</span></button>
-        <span class="vf-sep" aria-hidden="true"></span>
-        <button type="button" class="danger" data-vf="delete">${icon('trash')}<span>Delete</span></button>
+        <button type="button" data-vf="image">${icon('photo')}<span>Image</span></button>
         <button type="button" data-vf="more">${icon('more')}<span>More</span></button>
       </nav>
     </div>
@@ -4322,10 +4374,16 @@ function vfEnsureShell(){
   $('#vfRedo').onclick=()=>runCommand('redo');
   $('#vfHintDismiss').onclick=()=>vfDismissHint();
   shell.querySelectorAll('[data-vf-view]').forEach(b=>b.onclick=()=>vfSetView(b.dataset.vfView));
-  $('#vfChevUp').onclick=()=>vfGoSibling(-1);
-  $('#vfChevDown').onclick=()=>vfGoSibling(1);
-  $('#vfChevLeft').onclick=()=>vfGoRootDelta(-1);
-  $('#vfChevRight').onclick=()=>vfGoRootDelta(1);
+  // in-card arrows (delegated): navigation + reorder
+  shell.addEventListener('click',e=>{
+    let b=e.target.closest('[data-nav],[data-move]');if(!b||!shell.contains(b))return;
+    e.stopPropagation();if(VF.suppressClick)return;
+    let k=b.dataset.nav||'';
+    if(k==='up')vfGoSibling(-1);else if(k==='down')vfGoSibling(1);
+    else if(k==='left')vfGoRootDelta(-1);else if(k==='right')vfGoRootDelta(1);
+    else if(b.dataset.move==='prev')runCommand('moveUp');
+    else if(b.dataset.move==='next')runCommand('moveDown');
+  },true);
   const barAct=e=>{
     let b=e.target.closest('[data-vf]');if(!b)return;
     let k=b.dataset.vf;
@@ -4334,7 +4392,7 @@ function vfEnsureShell(){
     else if(k==='indent')runCommand('indent');
     else if(k==='outdent')runCommand('outdent');
     else if(k==='math')runCommand('math');
-    else if(k==='delete')runCommand('deleteNode');
+    else if(k==='image')runCommand('image');
     else if(k==='more')vfOpenMore(b);
   };
   $('#vfBar').onclick=barAct;$('#vfBar2').onclick=barAct;
@@ -4344,13 +4402,12 @@ function vfEnsureShell(){
 function vfOpenMore(anchor){
   openMenu(anchor,[
     cmdItem('addTopic',{label:'New topic'}),
-    cmdItem('image',{label:'Add image'}),
     cmdItem('exportMd',{label:'Export Markdown'}),
     cmdItem('settings',{label:'Settings'}),
-    {sep:1},
     {icon:'question',label:'Show gesture tip',run:()=>{try{localStorage.removeItem(VF.HINT_KEY)}catch(e){};let h=$('#vfHint');if(h)h.hidden=false}},
     {icon:'columns',label:'Classic view',run:()=>vfSetView('classic')},
-    {icon:'branch',label:'Focus view',run:()=>vfSetView('focus')}
+    {sep:1},
+    cmdItem('deleteNode',{label:'Delete note',danger:true})
   ],{title:'More',sheet:true});
 }
 function vfSetView(view){
@@ -4371,14 +4428,25 @@ function vfSetActive(on){
 }
 
 // ---- rendering ----
-function vfNodeHTML(item,level,idx,total){
+function vfNavBtn(dir,show,label,ic){return `<button type="button" class="vf-nav ${dir}" data-nav="${dir}" aria-label="${label}"${show?'':' hidden'}>${icon(ic)}</button>`}
+function vfMoveBtn(which,show,label,ic){return `<button type="button" class="vf-move" data-move="${which}" aria-label="${label}"${show?'':' disabled'}>${icon(ic)}</button>`}
+function vfNodeHTML(item,level,idx,total,ctx={}){
   let n=item.node,d=item.depth,dd=Math.min(d,5);
   if(level===0){
     return `<div class="vf-node lv0" data-id="${n.id}" data-level="0" data-depth="${d}" style="--d:${dd}">
       <div class="vf-card" data-focus-card>
-        <div class="vf-card-head"><span class="vf-depth">${vfDepthLabel(d)}</span><span class="vf-pos">${idx+1}/${total}</span></div>
-        <div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-edit-id="${n.id}">${writingHTML(n.text)}</div>
-        <div class="vf-images">${imageHTML(n)}</div>
+        <div class="vf-card-head"><span class="vf-depth">${vfDepthLabel(d)}</span><span class="vf-pos">${idx}/${total-1}</span></div>
+        ${vfNavBtn('up',ctx.up,'Previous note','navUp')}
+        ${vfNavBtn('down',ctx.down,'Next note','navDown')}
+        ${vfNavBtn('left',ctx.left,'Previous topic','navLeft')}
+        ${vfNavBtn('right',ctx.right,'Next topic','navRight')}
+        <div class="vf-moves v" role="group" aria-label="Reorder">
+          ${vfMoveBtn('prev',ctx.mvPrev,'Move note up','mvUp')}${vfMoveBtn('next',ctx.mvNext,'Move note down','mvDown')}
+        </div>
+        <div class="vf-body">
+          <div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-edit-id="${n.id}">${writingHTML(n.text)}</div>
+          <div class="vf-images">${imageHTML(n)}</div>
+        </div>
       </div></div>`;
   }
   let aria=escapeHTML(vfPlain(n));
@@ -4393,30 +4461,43 @@ function vfNodeHTML(item,level,idx,total){
 }
 function vfRowX(ri){
   let w=($('#vfStage')?.getBoundingClientRect().width)||390;
-  return w/2-(8+ri*VF.CHIP+52);
+  return w/2-(ri*VF.CHIP+VF.CW/2);
 }
-function vfRenderRow(ri,root){
+function vfRenderRow(ri,root,rootFocused){
   let row=$('#vfRow');if(!row)return;
-  row.innerHTML=tree().map((n,i)=>{
+  let roots=tree();
+  row.innerHTML=roots.map((n,i)=>{
     let cur=i===ri,land=vfLanding(n);
-    let sub=cur?vfCount(n):(land.id!==n.id?vfPlain(land):vfCount(n));
     let peek=i===ri-1?'prev':i===ri+1?'next':'';
-    return `<button type="button" class="vf-chip" data-root="${n.id}" data-land="${land.id}" data-i="${i}" data-peek="${peek}"${cur?' aria-current="true"':''}>
-      <span class="t">${escapeHTML(vfPlain(n))}</span><span class="s">${escapeHTML(sub)}</span></button>`;
+    if(cur&&rootFocused){
+      return `<div class="vf-chip cur focus" role="group" data-root="${n.id}" data-land="${n.id}" data-i="${i}" aria-current="true" data-focus-card>
+        ${vfNavBtn('left',i>0,'Previous topic','navLeft')}
+        <div class="vf-chip-mid">
+          <div class="vf-chip-top"><div class="note-editor vf-chip-title" contenteditable="true" spellcheck="true" data-placeholder="Topic…" data-edit-id="${n.id}">${writingHTML(n.text)}</div><span class="vf-pos">–/${countDocNodes(n.children||[])}</span></div>
+          <div class="vf-moves h" role="group" aria-label="Reorder topic">
+            ${vfMoveBtn('prev',i>0,'Move topic left','mvLeft')}${vfMoveBtn('next',i<roots.length-1,'Move topic right','mvRight')}
+          </div>
+        </div>
+        ${vfNavBtn('right',i<roots.length-1,'Next topic','navRight')}
+      </div>`;
+    }
+    let sub=cur?vfCount(n):(land.id!==n.id?vfPlain(land):vfCount(n));
+    return `<div class="vf-chip${cur?' cur':''}" role="button" tabindex="0" data-root="${n.id}" data-land="${land.id}" data-i="${i}" data-peek="${peek}"${cur?' aria-current="true"':''}>
+      <span class="t">${escapeHTML(vfPlain(n))}</span><span class="s">${escapeHTML(sub)}</span></div>`;
   }).join('');
   row.classList.remove('panning');
   row.classList.toggle('anim',VF.rowAnim&&!VF.reduced);
   row.style.transform=`translateX(${vfRowX(ri)}px)`;
   VF.rowAnim=true;
   row.querySelectorAll('.vf-chip').forEach(c=>{
-    c.onclick=e=>{e.stopPropagation();if(VF.suppressClick||VF.drag)return;
-      if(c.dataset.root===root.id)return;vfGoRootId(c.dataset.root)};
+    c.onclick=e=>{
+      if(e.target.closest('[data-nav],[data-move],.note-editor'))return;
+      e.stopPropagation();if(VF.suppressClick||VF.drag)return;
+      if(c.dataset.root===root.id){if(doc().selectedId!==root.id)vfGo(root.id);return}
+      vfGoRootId(c.dataset.root);
+    };
   });
-}
-function vfUpdateChevrons(ri,idx,total){
-  let g=id=>$(id);if(!g('#vfChevUp'))return;
-  g('#vfChevUp').hidden=!(idx>0);g('#vfChevDown').hidden=!(idx<total-1);
-  g('#vfChevLeft').hidden=!(ri>0);g('#vfChevRight').hidden=!(ri<tree().length-1);
+  if(rootFocused)bindEditors(row);
 }
 function vfShowHintIfNeeded(){let h=$('#vfHint');if(!h)return;if(VF.view!=='focus'){h.hidden=true;return}h.hidden=vfHintSeen()}
 
@@ -4433,26 +4514,30 @@ function vfRender(opts={}){
   let root=r.path[0];
   VF.lastIn[root.id]=r.node.id;                       // remember where we were inside this parent
   let col=vfColumn(root),idx=col.findIndex(x=>x.node.id===r.node.id);
-  let maxD=6,start=Math.max(0,idx-maxD),end=Math.min(col.length-1,idx+maxD);
+  let maxD=6,start=Math.max(1,idx-maxD),end=Math.min(col.length-1,idx+maxD); // col[0] is the parent: it lives in the row, never in the column
+  let ri0=vfRootIndex(root.id),rootFocused=idx===0;
+  let ctx={up:idx>0,down:idx<col.length-1,left:ri0>0,right:ri0<tree().length-1,mvPrev:r.index>0,mvNext:r.index<r.list.length-1};
   let above='',below='';
   for(let i=start;i<idx;i++)above+=vfNodeHTML(col[i],vfLevel(idx-i),i,col.length);
-  let focusHtml=vfNodeHTML(col[idx],0,idx,col.length);
+  let focusHtml=rootFocused?'':vfNodeHTML(col[idx],0,idx,col.length,ctx);
   for(let i=idx+1;i<=end;i++)below+=vfNodeHTML(col[i],vfLevel(i-idx),i,col.length);
+  if(rootFocused&&col.length===1)below=`<div class="vf-empty">No notes under this topic yet. Tap <b>Child</b> to add one.</div>`;
   let stack=$('#vfStack'),stage=$('#vfStage');
   let keepFocus=null,ae=document.activeElement;
   if(ae&&ae.classList?.contains('note-editor')&&ae.dataset.editId===d.selectedId){
     keepFocus={id:d.selectedId,sel:null};
     try{let s=getSelection();if(s&&s.rangeCount)keepFocus.sel=s.getRangeAt(0).cloneRange()}catch(e){}
   }
-  stack.innerHTML=`<div class="vf-above">${above}</div><div class="vf-focus-slot">${focusHtml}</div><div class="vf-below">${below}</div>`;
+  stack.innerHTML=rootFocused
+    ?`<div class="vf-below from-top">${below}</div>`
+    :`<div class="vf-above">${above}</div><div class="vf-focus-slot">${focusHtml}</div><div class="vf-below">${below}</div>`;
+  stack.classList.toggle('root-focused',rootFocused);
   if(opts.slide||VF.dir){
     stage.classList.remove('slide-left','slide-right');void stage.offsetWidth;
     stage.classList.add(VF.dir==='left'?'slide-left':'slide-right');
     setTimeout(()=>stage.classList.remove('slide-left','slide-right'),280);VF.dir=null;
   }
-  let ri=vfRootIndex(root.id);
-  vfRenderRow(ri,root);
-  vfUpdateChevrons(ri,idx,col.length);
+  vfRenderRow(ri0,root,rootFocused);
   $('#vfCrumb').textContent=r.path.map(n=>vfPlain(n)).join(' › ');
   $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
   bindEditors(stack);
@@ -4465,7 +4550,7 @@ function vfRender(opts={}){
     h.onclick=e=>{e.stopPropagation();if(VF.suppressClick)return;vfGo(h.dataset.vfTap)};
   });
   if(keepFocus){
-    let ed=stack.querySelector(`[data-edit-id="${keepFocus.id}"]`);
+    let ed=document.querySelector(`#vfStack [data-edit-id="${keepFocus.id}"],#vfRow [data-edit-id="${keepFocus.id}"]`);
     if(ed){ed.focus({preventScroll:true});try{if(keepFocus.sel){let s=getSelection();s.removeAllRanges();s.addRange(keepFocus.sel)}}catch(e){}}
   }
   vfShowHintIfNeeded();
@@ -4557,14 +4642,16 @@ function vfBindGestures(){
     return {x:e.clientX,y:e.clientY};
   };
   function measure(){
-    let stack=$('#vfStack'),f=stack&&stack.querySelector('.vf-node.lv0');if(!f)return [];
+    let stack=$('#vfStack');if(!stack)return [];
+    let f=stack.querySelector('.vf-node.lv0')||document.querySelector('#vfRow .vf-chip.cur');if(!f)return [];
     let fr=f.getBoundingClientRect(),fc=(fr.top+fr.bottom)/2;
     return [...stack.querySelectorAll('.vf-node')].map(el=>{let r=el.getBoundingClientRect();return {id:el.dataset.id,off:(r.top+r.bottom)/2-fc}});
   }
   function onDown(e){
     if(VF.view!=='focus')return;
     if(e.type==='mousedown'&&e.button!==0)return;
-    if(e.target.closest('.vf-chev,.vf-bar,.vf-bar-wrap,.vf-top,.vf-hint'))return;
+    if(e.target.closest('.vf-bar,.vf-bar-wrap,.vf-top,.vf-hint'))return;
+    let onArrow=!!e.target.closest('[data-nav],[data-move]');
     VF.animating=false;
     let p=xy(e),inEditor=!!e.target.closest('.note-editor,math-field,[contenteditable="true"]');
     let editing=!!document.activeElement?.closest?.('.note-editor');
@@ -4572,7 +4659,7 @@ function vfBindGestures(){
       fromEditor:inEditor&&editing,offs:measure(),rowBase:vfRowX(vfRootIndex((locate(doc().selectedId)||{path:[{id:null}]}).path[0].id))};
     clearTimeout(VF.longPress);VF.longPress=null;
     let chip=e.target.closest('.vf-chip'),card=e.target.closest('[data-focus-card]');
-    if(chip||(card&&!editing)){
+    if(!onArrow&&(chip||(card&&!editing))){
       VF.longPress=setTimeout(()=>{if(VF.pan&&!VF.pan.axis)vfStartReorder(chip,card,p)},LP_MS);
     }
   }
@@ -4716,11 +4803,11 @@ window.selectNode=function(id,opts){
       return;
     }
     if(id===doc().selectedId){
-      if(opts&&opts.focus)requestAnimationFrame(()=>document.querySelector(`#vfStack [data-edit-id="${id}"]`)?.focus({preventScroll:true}));
+      if(opts&&opts.focus)requestAnimationFrame(()=>document.querySelector(`#vfStack [data-edit-id="${id}"],#vfRow [data-edit-id="${id}"]`)?.focus({preventScroll:true}));
       return;
     }
     vfGo(id);
-    if(opts&&opts.focus)setTimeout(()=>document.querySelector(`#vfStack [data-edit-id="${id}"]`)?.focus({preventScroll:true}),260);
+    if(opts&&opts.focus)setTimeout(()=>document.querySelector(`#vfStack [data-edit-id="${id}"],#vfRow [data-edit-id="${id}"]`)?.focus({preventScroll:true}),260);
     return;
   }
   if(_selectNode)_selectNode.apply(this,arguments);
