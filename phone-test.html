@@ -4396,7 +4396,7 @@ function vfBindGestures(){
     if(adx<SWIPE&&ady<SWIPE)return; // tap handled by click
     VF.suppressClick=true;setTimeout(()=>VF.suppressClick=false,320);
     if(adx>ady&&adx>=SWIPE){
-      if(dx<0)vfGoChild(); else vfGoParent();
+      if(dx<0)vfGoParent(); else vfGoChild();
     }else if(ady>=SWIPE){
       if(dy<0)vfGoSibling(1); else vfGoSibling(-1);
     }
