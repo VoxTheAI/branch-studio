@@ -3682,6 +3682,7 @@ html:not(.anim-on) .toast{transition:none}
 .note.related:not(.path):not(.active) .note-editor{color:var(--related-text,#c9ccd8)}
 .note:not(.path):not(.active) .image-editor img{opacity:.6}
 .note:not(.path):not(.active) .grip{opacity:0}
+.crumb .crumb-more{display:inline}
 </style>
 <style id="custom-style"></style>
 
@@ -4507,11 +4508,17 @@ function crumbLabelHTML(text){
 // formulas are atomic: if one crosses the label's clip edge, hide it whole (never a half-drawn glyph after the ellipsis)
 function fitCrumbMath(){
   document.querySelectorAll('#breadcrumbs .crumb-label').forEach(l=>{
-    let ms=l.querySelectorAll('.crumb-math,.crumb-math-text');if(!ms.length)return;
-    ms.forEach(m=>m.style.visibility='');
+    l.querySelectorAll('.crumb-more').forEach(x=>x.remove());
+    let ms=[...l.querySelectorAll('.crumb-math,.crumb-math-text')];if(!ms.length)return;
+    [...l.childNodes].forEach(n=>{if(n.nodeType===1)n.style.display='';else if(n.__cut){n.textContent=n.__cut;n.__cut=null}});
     if(l.scrollWidth<=l.clientWidth+1)return;
-    let edge=l.getBoundingClientRect().right-1;
-    ms.forEach(m=>{if(m.getBoundingClientRect().right>edge)m.style.visibility='hidden'});
+    let edge=l.getBoundingClientRect().right-1,cut=ms.find(m=>m.getBoundingClientRect().right>edge);
+    if(!cut)return;
+    // hide the formula (and anything after it) whole, and show a visible "…" in its place
+    let top=cut;while(top.parentNode!==l)top=top.parentNode;
+    for(let n=top;n;n=n.nextSibling){if(n.nodeType===1)n.style.display='none';else{n.__cut=n.textContent;n.textContent=''}}
+    let more=document.createElement('span');more.className='crumb-more';more.textContent='…';more.setAttribute('aria-hidden','true');
+    l.insertBefore(more,top);
   });
 }
 if(typeof renderContext==='function'){const _rc=renderContext;renderContext=function(){_rc.apply(this,arguments);fitCrumbMath();requestAnimationFrame(fitCrumbMath)}}
