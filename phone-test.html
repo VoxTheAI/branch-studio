@@ -3747,9 +3747,11 @@ html.wb-dock-on .read-wrap,html.wb-dock-on .vf-read{padding-bottom:calc(140px + 
 .aa-head{display:flex;align-items:center;justify-content:space-between;min-height:48px}
 .aa-head b{font-size:16px}
 .aa-done{min-height:44px;min-width:64px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:650}
-.aa-sec{padding:6px 0}
-.aa-t{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:2px 2px 6px}
-.aa-row{display:flex;flex-wrap:wrap;gap:6px}
+.aa-sec{padding:3px 0}
+.aa-t{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:2px 2px 4px}
+.aa-row{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px 2px;scroll-padding:0 14px}
+.aa-row::-webkit-scrollbar{display:none}
+.aa-row>*{flex:0 0 auto;white-space:nowrap}
 .aa-chip{min-height:44px;min-width:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--bg) 60%,var(--panel));color:var(--text);font:inherit;font-size:14px;display:inline-flex;align-items:center;gap:6px}
 .aa-chip[aria-pressed="true"],.aa-sw[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 26%,var(--panel))}
 .aa-sw{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:color-mix(in srgb,var(--bg) 60%,var(--panel));color:var(--text);display:inline-flex;align-items:center;justify-content:center;font-size:20px}
@@ -3777,9 +3779,20 @@ html[data-input="touch"] .link-row button,html[data-size="phone"] .link-row butt
 .imp-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .imp-seg button{min-height:36px;padding:0 12px;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px}
 .imp-seg button[aria-checked="true"]{background:color-mix(in srgb,var(--accent) 32%,transparent);color:#fff}
-.imp-depth select{min-height:34px;margin-left:6px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:0 8px}
+.imp-depth{display:inline-flex;align-items:center;gap:8px;font-size:13px}
+.imp-select{position:relative;display:inline-flex;align-items:center}
+.imp-depth select{appearance:none;-webkit-appearance:none;min-height:36px;min-width:58px;background:color-mix(in srgb,var(--bg) 60%,var(--panel));color:var(--text);border:1px solid var(--line);border-radius:10px;padding:0 28px 0 12px;font:inherit;font-size:13px;cursor:pointer}
+.imp-depth select:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.imp-depth select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.imp-depth option{background:var(--panel);color:var(--text)}
+.imp-select-chev{position:absolute;right:9px;pointer-events:none;color:var(--muted);font-size:12px}
 .imp-join{display:inline-flex;align-items:center;gap:6px;font-size:13px}
-.imp-join input{width:18px;height:18px}
+.imp-join{cursor:pointer;min-height:36px}
+.imp-join input{appearance:none;-webkit-appearance:none;margin:0;flex:0 0 auto;width:20px;height:20px;border:1.6px solid var(--muted);border-radius:6px;background:transparent;display:inline-grid;place-content:center;cursor:pointer;transition:background .12s,border-color .12s}
+.imp-join input::before{content:"\f633";font-family:bootstrap-icons!important;font-size:15px;line-height:1;color:#fff;transform:scale(0);transition:transform .12s}
+.imp-join input:checked{background:var(--accent);border-color:var(--accent)}
+.imp-join input:checked::before{transform:scale(1)}
+.imp-join input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .imp-tree{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px;background:color-mix(in srgb,var(--panel) 70%,var(--bg))}
 .imp-row{display:flex;align-items:center;gap:8px;min-height:44px;padding:3px 6px 3px calc(6px + var(--lv,0) * 22px);border-radius:8px;position:relative}
 .imp-row:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
@@ -3790,8 +3803,8 @@ html[data-input="touch"] .link-row button,html[data-size="phone"] .link-row butt
 .imp-row[aria-level="1"] .imp-title{font-weight:700}
 .imp-body{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .imp-acts{display:flex;gap:2px;flex:0 0 auto}
-.imp-acts .icon-btn{width:34px;height:34px}
-.imp-acts .icon-btn:disabled{opacity:.35}
+.imp-acts .icon-btn{width:32px;height:32px}
+.imp-acts .icon-btn:disabled{opacity:.22;cursor:default;pointer-events:none;filter:grayscale(1)}
 .imp-rename{flex:1;min-height:34px;border:1px solid var(--accent);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;font:inherit}
 .imp-empty{color:var(--muted);padding:20px;text-align:center}
 .imp-foot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}
@@ -3813,6 +3826,19 @@ html[data-size="phone"] .imp-row{padding-left:calc(4px + var(--lv,0) * 14px)}
 html[data-size="phone"] .import-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;inset:0;border-radius:0;border:0}
 html[data-size="phone"] .import-dialog .imp-main{grid-template-columns:minmax(0,1fr);overflow:hidden}
 html[data-size="phone"] .import-dialog .imp-opts{gap:8px 10px}
+
+/* phone Aa sheet: about half the screen, so the text being formatted stays visible */
+.aa-sheet{max-height:52vh;max-height:52dvh;overflow-y:auto;overscroll-behavior:contain}
+.aa-head{min-height:44px}
+.aa-back{background:rgba(8,9,13,.12)}
+/* reading on PC / iPad: only the view bar and the format bar */
+html[data-view="read"]:not([data-size="phone"]) .contextbar{display:none!important}
+/* reading body text is regular weight so bold stands out */
+.read-block:not(.depth-0) .read-editor,.read-node:not(.depth-0)>.read-head .read-editor{font-weight:400!important}
+.read-editor b,.read-editor strong{font-weight:700}
+/* maths keyboard toggle: small, grey, inline (44px hit area kept by padding, no layout gap) */
+html[data-input="touch"] math-field::part(virtual-keyboard-toggle){width:16px;height:16px;min-height:0;min-width:0;flex:none;padding:14px;margin:-14px -14px -14px -12px;box-sizing:content-box;color:var(--muted);opacity:.75;background:transparent;border:0;align-self:center}
+html[data-input="touch"] math-field::part(virtual-keyboard-toggle):hover{opacity:1;background:transparent}
 </style>
 <style id="custom-style"></style>
 
@@ -5636,6 +5662,7 @@ function wbHiddenItems(){
   let bar=$('#writeBar');if(!bar)return [];
   return [...bar.querySelectorAll('.wb-group[hidden] [data-wb]')].map(b=>b.dataset.wb);
 }
+const WB_NOTE_ACTIONS=['addTopic','addSibling','addChild','image','math','moveUp','moveDown','deleteNode'];
 function fmtItem(id,extra={}){return cmdItem(id,{...extra})}
 function wbMenuFor(key){
   if(key==='style')return [fmtItem('fmtNormal'),fmtItem('fmtH1'),fmtItem('fmtH2'),fmtItem('fmtH3'),{sep:1},fmtItem('fmtQuote'),fmtItem('fmtCodeBlock')];
@@ -5665,7 +5692,9 @@ function wbAction(key,b){
     if(key==='dmore')['fmtStrike','fmtQuote','code','fmtCodeBlock','fmtHighlight'].forEach(add);else hidden.forEach(add);
     if(items.length)items.push({sep:1});
     if(key==='more')items.push(fmtItem('fmtCodeBlock'));
-    items.push(fmtItem('fmtClear'),{sep:1},fmtItem('importDoc'));
+    items.push(fmtItem('fmtClear'),{sep:1});
+    if(key==='more')items.push(...WB_NOTE_ACTIONS.map(id=>cmdItem(id)),{sep:1});
+    items.push(fmtItem('importDoc'));
     return openFmtMenu(b,items,'More formatting');
   }
 }
@@ -5707,7 +5736,9 @@ function updateSelBar(){
   let rect=sel.getRangeAt(0).getBoundingClientRect();if(!rect||(!rect.width&&!rect.height)){hideSelBar();return}
   let s=ensureSelBar();s.classList.add('show');
   let w=s.offsetWidth,h=s.offsetHeight,vv=window.visualViewport;
-  let top=rect.top-h-10;if(top<(vv?vv.offsetTop:0)+8)top=rect.bottom+10;
+  let minTop=(vv?vv.offsetTop:0)+8;
+  for(const el of document.querySelectorAll('.topbar,.contextbar,#writeBar,.vf-top')){if(!el.getClientRects().length||getComputedStyle(el).display==='none')continue;let b=el.getBoundingClientRect();if(b.height&&b.top<innerHeight/2)minTop=Math.max(minTop,b.bottom+8)}
+  let top=rect.top-h-10;if(top<minTop)top=rect.bottom+10;
   let left=Math.max(8,Math.min(innerWidth-w-8,rect.left+rect.width/2-w/2));
   s.style.left=left+'px';s.style.top=Math.round(top)+'px';
 }
@@ -5743,6 +5774,7 @@ function openAaSheet(){
    <div class="aa-sec"><div class="aa-t">Colour</div><div class="aa-row aa-swatches"><button type="button" class="aa-sw" data-aa="color:" data-run="color:" aria-pressed="false" aria-label="Default colour">${icon('x')}</button>${Object.entries(RT_COLORS).map(([k,l])=>`<button type="button" class="aa-sw" data-aa="color:${k}" data-run="color:${k}" aria-pressed="false" aria-label="${l}"><span class="rt-c" data-c="${k}">${icon('dot')}</span></button>`).join('')}</div></div>
    <div class="aa-sec"><div class="aa-t">Highlight &amp; more</div><div class="aa-row">${chip('hl','fmtHighlight','Highlight','fmtHighlight')}${chip('x','fmtStrike','Strike','fmtStrike')}${chip('x','fmtQuote','Quote','fmtQuote')}${chip('x','code','Code','fmtCode')}${chip('x','fmtClear','Clear','fmtClear')}</div></div>
    <div class="aa-sec"><div class="aa-t">Alignment</div><div class="aa-row">${chip('align:left','fmtAlignLeft','Left','fmtAlignLeft')}${chip('align:center','fmtAlignCenter','Centre','fmtAlignCenter')}${chip('align:right','fmtAlignRight','Right','fmtAlignRight')}${chip('align:justify','fmtAlignJustify','Justify','fmtAlignJustify')}</div></div>`;
+  if(wbDevice()==='touch')s.insertAdjacentHTML('beforeend',`<div class="aa-sec"><div class="aa-t">Note</div><div class="aa-row">${WB_NOTE_ACTIONS.filter(id=>COMMANDS[id]).map(id=>`<button type="button" class="aa-chip" data-run="${id}" aria-label="${escapeHTML(COMMANDS[id].label)}">${icon(id)}<span>${escapeHTML(COMMANDS[id].label)}</span></button>`).join('')}</div></div>`);
   document.body.append(back,s);
   [s,back].forEach(el=>{el.addEventListener('pointerdown',e=>e.preventDefault());el.addEventListener('mousedown',e=>e.preventDefault())});
   back.addEventListener('click',closeAaSheet);
@@ -5753,8 +5785,19 @@ function openAaSheet(){
     if(r==='code')return fmtCodeSmart();
     runCommand(r)});
   positionDock();fmtRefresh();
+  requestAnimationFrame(()=>aaKeepSelectionVisible(s));
 }
-function closeAaSheet(){$('#aaSheet')?.remove();$('#aaBack')?.remove()}
+// keep the text being formatted visible above the sheet
+function aaKeepSelectionVisible(s){
+  let sel=getSelection();if(!sel.rangeCount||!s.isConnected)return;
+  let r=sel.getRangeAt(0).getBoundingClientRect();if(!r.height&&!r.width){let ed=fmtEditor();if(!ed)return;r=ed.getBoundingClientRect()}
+  let limit=s.getBoundingClientRect().top-12,dy=r.bottom-limit;if(dy<=0)return;
+  let sc=fmtEditor()||sel.anchorNode.parentElement;
+  for(;sc&&sc!==document.body;sc=sc.parentElement){let o=getComputedStyle(sc).overflowY;if((o==='auto'||o==='scroll')&&sc.scrollHeight>sc.clientHeight)break}
+  if(sc&&sc!==document.body){let pad=parseFloat(getComputedStyle(sc).paddingBottom)||0;if(sc.scrollTop+sc.clientHeight+dy>sc.scrollHeight)sc.style.paddingBottom=(pad+dy+20)+'px',sc.dataset.aaPad=pad;sc.scrollTop+=dy}
+  else window.scrollBy(0,dy);
+}
+function closeAaSheet(){$('#aaSheet')?.remove();$('#aaBack')?.remove();document.querySelectorAll('[data-aa-pad]').forEach(e=>{e.style.paddingBottom='';delete e.dataset.aaPad})}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#aaSheet')){e.preventDefault();e.stopImmediatePropagation();closeAaSheet()}},true);
 
 // ---------- 6. link dialog (Ctrl+K / ⌘K) ----------
@@ -6035,16 +6078,16 @@ function openImporter(src){
     <section class="imp-preview">
       <div class="imp-opts">
         <div class="imp-seg" role="radiogroup" aria-label="Split by">${[['headings','Headings'],['bullets','Bullets'],['both','Both']].map(([v,l])=>`<button type="button" role="radio" data-imp-split="${v}" aria-checked="${IMP.opts.split===v}">${l}</button>`).join('')}</div>
-        <label class="imp-depth">Max depth <select id="impDepth">${[1,2,3,4].map(n=>`<option value="${n}"${IMP.opts.depth===n?' selected':''}>${n}</option>`).join('')}</select></label>
+        <label class="imp-depth">Max depth <span class="imp-select"><select id="impDepth">${[1,2,3,4].map(n=>`<option value="${n}"${IMP.opts.depth===n?' selected':''}>${n}</option>`).join('')}</select>${icon('chevron','icon imp-select-chev')}</span></label>
         <label class="imp-join"><input type="checkbox" id="impJoin"${IMP.opts.join?' checked':''}> Join paragraphs into their heading's note</label>
       </div>
       <div class="imp-tree" id="impTree" role="tree" aria-label="Preview of the branches"></div>
     </section>
   </div>
   <div class="button-row imp-foot"><span class="imp-hint">Promote, demote, merge or rename before importing. One undo removes the whole import.</span><button type="button" class="secondary" data-imp-close>Cancel</button><button type="button" class="primary" id="impGo">Import</button></div>`;
-  let ta=$('#impText');ta.value=IMP.src.text||'';
+  let ta=$('#impText');ta.value=impSourceText(IMP.src);
   const note=()=>{$('#impSrcNote').textContent=IMP.src.html?'Formatted paste: headings, bold, lists and maths are kept.':''};note();
-  ta.addEventListener('paste',e=>{let dt=e.clipboardData;if(!dt)return;let h='',t='';try{h=dt.getData('text/html');t=dt.getData('text/plain')}catch(x){}if(!h&&!t)return;e.preventDefault();ta.value=t||ta.value;IMP.src={html:h||'',text:t||''};note();impReparse()});
+  ta.addEventListener('paste',e=>{let dt=e.clipboardData;if(!dt)return;let h='',t='';try{h=dt.getData('text/html');t=dt.getData('text/plain')}catch(x){}if(!h&&!t)return;e.preventDefault();IMP.src={html:h||'',text:t||''};ta.value=impSourceText(IMP.src)||ta.value;note();impReparse()});
   ta.addEventListener('input',()=>{IMP.src={html:'',text:ta.value};note();impReparse()});
   d.querySelectorAll('[data-imp-split]').forEach(b=>b.onclick=()=>{IMP.opts.split=b.dataset.impSplit;d.querySelectorAll('[data-imp-split]').forEach(x=>x.setAttribute('aria-checked',x===b?'true':'false'));impReparse()});
   $('#impDepth').onchange=e=>{IMP.opts.depth=+e.target.value;impReparse()};
@@ -6055,6 +6098,19 @@ function openImporter(src){
   impReparse();
   if(!d.open)d.showModal();
   if(!IMP.src.text)setTimeout(()=>ta.focus(),0);
+}
+// what the Original box shows: for formatted pastes, the full document as readable outline text
+function impSourceText(src){
+  if(!src.html)return src.text||'';
+  let blocks=impBlocksFromHTML(src.html),lift=blocks.some(b=>b.kind==='h'&&b.level===0)?1:0;
+  let lines=blocks.map(b=>{
+    let t=b.kind==='pre'?b.text:plainText(b.rich||b.item||'');
+    if(b.kind==='h')return '#'.repeat(Math.max(1,Math.min(6,(b.level||0)+lift)))+' '+t;
+    if(b.kind==='li')return '  '.repeat(b.depth??b.ind??0)+(b.ordered?'1. ':'- ')+(b.check?'['+(b.check==='x'?'x':' ')+'] ':'')+t;
+    return t;
+  }).filter(x=>x.trim());
+  let fromHtml=lines.join('\n'),plain=src.text||'';
+  return plain.split('\n').filter(x=>x.trim()).length>=lines.length?plain:fromHtml;
 }
 function impInsert(){
   if(!IMP.items.length)return 0;
@@ -6098,6 +6154,20 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();e.stopPropagation();
   fmtRun(()=>fmtExec(li.parentElement.nodeName==='OL'?'insertOrderedList':'insertUnorderedList'),ed);
 },true);
+
+// ---------- breadcrumbs show the note's title (first heading or line), not the whole text ----------
+function noteTitleText(t){
+  t=String(t||'');
+  for(const part of t.split(/\n|(?=\uE000[LK])/)){if(plainText(part).replace(/\$\$?/g,'').trim()||/\$[^$]+\$/.test(part))return part}
+  return t;
+}
+const _crumbLabelHTML=crumbLabelHTML;crumbLabelHTML=function(text){return _crumbLabelHTML(noteTitleText(text))};
+const _renderContext=renderContext;
+renderContext=function(){_renderContext.apply(this,arguments);
+  document.querySelectorAll('#breadcrumbs .crumb[data-select]').forEach(b=>{let r=locate(b.dataset.select);if(!r)return;let t=readableText(noteTitleText(r.node.text))||'Untitled note';b.title=t;b.setAttribute('aria-label',t)})};
+// reading mode on PC / iPad: only the view bar and the format bar (note actions live in the format bar's More)
+const _renderAllW=renderAll;
+renderAll=function(){document.documentElement.dataset.view=doc().mode;return _renderAllW.apply(this,arguments)};
 
 init();
 </script>
@@ -6357,7 +6427,7 @@ function vfRender(opts={}){
     setTimeout(()=>stage.classList.remove('slide-left','slide-right'),240);VF.dir=null;
   }
   vfRenderRow(ri0,root,rootFocused);
-  $('#vfCrumb').textContent=r.path.map(n=>vfPlain(n)).join(' › ');
+  $('#vfCrumb').textContent=r.path.map(n=>vfPlain(typeof noteTitleText==='function'?{text:noteTitleText(n.text)}:n)).join(' › ');
   $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
   bindEditors(stack);
   stack.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{
