@@ -3944,6 +3944,44 @@ html[data-size="phone"] .px-focus-exit{width:44px;padding:0;justify-content:cent
 #printDoc mark{background:#fff3a6}
 #printDoc .rt-c{color:#333!important}
 #printDoc .wl{color:inherit}
+/* ===== worldbuilder ===== */
+.wl{position:relative;display:inline;padding:0 2px;color:var(--text);border-bottom:1px solid color-mix(in srgb,var(--accent) 80%,transparent);background:color-mix(in srgb,var(--accent) 14%,transparent);cursor:pointer;user-select:all;-webkit-user-select:all;white-space:nowrap}
+.wl::before{content:"";}
+.wl:hover{background:color-mix(in srgb,var(--accent) 28%,transparent)}
+.wl.missing{border-bottom-style:dashed;background:none;color:var(--muted)}
+.wl-pop{position:fixed;z-index:400;background:var(--bg);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.45);padding:4px;display:flex;flex-direction:column;gap:1px;max-height:min(360px,50vh);overflow:auto;font-family:var(--font-ui)}
+.wl-pop-h{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 8px 4px}
+.wl-opt{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;background:none;border:0;color:var(--text);font:13px var(--font-ui);text-align:left;cursor:pointer;width:100%}
+.wl-opt span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl-opt em{font-style:normal;font-size:11px;color:var(--muted)}
+.wl-opt.on,.wl-opt:hover{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+html[data-input^="touch"] .wl-opt,html[data-size="phone"] .wl-opt{min-height:44px}
+.px-type{color:var(--text)}
+.px-tag{color:#86a3ba}
+.px-back{border-style:dotted}
+.px-results{display:flex;flex-direction:column;gap:1px;min-height:60px}
+.px-count{font-size:11px;color:var(--muted);padding:2px 0 6px}
+.px-dochead{font:600 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 2px 4px;display:flex;gap:6px;align-items:center}
+.px-hit{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;min-height:44px;padding:8px 10px;background:none;border:0;border-left:2px solid transparent;color:var(--text);cursor:pointer;font-family:var(--font-ui)}
+.px-hit .bi{margin-top:2px;color:var(--muted)}
+.px-hit.on,.px-hit:hover{background:color-mix(in srgb,var(--accent) 16%,transparent);border-left-color:var(--accent)}
+.px-hit-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.px-hit-main b{font:500 14px/1.35 var(--font-note);overflow:hidden;text-overflow:ellipsis}
+.px-hit-main small{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-snip{font:13px/1.4 var(--font-note);color:var(--glass-text,var(--muted))}
+.px-hit mark{background:color-mix(in srgb,#c4ad74 45%,transparent);color:inherit}
+.px-hit-type{color:var(--muted)}
+.px-filters{gap:6px}
+.px-filters .px-chip{min-height:36px}
+html[data-input^="touch"] .px-filters .px-chip,html[data-size="phone"] .px-filters .px-chip{min-height:44px}
+html[data-input^="touch"] .px-filters .px-chip::after,html[data-size="phone"] .px-filters .px-chip::after{display:none}
+html[data-input^="touch"] .px-filters,html[data-size="phone"] .px-filters{gap:6px}
+dialog.px-pal{margin-top:10vh;width:min(620px,94vw)}
+dialog.px-pal .modal-head{display:none}
+dialog.px-pal .px-body{max-height:70vh}
+.px-hintrow{text-align:right}
+html[data-input="touch"] .px-hintrow,html[data-size="phone"] .px-hintrow{display:none}
+@media (max-width:700px){dialog.px-pal{margin-top:0;width:100vw;height:100dvh;max-height:none}dialog.px-pal .modal-head{display:flex}}
 </style>
 <style id="vf-css">
 /* Vertical focus-node layout — phone test */
@@ -6976,7 +7014,7 @@ const FN_RE=/\uE000n([^\uE002]*)\uE002\uE001/g;
 {const _md=markdown;markdown=function(nodes,depth=0){let out=_md(nodes,depth);if(depth)return out;let defs=[];out=out.replace(/\uF8F4([^\uF8F5]*)\uF8F5/g,(m,v)=>{defs.push(v);return `[^${defs.length}]`});let refs=essRefs();
   if(refs.length)out+='\n\n## References\n\n'+refs.map(r=>'- '+r).join('\n');
   if(defs.length)out+='\n\n'+defs.map((v,i)=>`[^${i+1}]: ${v}`).join('\n');return out}}
-function essFootnotes(){let out=[];flatten().forEach(({node})=>{let m;FN_RE.lastIndex=0;while((m=FN_RE.exec(node.text||'')))out.push({id:node.id,text:m[1]})});return out}
+function essFootnotes(){let out=[];flatten().forEach(({node})=>{let m,re=new RegExp(FN_RE.source,"g");while((m=re.exec(node.text||'')))out.push({id:node.id,text:m[1]})});return out}
 function fnRenumber(){
   let off={},k=0;flatten().forEach(({node})=>{off[node.id]=k;k+=((node.text||'').match(FN_RE)||[]).length});
   document.querySelectorAll('[data-edit-id],[data-read-edit]').forEach(ed=>{let id=ed.dataset.editId||ed.dataset.readEdit;if(!(id in off))return;
@@ -7248,6 +7286,206 @@ registerCommands({
 Object.assign(BOOTSTRAP_ICONS,{essDone:'check-circle-fill',essDraft:'pencil',focusExit:'fullscreen-exit'});
 PX.topItems.push(()=>[cmdItem('wordCount'),cmdItem('references'),cmdItem('focusMode'),cmdItem('exportDocx'),cmdItem('exportPdf')]);
 PX.noteItems.push(()=>{let n=locate(doc().selectedId)?.node;return [cmdItem('footnote'),cmdItem('toggleDone',{label:n&&n.status==='done'?'Mark as draft':'Mark as done',icon:n&&n.status==='done'?'essDraft':'toggleDone'})]});
+
+// ===================== Persona 2: worldbuilder =====================
+// ---- [[links]]: stored as plain "[[Name]]", shown as a tappable chip, written back by the serializer ----
+const WL_RE=/\[\[([^\[\]\n]{1,120})\]\]/g;
+const wlKey=s=>String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
+let wlIdx=null;
+function wlIndex(){
+  if(wlIdx&&wlIdx.at===state&&wlIdx.v===wlIdx.cur)return wlIdx.map;
+  let map=new Map();
+  state.documents.forEach(d=>{let w=(list)=>list.forEach(n=>{let k=wlKey(pxTitleOf(n));if(k){let arr=map.get(k);let e={doc:d.id,id:n.id};if(!arr)map.set(k,[e]);else arr.push(e)}w(n.children||[])});w(d.tree||[])});
+  wlIdx={map,at:state,v:0,cur:0};return map;
+}
+function wlDirty(){wlIdx=null}
+{const _ss=saveState;saveState=function(...a){wlIdx=null;return _ss.apply(this,a)}}
+function pxTitleOf(n){let t=String(n.text||'').split('\n')[0];return readableText(t.replace(WL_RE,'$1'))}
+function wlFind(name){let a=wlIndex().get(wlKey(name));if(!a)return null;return a.find(e=>e.doc===state.activeDocumentId)||a[0]}
+{const _w=writingPlainHTML;writingPlainHTML=function(text=''){
+  text=String(text);if(text.indexOf('[[')<0)return _w(text);
+  let out='',last=0,m,re=new RegExp(WL_RE.source,'g');
+  while((m=re.exec(text))){out+=_w(text.slice(last,m.index));let name=m[1].trim();let miss=!wlFind(name);
+    out+=`<span class="wl${miss?' missing':''}" contenteditable="false" data-wl="${escapeHTML(name)}" title="${miss?'No note yet: tap to create':'Open'} ${escapeHTML(name)}">${escapeHTML(name)}</span>`;last=m.index+m[0].length}
+  return out+_w(text.slice(last));
+}}
+// plain text keeps the name without brackets (titles, search, word counts)
+{const _p=plainText;plainText=function(t){return _p(String(t||'').replace(WL_RE,'$1'))}}
+document.addEventListener('input',()=>wlDirty(),true);
+// tap a link: open the note (or offer to create it)
+document.addEventListener('click',e=>{
+  let s=e.target.closest&&e.target.closest('.wl');if(!s||!s.closest('.note-editor,.read-editor'))return;
+  e.preventDefault();e.stopPropagation();
+  let name=s.dataset.wl,hitE=wlFind(name);
+  if(hitE){wlGo(hitE);return}
+  openMenu(s,[{icon:'plus',label:`Create note “${name}”`,run:()=>wlCreate(name)},{icon:'search',label:'Search for it',run:()=>worldSearch(name)}],{title:'[['+name+']]'});
+},true);
+function wlGo(e){let from=doc().selectedId,fromDoc=state.activeDocumentId;
+  if(e.doc!==state.activeDocumentId)switchDocument(e.doc);
+  pxSelect(e.id);
+  toastAction('Opened '+(pxTitleOf(locate(e.id)?.node||{text:''})||'note'),'Back',()=>{if(state.activeDocumentId!==fromDoc)switchDocument(fromDoc);pxSelect(from)});
+}
+function wlCreate(name,type){snapshot();let n={id:uid(),text:name,children:[]};if(type)n.type=type;tree().push(n);wlDirty();pxChange();doc().selectedId=n.id;pxRerender();pxSelect(n.id);toast('Note created')}
+// backlinks: notes that link here
+function wlBacklinks(n){let k=wlKey(pxTitleOf(n));if(!k)return [];let out=[];
+  state.documents.forEach(d=>{let w=list=>list.forEach(x=>{if(x.id!==n.id&&(x.text||'').indexOf('[[')>=0){let re=new RegExp(WL_RE.source,'g'),m;while((m=re.exec(x.text))){if(wlKey(m[1])===k){out.push({doc:d.id,id:x.id,title:pxTitleOf(x),docTitle:d.title});break}}}w(x.children||[])});w(d.tree||[])});
+  return out}
+
+// ---- autocomplete while typing [[ ----
+const WLA={el:null,items:[],i:0,ctx:null};
+function wlCaretQuery(){
+  let s=getSelection();if(!s||!s.rangeCount||!s.isCollapsed)return null;
+  let n=s.anchorNode,off=s.anchorOffset;if(!n||n.nodeType!==3)return null;
+  let ed=n.parentElement&&n.parentElement.closest('.note-editor,.read-editor');if(!ed)return null;
+  let before=n.nodeValue.slice(0,off);let m=before.match(/\[\[([^\[\]\n]{0,60})$/);if(!m)return null;
+  return {ed,node:n,start:off-m[0].length,end:off,q:m[1]};
+}
+function wlCandidates(q,excl){
+  let k=wlKey(q),seen=new Set(),out=[];
+  state.documents.forEach(d=>{let w=list=>list.forEach(x=>{let t=pxTitleOf(x);let kk=wlKey(t);if(t&&x.id!==excl&&t.indexOf('[[')<0&&t.length<=80&&!seen.has(kk)&&(!k||kk.includes(k))){seen.add(kk);out.push({title:t,type:x.type,doc:d.id,score:(kk.startsWith(k)?0:1)+(d.id===state.activeDocumentId?0:2)+(x.type?-.5:0)})}w(x.children||[])});w(d.tree||[])});
+  out.sort((a,b)=>a.score-b.score||a.title.localeCompare(b.title));out=out.slice(0,8);
+  if(q.trim()&&!out.some(o=>wlKey(o.title)===k))out.push({title:q.trim(),create:true});
+  return out;
+}
+function wlCloseAuto(){if(WLA.el){WLA.el.remove();WLA.el=null}WLA.ctx=null}
+function wlRenderAuto(){
+  let c=wlCaretQuery();if(!c){wlCloseAuto();return}
+  WLA.ctx=c;WLA.items=wlCandidates(c.q,c.ed.dataset.editId||c.ed.dataset.readEdit);if(WLA.i>=WLA.items.length)WLA.i=0;
+  if(!WLA.items.length){wlCloseAuto();return}
+  if(!WLA.el){WLA.el=document.createElement('div');WLA.el.className='wl-pop';WLA.el.setAttribute('role','listbox');document.body.appendChild(WLA.el);
+    WLA.el.addEventListener('pointerdown',e=>e.preventDefault());WLA.el.addEventListener('mousedown',e=>e.preventDefault())}
+  WLA.el.innerHTML=`<div class="wl-pop-h">Link to a note</div>`+WLA.items.map((it,i)=>`<button type="button" role="option" class="wl-opt${i===WLA.i?' on':''}" data-i="${i}" aria-selected="${i===WLA.i}">${icon(it.create?'plus':typeIcon(it.type))}<span>${it.create?'Create “'+pxEsc(it.title)+'”':pxEsc(it.title)}</span>${it.type?`<em>${pxEsc(typeLabel(it.type))}</em>`:''}</button>`).join('');
+  WLA.el.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{WLA.i=+b.dataset.i;wlPick()});
+  // place under the caret, keep on screen (above if no room below)
+  let r;try{let rg=getSelection().getRangeAt(0).cloneRange();r=rg.getClientRects()[0]||rg.getBoundingClientRect()}catch(e){}
+  if(!r||(!r.width&&!r.height&&!r.left))r=c.ed.getBoundingClientRect();
+  let vv=window.visualViewport,vh=vv?vv.height+vv.offsetTop:innerHeight;
+  let w=Math.min(320,innerWidth-16),h=WLA.el.offsetHeight;
+  let x=Math.max(8,Math.min(r.left,innerWidth-w-8)),y=r.bottom+6;if(y+h>vh-8)y=Math.max(8,r.top-h-6);
+  Object.assign(WLA.el.style,{left:x+'px',top:y+'px',width:w+'px'});
+}
+function wlPick(){
+  let c=WLA.ctx||wlCaretQuery(),it=WLA.items[WLA.i];if(!c||!it){wlCloseAuto();return}
+  let {ed,node,start,end}=c;
+  let rg=document.createRange();rg.setStart(node,start);rg.setEnd(node,Math.min(end,node.nodeValue.length));
+  // swallow a "]]" right after the caret if the person typed it already
+  let after=node.nodeValue.slice(end,end+2);if(after===']]')rg.setEnd(node,end+2);
+  wlCloseAuto();
+  snapshot();
+  let miss=!wlFind(it.title);
+  essInsertAtom(ed,rg,`<span class="wl${miss?' missing':''}" contenteditable="false" data-wl="${escapeHTML(it.title)}">${escapeHTML(it.title)}</span>\u00a0`);
+  wlDirty();
+  if(it.create)toastAction(`Linked “${it.title}”`,'Create note',()=>wlCreate(it.title));
+}
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('.note-editor,.read-editor'))requestAnimationFrame(wlRenderAuto)},true);
+document.addEventListener('selectionchange',()=>{if(WLA.el&&!wlCaretQuery())wlCloseAuto()});
+window.addEventListener('keydown',e=>{
+  if(!WLA.el)return;
+  let k=e.key;
+  if(k==='ArrowDown'||k==='ArrowUp'){e.preventDefault();e.stopImmediatePropagation();WLA.i=(WLA.i+(k==='ArrowDown'?1:-1)+WLA.items.length)%WLA.items.length;wlRenderAuto();return}
+  if((k==='Enter'||k==='Tab')&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();e.stopImmediatePropagation();wlPick();return}
+  if(k==='Escape'){e.preventDefault();e.stopImmediatePropagation();wlCloseAuto()}
+},true);
+document.addEventListener('focusout',e=>{setTimeout(()=>{if(WLA.el&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.note-editor,.read-editor')))wlCloseAuto()},120)});
+
+// ---- types and tags ----
+const WORLD_TYPES={character:['Character','person'],place:['Place','geo-alt'],event:['Event','calendar-event']};
+function typeLabel(t){return WORLD_TYPES[t]?WORLD_TYPES[t][0]:String(t||'')}
+function typeIcon(t){return t?('wt_'+(WORLD_TYPES[t]?t:'custom')):'wt_note'}
+Object.assign(BOOTSTRAP_ICONS,{wt_character:'person',wt_place:'geo-alt',wt_event:'calendar-event',wt_custom:'bookmark',wt_note:'file-earmark-text',wt_tag:'tag',wlBack:'arrow-return-left'});
+function allTypes(){let s=new Set(Object.keys(WORLD_TYPES));state.documents.forEach(d=>flatten(d.tree).forEach(({node})=>{if(node.type)s.add(node.type)}));return [...s]}
+function allTags(){let m=new Map();state.documents.forEach(d=>flatten(d.tree).forEach(({node})=>(node.tags||[]).forEach(t=>m.set(t,(m.get(t)||0)+1))));return [...m.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0])}
+PX.providers.push((n,{ctx})=>{
+  let h='';
+  if(n.type)h+=`<button type="button" class="px-chip px-type" data-px="setType" data-t="${pxEsc(n.type)}" title="Type: tap to change">${icon(typeIcon(n.type))}<span>${pxEsc(typeLabel(n.type))}</span></button>`;
+  (n.tags||[]).forEach(t=>{h+=`<button type="button" class="px-chip px-tag" data-px="tagFilter" data-tag="${pxEsc(t)}" title="Show everything tagged #${pxEsc(t)}">#${pxEsc(t)}</button>`});
+  let bl=wlBacklinks(n);
+  if(bl.length)h+=`<button type="button" class="px-chip px-back" data-px="backlinks" title="Notes that link here">${icon('wlBack')}<span>Mentioned in ${bl.length===1?pxEsc(bl[0].title.slice(0,32)):bl.length+' notes'}</span></button>`;
+  return h;
+});
+PX.actions.setType=(id,b)=>worldTypeMenu(id,b);
+PX.actions.tagFilter=(id,b)=>worldSearch('',{tag:b.dataset.tag});
+PX.actions.backlinks=(id,b)=>{let r=locate(id);if(!r)return;let bl=wlBacklinks(r.node);
+  if(bl.length===1){wlGo(bl[0]);return}
+  openMenu(b,bl.map(x=>({icon:'wlBack',label:x.title+(x.doc!==state.activeDocumentId?' · '+(x.docTitle||'Untitled'):''),run:()=>wlGo(x)})),{title:'Mentioned in'})};
+function worldTypeMenu(id,anchor){
+  let r=locate(id||doc().selectedId);if(!r)return;let n=r.node;
+  let items=allTypes().map(t=>({icon:typeIcon(t),label:typeLabel(t)+(n.type===t?'  ✓':''),run:()=>setNodeType(n.id,t)}));
+  items.push({icon:'plus',label:'Custom type…',run:async()=>{let v=await askDialog('Custom type',{label:'Type name (e.g. Faction, Item, Creature)',ok:'Set type'});if(v&&v.trim())setNodeType(n.id,v.trim().slice(0,30))}});
+  if(n.type)items.push({sep:1},{icon:'x',label:'No type',run:()=>setNodeType(n.id,null)});
+  openMenu(anchor||document.querySelector(`[data-id="${n.id}"] .note-meta`)||$('#moreTopBtn'),items,{title:'Type'});
+}
+function setNodeType(id,t){let r=locate(id);if(!r)return;snapshot();let k=t&&WORLD_TYPES[t.toLowerCase()]?t.toLowerCase():t;if(k)r.node.type=k;else delete r.node.type;pxChange();pxRefresh();toast(k?'Type: '+typeLabel(k):'Type removed')}
+async function worldTagsDialog(id){
+  let r=locate(id||doc().selectedId);if(!r)return;let n=r.node;let cur=[...(n.tags||[])];
+  let dl=pxDialog({title:'Tags',cls:'px-tagdlg',body:`<div class="px-chips" id="wtCur"></div><div class="px-row"><input class="px-input" id="wtIn" placeholder="Add a tag and press Enter" autocomplete="off"><button type="button" class="px-btn primary" id="wtAdd">Add</button></div><div class="px-sub">Used before</div><div class="px-chips" id="wtAll"></div><div class="px-row px-end"><button type="button" class="px-btn primary" id="wtDone">Done</button></div>`,onClose:()=>{let a=JSON.stringify(n.tags||[]),b=JSON.stringify(cur);if(a!==b){snapshot();if(cur.length)n.tags=cur;else delete n.tags;pxChange();pxRefresh()}}});
+  const draw=()=>{dl.querySelector('#wtCur').innerHTML=cur.length?cur.map((t,i)=>`<button type="button" class="px-chip on" data-rm="${i}" aria-label="Remove tag ${pxEsc(t)}">#${pxEsc(t)} ${icon('x')}</button>`).join(''):'<span class="px-muted">No tags yet</span>';
+    let all=allTags().filter(t=>!cur.includes(t)).slice(0,24);dl.querySelector('#wtAll').innerHTML=all.map(t=>`<button type="button" class="px-chip" data-add="${pxEsc(t)}">#${pxEsc(t)}</button>`).join('')||'<span class="px-muted">None</span>';
+    dl.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{cur.splice(+b.dataset.rm,1);draw()});
+    dl.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{cur.push(b.dataset.add);draw()})};
+  const add=()=>{let i=dl.querySelector('#wtIn');i.value.split(',').map(t=>t.trim().replace(/^#/,'').replace(/\s+/g,'-').slice(0,30)).filter(Boolean).forEach(t=>{if(!cur.includes(t))cur.push(t)});i.value='';draw();i.focus()};
+  dl.querySelector('#wtAdd').onclick=add;dl.querySelector('#wtIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}};
+  dl.querySelector('#wtDone').onclick=()=>dl.close();
+  draw();setTimeout(()=>dl.querySelector('#wtIn').focus(),20);
+}
+
+// ---- search across every note in every document, with type / tag filters ----
+function worldIndex(){let out=[];state.documents.forEach(d=>{const w=(list,path)=>list.forEach(n=>{let txt=readableText(n.text||'').replace(WL_RE,'$1');out.push({doc:d,node:n,title:pxTitleOf(n),text:txt,path});w(n.children||[],[...path,pxTitleOf(n)])});w(d.tree||[],[])});return out}
+function snippet(text,q){let i=text.toLowerCase().indexOf(q.toLowerCase());if(i<0)return pxEsc(text.slice(0,110))+(text.length>110?'…':'');let s=Math.max(0,i-40),e=Math.min(text.length,i+q.length+70);return (s?'…':'')+pxEsc(text.slice(s,i))+'<mark>'+pxEsc(text.slice(i,i+q.length))+'</mark>'+pxEsc(text.slice(i+q.length,e))+(e<text.length?'…':'')}
+function worldSearch(q='',{tag=null,type=null}={}){
+  let F={q,tag,type,scope:'all',sel:0};
+  let dl=pxDialog({title:'Search',wide:true,cls:'px-search',body:`<div class="px-row"><input class="px-input" id="wsQ" type="search" placeholder="Search all notes and documents" value="${pxEsc(q)}" autocomplete="off" aria-label="Search"></div><div class="px-chips px-filters" id="wsF" aria-label="Filters"></div><div class="px-results" id="wsR" role="listbox"></div>`});
+  let inp=dl.querySelector('#wsQ');
+  const filters=()=>{let types=allTypes(),tags=allTags().slice(0,16);
+    dl.querySelector('#wsF').innerHTML=`<button type="button" class="px-chip${F.scope==='doc'?' on':''}" data-scope aria-pressed="${F.scope==='doc'}">${icon('file')}<span>This document only</span></button>`+
+      types.map(t=>`<button type="button" class="px-chip${F.type===t?' on':''}" data-ty="${pxEsc(t)}" aria-pressed="${F.type===t}">${icon(typeIcon(t))}<span>${pxEsc(typeLabel(t))}</span></button>`).join('')+
+      tags.map(t=>`<button type="button" class="px-chip${F.tag===t?' on':''}" data-tg="${pxEsc(t)}" aria-pressed="${F.tag===t}">#${pxEsc(t)}</button>`).join('');
+    dl.querySelector('[data-scope]').onclick=()=>{F.scope=F.scope==='doc'?'all':'doc';filters();results()};
+    dl.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{F.type=F.type===b.dataset.ty?null:b.dataset.ty;filters();results()});
+    dl.querySelectorAll('[data-tg]').forEach(b=>b.onclick=()=>{F.tag=F.tag===b.dataset.tg?null:b.dataset.tg;filters();results()})};
+  let hits=[];
+  const results=()=>{let qq=inp.value.trim(),lq=qq.toLowerCase();F.sel=0;
+    hits=worldIndex().filter(x=>(F.scope==='all'||x.doc.id===state.activeDocumentId)&&(!F.type||x.node.type===F.type)&&(!F.tag||(x.node.tags||[]).includes(F.tag))&&(qq?(x.text.toLowerCase().includes(lq)||(x.node.tags||[]).some(t=>t.toLowerCase()===lq.replace(/^#/,''))):(F.type||F.tag))&&x.text.trim());
+    hits.sort((a,b)=>(a.doc.id===state.activeDocumentId?0:1)-(b.doc.id===state.activeDocumentId?0:1)||(lq&&a.title.toLowerCase().includes(lq)?0:1)-(lq&&b.title.toLowerCase().includes(lq)?0:1));
+    let R=dl.querySelector('#wsR');
+    if(!qq&&!F.type&&!F.tag){R.innerHTML='<p class="px-muted">Type to search every note in every document, or pick a type or tag.</p>';return}
+    if(!hits.length){R.innerHTML='<p class="px-muted">No matches.</p>';return}
+    let lastDoc=null;
+    R.innerHTML=`<div class="px-count">${hits.length} result${hits.length===1?'':'s'}</div>`+hits.slice(0,200).map((h,i)=>{let head='';if(h.doc.id!==lastDoc){lastDoc=h.doc.id;head=`<div class="px-dochead">${icon('book')} ${pxEsc(h.doc.title||'Untitled')}</div>`}
+      return head+`<button type="button" class="px-hit${i===F.sel?' on':''}" data-h="${i}" role="option">${h.node.type?`<span class="px-hit-type">${icon(typeIcon(h.node.type))}</span>`:''}<span class="px-hit-main"><b>${qq?snippet(h.title,qq):pxEsc(h.title)}</b>${h.path.length?`<small>${pxEsc(h.path.join(' › '))}</small>`:''}${qq&&!h.title.toLowerCase().includes(lq)?`<span class="px-snip">${snippet(h.text,qq)}</span>`:''}</span></button>`}).join('');
+    R.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>go(+b.dataset.h))};
+  const go=i=>{let h=hits[i];if(!h)return;dl.close();if(h.doc.id!==state.activeDocumentId)switchDocument(h.doc.id);pxSelect(h.node.id)};
+  inp.oninput=results;
+  inp.onkeydown=e=>{let R=dl.querySelector('#wsR');if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();F.sel=Math.max(0,Math.min(hits.length-1,F.sel+(e.key==='ArrowDown'?1:-1)));R.querySelectorAll('.px-hit').forEach((b,i)=>b.classList.toggle('on',i===F.sel));R.querySelector('.px-hit.on')?.scrollIntoView({block:'nearest'})}else if(e.key==='Enter'){e.preventDefault();go(F.sel)}};
+  filters();results();setTimeout(()=>{inp.focus();inp.select()},20);
+  return dl;
+}
+// ---- quick jump (Ctrl+P / ⌘P): fuzzy note titles across documents ----
+function fuzzy(q,t){q=q.toLowerCase();t=t.toLowerCase();if(!q)return 1;let i=t.indexOf(q);if(i>=0)return 100-i-(t.length-q.length)*.1;let j=0,score=0,last=-2;for(let k=0;k<t.length&&j<q.length;k++){if(t[k]===q[j]){score+=k===last+1?3:1;last=k;j++}}return j===q.length?score:0}
+function quickJump(){
+  let open=document.querySelector('dialog.px-pal[open]');if(open){open.close();return}
+  let dl=pxDialog({title:'Quick jump',cls:'px-pal',body:`<input class="px-input" id="qjQ" type="search" placeholder="Jump to a note or document…" autocomplete="off" aria-label="Jump to"><div class="px-results" id="qjR" role="listbox"></div><div class="px-muted px-hintrow">↑↓ to choose · Enter to jump · Esc to close</div>`});
+  let inp=dl.querySelector('#qjQ'),items=[],sel=0;
+  const all=()=>{let out=[];state.documents.forEach(d=>{out.push({kind:'doc',doc:d,title:d.title||'Untitled'});flatten(d.tree).forEach(({node,depth})=>{let t=pxTitleOf(node);if(t)out.push({kind:'note',doc:d,node,title:t,depth})})});return out};
+  const draw=()=>{let q=inp.value.trim();items=all().map(x=>({...x,s:fuzzy(q,x.title)+(x.doc.id===state.activeDocumentId?5:0)+(x.kind==='doc'?-1:0)+(x.node&&x.node.type?2:0)})).filter(x=>x.s>(q?5:0)).sort((a,b)=>b.s-a.s).slice(0,40);sel=Math.min(sel,Math.max(0,items.length-1));
+    dl.querySelector('#qjR').innerHTML=items.map((x,i)=>`<button type="button" class="px-hit${i===sel?' on':''}" data-i="${i}" role="option" aria-selected="${i===sel}">${icon(x.kind==='doc'?'book':typeIcon(x.node.type))}<span class="px-hit-main"><b>${pxEsc(x.title)}</b>${x.kind==='doc'?'<small>Document</small>':x.doc.id!==state.activeDocumentId?`<small>${pxEsc(x.doc.title||'Untitled')}</small>`:''}</span></button>`).join('')||'<p class="px-muted">No match</p>';
+    dl.querySelectorAll('#qjR [data-i]').forEach(b=>b.onclick=()=>go(+b.dataset.i))};
+  const go=i=>{let x=items[i];if(!x)return;dl.close();if(x.doc.id!==state.activeDocumentId)switchDocument(x.doc.id);if(x.node)pxSelect(x.node.id,{edit:UI.input==='pointer'})};
+  inp.oninput=()=>{sel=0;draw()};
+  inp.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=Math.max(0,Math.min(items.length-1,sel+(e.key==='ArrowDown'?1:-1)));draw();dl.querySelector('.px-hit.on')?.scrollIntoView({block:'nearest'})}else if(e.key==='Enter'){e.preventDefault();go(sel)}};
+  draw();setTimeout(()=>inp.focus(),20);
+}
+registerCommands({
+  quickJump:{label:'Quick jump',bi:'signpost-split',run:quickJump,pc:'Ctrl+P',apple:'Ctrl+P'},
+  searchAll:{label:'Search all notes',bi:'search',run:()=>worldSearch(),pc:'Ctrl+Shift+F',apple:'Ctrl+Shift+F'},
+  setType:{label:'Set type…',bi:'bookmark',run:()=>worldTypeMenu(doc().selectedId),pc:'',apple:''},
+  editTags:{label:'Tags…',bi:'tags',run:()=>worldTagsDialog(doc().selectedId),pc:'',apple:''},
+  insertLink:{label:'Link to a note [[ ]]',bi:'link-45deg',run:()=>wlInsertTrigger(),pc:'',apple:''}
+});
+function wlInsertTrigger(){let id=doc().selectedId;let s=getSelection();let inEd=s&&s.anchorNode&&(s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement).closest?.('.note-editor,.read-editor');if(!inEd)pxFocusEditor(id,true);document.execCommand('insertText',false,'[[');}
+PX.topItems.unshift(()=>[cmdItem('quickJump'),cmdItem('searchAll'),{sep:1}]);
+PX.noteItems.push(()=>[cmdItem('insertLink'),cmdItem('setType'),cmdItem('editTags')]);
+{const _ec=ensureChrome;ensureChrome=function(){_ec();if(!$('#searchTopBtn')){let s=$('#documentsBtn');s&&s.insertAdjacentHTML('beforebegin','<button class="icon-btn" id="searchTopBtn" title="Search all notes" aria-label="Search all notes"></button>');let b=$('#searchTopBtn');if(b){b.innerHTML=icon('searchAll');b.onclick=()=>runCommand('searchAll')}}}}
 
 init();
 </script>
