@@ -3982,6 +3982,26 @@ dialog.px-pal .px-body{max-height:70vh}
 .px-hintrow{text-align:right}
 html[data-input="touch"] .px-hintrow,html[data-size="phone"] .px-hintrow{display:none}
 @media (max-width:700px){dialog.px-pal{margin-top:0;width:100vw;height:100dvh;max-height:none}dialog.px-pal .modal-head{display:flex}}
+/* ===== maths learner ===== */
+.px-answer:not(.px-shown) > .note-body > .note-editor,
+.px-answer:not(.px-shown) > .read-head > .read-editor,
+.read-block.px-answer:not(.px-shown) > .read-editor,
+.vf-node.px-answer:not(.px-shown) .vf-body > .note-editor,
+.vf-node.px-answer:not(.px-shown) .vf-txt{filter:blur(7px);opacity:.6;pointer-events:none;user-select:none;-webkit-user-select:none}
+.px-answer:not(.px-shown) math-field{visibility:hidden}
+.px-reveal{color:var(--text);border-color:color-mix(in srgb,var(--accent) 70%,var(--line))}
+.px-mk.r.on{color:#8fae86;border-color:#8fae86;background:color-mix(in srgb,#8fae86 18%,transparent)}
+.px-mk.w.on{color:#cf7f6a;border-color:#cf7f6a;background:color-mix(in srgb,#cf7f6a 18%,transparent)}
+.px-score{font-size:11px;color:var(--muted);padding:0 4px}
+.px-label{cursor:default;border-style:dotted}
+.px-scorechip{color:var(--text)}
+article.note.px-right,.read-node.px-right > .read-head,.read-block.px-right{box-shadow:inset 3px 0 0 #8fae86}
+article.note.px-wrong,.read-node.px-wrong > .read-head,.read-block.px-wrong{box-shadow:inset 3px 0 0 #cf7f6a}
+.vf-node.px-right .vf-card{box-shadow:inset 3px 0 0 #8fae86}
+.vf-node.px-wrong .vf-card{box-shadow:inset 3px 0 0 #cf7f6a}
+.px-working > .note-body > .note-editor,.px-working > .read-head > .read-editor{font-family:var(--font-note)}
+.imp-kind{display:inline-block;font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:1px 5px;margin-right:6px;vertical-align:1px}
+.imp-kind.k-answer{border-style:dashed}
 </style>
 <style id="vf-css">
 /* Vertical focus-node layout — phone test */
@@ -7486,6 +7506,153 @@ function wlInsertTrigger(){let id=doc().selectedId;let s=getSelection();let inEd
 PX.topItems.unshift(()=>[cmdItem('quickJump'),cmdItem('searchAll'),{sep:1}]);
 PX.noteItems.push(()=>[cmdItem('insertLink'),cmdItem('setType'),cmdItem('editTags')]);
 {const _ec=ensureChrome;ensureChrome=function(){_ec();if(!$('#searchTopBtn')){let s=$('#documentsBtn');s&&s.insertAdjacentHTML('beforebegin','<button class="icon-btn" id="searchTopBtn" title="Search all notes" aria-label="Search all notes"></button>');let b=$('#searchTopBtn');if(b){b.innerHTML=icon('searchAll');b.onclick=()=>runCommand('searchAll')}}}}
+
+// ===================== Persona 3: maths learner =====================
+// ---- importer: \( \) \[ \] (and KaTeX / MathML copies) become maths fields ----
+function mathsNormalize(s){
+  return String(s||'')
+    .replace(/\\\[([\s\S]+?)\\\]/g,(m,a)=>'$$'+a.replace(/\s*\n\s*/g,' ').trim()+'$$')
+    .replace(/\\\(([\s\S]+?)\\\)/g,(m,a)=>'$'+a.replace(/\s*\n\s*/g,' ').trim()+'$')
+    .replace(/\$\$([\s\S]+?)\$\$/g,(m,a)=>'$$'+a.replace(/\s*\n\s*/g,' ').trim()+'$$')
+    .replace(/\\begin\{(equation|align|gather)\*?\}([\s\S]+?)\\end\{\1\*?\}/g,(m,e,a)=>'$$'+a.replace(/\s*\n\s*/g,' ').replace(/&|\\\\/g,' ').trim()+'$$');
+}
+function mathsHTML(html){
+  html=String(html||'');
+  if(!/katex|<math|mjx-|\\\(|\\\[|\$\$/.test(html))return html;
+  let d;try{d=new DOMParser().parseFromString(html,'text/html')}catch(e){return html}
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  d.querySelectorAll('.katex-display, .katex, mjx-container, math').forEach(el=>{
+    if(!el.isConnected)return;
+    let tex=el.querySelector('annotation[encoding="application/x-tex"]')?.textContent||el.getAttribute('alttext')||el.querySelector('math')?.getAttribute('alttext')||'';
+    if(!tex)return;
+    let disp=el.classList.contains('katex-display')||el.getAttribute('display')==='block'||el.getAttribute('display')==='true';
+    let host=el.classList.contains('katex')&&el.parentElement&&el.parentElement.classList.contains('katex-display')?el.parentElement:el;
+    disp=disp||host.classList.contains('katex-display');
+    host.replaceWith(d.createTextNode((disp?'$$':'$')+tex.trim()+(disp?'$$':'$')));
+  });
+  let w=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT),texts=[];for(let n=w.nextNode();n;n=w.nextNode())texts.push(n);
+  texts.forEach(n=>{let v=mathsNormalize(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v});
+  return d.body.innerHTML;
+}
+{const _t=impBlocksFromText;impBlocksFromText=function(text){return _t(mathsNormalize(text))}}
+{const _h=impBlocksFromHTML;impBlocksFromHTML=function(html){return _h(mathsHTML(html))}}
+
+// ---- question sheets: one note per question, (a)(b) parts as children, "Answer:" lines as hidden answers ----
+const Q_LINE=/^(?:(?:question|q|exercise|ex\.?|problem)\s*)?(\d{1,3})\s*[.):]\s*(.*)$|^(?:question|exercise|problem)\s+(\d{1,3})\b[.:)]?\s*(.*)$|^q(\d{1,3})\b\s*[.:)]?\s*(.*)$/i;
+const Q_PART=/^\(?([a-h]|i{1,3}|iv|v|vi{0,3})\)\s*(.*)$/;
+const Q_ANS=/^(?:answers?|ans\.?|solution|sol\.?|final answer)\s*[:.\-–]\s*(.*)$/i;
+function qLines(src){
+  if(src.html){
+    return impBlocksFromHTML(src.html).map(b=>{
+      let r=b.kind==='pre'?b.text:(b.rich||b.item||'');
+      if(b.kind==='li'&&b.ordered&&!(b.depth>0))return {rich:r,olq:true};
+      if(b.kind==='li'&&b.depth>0)return {rich:r,olpart:true};
+      if(b.kind==='h')return {rich:r,head:true};
+      return {rich:r};
+    });
+  }
+  return mathsNormalize(src.text||'').replace(/\r\n?/g,'\n').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{let m=/^#{1,6}\s+(.+)$/.exec(l);return m?{rich:mdInline(m[1]),head:true}:{rich:mdInline(l)}});
+}
+function qIsSheet(src){
+  let lines=qLines(src),q=0,pref=0,ans=0,mth=0,ol=0;
+  for(const l of lines){let t=plainText(l.rich);if(l.olq){ol++;continue}let m=Q_LINE.exec(t);if(m){q++;if(/^(question|q\d|q\s|exercise|ex|problem)/i.test(t))pref++}if(Q_ANS.test(t))ans++;if(/\$[^$]+\$/.test(l.rich))mth++}
+  return (q>=2&&(pref>=1||ans>=1||mth>=2))||(ol>=2&&(ans>=1||mth>=2));
+}
+function qItems(src){
+  let lines=qLines(src),items=[],sec=null,q=null,part=null,ans=null,base=0;
+  const add=(level,title,kind)=>{let it={level,title,body:[],kind};items.push(it);return it};
+  for(const l of lines){
+    let t=plainText(l.rich),m;
+    if(l.head||(!q&&!items.length&&!Q_LINE.test(t)&&!Q_ANS.test(t))){
+      if(q||sec||items.length){sec=add(0,l.rich);base=1}else{sec=add(0,l.rich);base=1}
+      q=part=ans=null;continue}
+    if(l.olq||(m=Q_LINE.exec(t))){
+      let num=l.olq?String(items.filter(i=>i.kind==='question'&&i.level===base).length+1):(m[1]||m[3]||m[5]);
+      let body=l.olq?l.rich:l.rich.replace(/^\s*(?:(?:question|q|exercise|ex\.?|problem)\s*)?\d{1,3}\s*[.):]?\s*/i,'');
+      q=add(base,'Q'+num+'. '+body,'question');part=ans=null;continue}
+    if(q&&(l.olpart||(m=Q_PART.exec(t)))){part=add(q.level+1,l.rich,'question');ans=null;continue}
+    if((m=Q_ANS.exec(t))&&(part||q)){ans=add((part||q).level+1,l.rich,'answer');continue}
+    let host=ans||part||q||sec;
+    if(host)host.body.push(l.rich);else sec=add(0,l.rich);
+  }
+  return items.map((it,i)=>({id:'imp'+i,level:it.level,title:it.title,body:it.body,kind:it.kind}));
+}
+{const _p=impParse;impParse=function(src,opts){if(opts&&opts.split!=='bullets'&&opts.questions!==false&&qIsSheet(src))return qItems(src);return _p(src,opts)}}
+impTreeFromItems=function(items){
+  let roots=[],stack=[];
+  for(const it of items){let n={id:uid(),text:impNoteText(it),children:[]};if(it.kind)n.kind=it.kind;while(stack.length&&stack[stack.length-1].level>=it.level)stack.pop();(stack.length?stack[stack.length-1].node.children:roots).push(n);stack.push({level:it.level,node:n})}
+  return roots;
+};
+{const _r=impRowHTML;impRowHTML=function(it,i){let h=_r(it,i);if(it.kind==='question'||it.kind==='answer')h=h.replace('<div class="imp-text">',`<div class="imp-text"><em class="imp-kind k-${it.kind}">${it.kind==='answer'?'Answer · hidden':'Question'}</em>`);return h}}
+
+// ---- answers: veiled until "Show answer" ----
+const MX={shown:new Set()};
+function mxQuestions(nodes=tree()){let out=[];const w=list=>list.forEach(n=>{if(n.kind==='question'&&!n.children.some(c=>c.kind==='question'))out.push(n);w(n.children)});w(nodes);return out}
+function mxScore(nodes){let qs=mxQuestions(nodes),r=qs.filter(q=>q.mark==='right').length,w=qs.filter(q=>q.mark==='wrong').length;return {total:qs.length,right:r,wrong:w,marked:r+w}}
+function mxScoreText(s){return `${s.right}/${s.marked||0} right${s.total>s.marked?` · ${s.total-s.marked} to do`:''}`}
+PX.classers.push((el,n)=>{el.classList.toggle('px-answer',n.kind==='answer');el.classList.toggle('px-shown',n.kind==='answer'&&MX.shown.has(n.id));el.classList.toggle('px-q',n.kind==='question');el.classList.toggle('px-working',n.kind==='working');el.classList.toggle('px-right',n.mark==='right');el.classList.toggle('px-wrong',n.mark==='wrong')});
+PX.providers.push((n,{depth,path})=>{
+  if(n.kind==='answer'){let s=MX.shown.has(n.id);return `<button type="button" class="px-chip px-reveal${s?' on':''}" data-px="toggleAnswer" aria-pressed="${s}">${icon(s?'mxHide':'mxShow')}<span>${s?'Hide answer':'Show answer'}</span></button>`}
+  if(n.kind==='working')return `<span class="px-chip px-label">${icon('myWorking')}<span>My working</span></span><button type="button" class="px-chip" data-px="addLine" title="Add a maths line">${icon('math')}<span>Add line</span></button>`;
+  if(n.kind==='question'&&!n.children.some(c=>c.kind==='question')){
+    let sc=mxScore([path[0]]);
+    return `<button type="button" class="px-chip px-mk r${n.mark==='right'?' on':''}" data-px="markRight" aria-pressed="${n.mark==='right'}" aria-label="Mark right">${icon('markRight')}<span>Right</span></button><button type="button" class="px-chip px-mk w${n.mark==='wrong'?' on':''}" data-px="markWrong" aria-pressed="${n.mark==='wrong'}" aria-label="Mark wrong">${icon('markWrong')}<span>Wrong</span></button><button type="button" class="px-chip" data-px="myWorking">${icon('myWorking')}<span>My working</span></button>${sc.marked?`<span class="px-score" title="Score in this topic">${mxScoreText(sc)}</span>`:''}`;
+  }
+  if(depth===0){let sc=mxScore([n]);if(sc.total)return `<button type="button" class="px-chip px-scorechip" data-px="revisionList" title="Score · tap for the revision list">${icon('mxScore')}<span>Score ${mxScoreText(sc)}</span></button>`}
+  return '';
+});
+PX.stat.push(()=>{let s=mxScore();return s.total?`<button type="button" class="px-schip" data-px="revisionList" title="Build a revision list from mistakes">Score ${s.right}/${s.marked}${s.total>s.marked?' ('+(s.total-s.marked)+' to do)':''}</button>`:''});
+function mxTarget(id){let r=locate(id||doc().selectedId);if(!r)return null;// a working / answer child acts for its question
+  let n=r.node;if(n.kind!=='question'){let q=[...r.path].reverse().find(x=>x.kind==='question');if(q)return q}return n.kind==='question'?n:null}
+function mxToggleAnswer(id){
+  let r=locate(id||doc().selectedId);if(!r)return;let n=r.node;
+  if(n.kind!=='answer'){let q=mxTarget(n.id);let a=q&&q.children.find(c=>c.kind==='answer');if(!a){toast('No answer on this question');return}n=a}
+  if(MX.shown.has(n.id))MX.shown.delete(n.id);else MX.shown.add(n.id);
+  pxRefresh();mxCrumbs();
+}
+function mxMark(id,m){let q=mxTarget(id);if(!q){toast('Select a question first');return}snapshot();q.mark=q.mark===m?undefined:m;if(!q.mark)delete q.mark;pxChange();pxRefresh();let s=mxScore();toast(q.mark?(m==='right'?'Marked right':'Marked wrong')+` · ${s.right}/${s.marked}`:'Mark cleared')}
+function mxWorking(id){
+  let q=mxTarget(id);if(!q){toast('Select a question first');return}
+  let w=q.children.find(c=>c.kind==='working');
+  if(!w){snapshot();w={id:uid(),text:'',children:[],kind:'working'};let ai=q.children.findIndex(c=>c.kind==='answer');if(ai<0)q.children.push(w);else q.children.splice(ai,0,w);pxChange()}
+  doc().selectedId=w.id;saveState();pxRerender();
+  setTimeout(()=>{let ed=pxEditorFor(w.id);if(!ed){pxSelect(w.id);ed=pxEditorFor(w.id)}if(!ed)return;ed.focus({preventScroll:false});try{let r=document.createRange();r.selectNodeContents(ed);r.collapse(false);let s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}if(plainText(w.text).trim())document.execCommand('insertLineBreak');runCommand('math')},60);
+}
+function mxRevision(){
+  let wrong=mxQuestions().filter(q=>q.mark==='wrong');
+  if(!wrong.length){forceToast('No wrong answers yet. Mark questions ✓ or ✗ first',2200);return}
+  snapshot();let mark=undoStack.length;
+  const copy=n=>{let c={id:uid(),text:n.text,children:(n.children||[]).filter(x=>x.kind!=='working').map(copy)};if(n.kind)c.kind=n.kind;if(n.images)c.images=JSON.parse(JSON.stringify(n.images));return c};
+  let day=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  let topic={id:uid(),text:`Revision list · ${day} (${wrong.length})`,children:wrong.map(copy),kind:'revision'};
+  tree().push(topic);doc().selectedId=topic.children[0].id;pxChange();pxRerender();pxSelect(topic.children[0].id);
+  toastAction(`Revision list: ${wrong.length} question${wrong.length===1?'':'s'} to redo`,'Undo',()=>{if(undoStack.length===mark)runCommand('undo');else forceToast('Use the Undo button in the top bar',1800)},8000);
+}
+function mxHideAll(){MX.shown.clear();pxRefresh();mxCrumbs();toast('Answers hidden')}
+PX.actions.toggleAnswer=id=>mxToggleAnswer(id);
+PX.actions.markRight=id=>mxMark(id,'right');
+PX.actions.markWrong=id=>mxMark(id,'wrong');
+PX.actions.myWorking=id=>mxWorking(id);
+PX.actions.addLine=id=>mxWorking(id);
+PX.actions.revisionList=()=>mxRevision();
+// a hidden answer never shows in breadcrumbs either
+function mxCrumbs(){
+  let r=locate(doc().selectedId);if(!r)return;
+  document.querySelectorAll('#breadcrumbs .crumb').forEach(b=>{let n=locate(b.dataset.select)?.node;if(n&&n.kind==='answer'&&!MX.shown.has(n.id)){b.querySelector('.crumb-label').textContent='Answer (hidden)';b.title='Answer (hidden)';b.setAttribute('aria-label','Answer (hidden)')}});
+  let vc=$('#vfCrumb');if(vc&&vc.textContent!=='Reading'&&r.path.some(n=>n.kind==='answer'&&!MX.shown.has(n.id)))vc.textContent=r.path.map(n=>n.kind==='answer'&&!MX.shown.has(n.id)?'Answer (hidden)':readableText(noteTitleText(n.text))).join(' › ');
+}
+{const _rc=renderContext;renderContext=function(){_rc.apply(this,arguments);try{mxCrumbs()}catch(e){}}}
+registerCommands({
+  toggleAnswer:{label:'Show / hide answer',bi:'eye',run:()=>mxToggleAnswer(doc().selectedId),pc:'Alt+Shift+A',apple:'Ctrl+Meta+A'},
+  markRight:{label:'Mark right',bi:'check-circle',run:()=>mxMark(doc().selectedId,'right'),pc:'Alt+Shift+Y',apple:'Ctrl+Meta+Y'},
+  markWrong:{label:'Mark wrong',bi:'x-circle',run:()=>mxMark(doc().selectedId,'wrong'),pc:'Alt+Shift+X',apple:'Ctrl+Meta+X'},
+  myWorking:{label:'My working',bi:'pencil-square',run:()=>mxWorking(doc().selectedId),pc:'Alt+Shift+G',apple:'Ctrl+Meta+G'},
+  revisionList:{label:'Revision list from mistakes',bi:'journal-check',run:mxRevision,pc:'',apple:''},
+  hideAnswers:{label:'Hide all answers',bi:'eye-slash',run:mxHideAll,pc:'',apple:''}
+});
+Object.assign(BOOTSTRAP_ICONS,{mxShow:'eye',mxHide:'eye-slash',mxScore:'clipboard-check'});
+PX.topItems.push(()=>{let s=mxScore();return s.total?[{sep:1},cmdItem('revisionList',{label:`Revision list (${s.wrong} wrong)`}),cmdItem('hideAnswers')]:[]});
+PX.noteItems.push(()=>{let r=locate(doc().selectedId);if(!r)return [];let q=mxTarget(r.node.id);if(!q&&r.node.kind!=='answer')return [];return [cmdItem('toggleAnswer'),cmdItem('markRight'),cmdItem('markWrong'),cmdItem('myWorking')]});
 
 init();
 </script>
