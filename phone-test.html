@@ -3669,6 +3669,19 @@ html.motion-reduce.anim-on.anim-ready button:not(:disabled):active{animation:non
 html.motion-reduce .toast{transform:none!important;translate:none!important}
 html.motion-reduce .app-tooltip{translate:none}
 html:not(.anim-on) .toast{transition:none}
+
+/* ---- breadcrumbs: rendered maths, ellipsis on the rendered label (formulas are atomic, never cut mid-token) ---- */
+.crumb .crumb-label{display:block;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.crumb .crumb-math{display:inline-block;vertical-align:-0.12em;font-size:1em;line-height:1}
+.crumb .crumb-math .ML__latex{display:inline-block;white-space:nowrap}
+/* ---- faded notes: fade the surface (background/border), keep text ≥4.5:1 ---- */
+.note,.note.related{opacity:1}
+.note:not(.path):not(.active) .note-body{background:color-mix(in srgb,var(--panel) calc(var(--fade-surface,.48)*100%),var(--bg));
+  border-color:color-mix(in srgb,var(--line) calc(var(--fade-surface,.48)*100%),var(--bg));box-shadow:none}
+.note:not(.path):not(.active) .note-editor,.note:not(.path):not(.active) .note-editor::before{color:var(--faded-text,#9ea4b6)}
+.note.related:not(.path):not(.active) .note-editor{color:var(--related-text,#c9ccd8)}
+.note:not(.path):not(.active) .image-editor img{opacity:.6}
+.note:not(.path):not(.active) .grip{opacity:0}
 </style>
 <style id="custom-style"></style>
 
@@ -4043,6 +4056,18 @@ html.vf-reading .vf-read{display:block}
 /* Animations off (Settings > Appearance): no motion at all in the focus view */
 html.vf-on:not(.anim-on) .vf-stack,html.vf-on:not(.anim-on) .vf-row,html.vf-on:not(.anim-on) .vf-node,html.vf-on:not(.anim-on) .vf-stage .vf-stack{transition:none!important;animation:none!important}
 
+/* legible faded text (≥4.5:1): fade card surfaces, not the words */
+.vf-node.lv1{opacity:1}
+.vf-node.lv1 .vf-card{background:color-mix(in srgb,var(--panel,#292c3d) calc(var(--fade-surface,.48)*100%),var(--bg,#232634));border-color:color-mix(in srgb,var(--line,#42485f) calc(var(--fade-surface,.48)*100%),var(--bg,#232634));box-shadow:none}
+.vf-node.lv1 .vf-txt{color:var(--faded-text,#9ea4b6);opacity:1}
+.vf-chip,.vf-chip:not([aria-current="true"]){opacity:1}
+.vf-chip:not([aria-current="true"]){background:color-mix(in srgb,var(--panel,#292c3d) calc(var(--fade-surface,.48)*100%),var(--bg,#232634));border-color:color-mix(in srgb,var(--line,#42485f) calc(var(--fade-surface,.48)*100%),var(--bg,#232634))}
+.vf-chip:not([aria-current="true"]) .t,.vf-chip .s{color:var(--faded-text,#9ea4b6);opacity:1}
+.vf-pos,.vf-empty{opacity:1;color:var(--faded-text,#9ea4b6)}
+.vf-chip[aria-current="true"] .t,.vf-chip[aria-current="true"] .s{color:var(--text,#e6e8f0);opacity:1}
+.vf-node.lv1 .vf-card{border-left-color:color-mix(in srgb,var(--accent,#8b7cf7) calc(20% + var(--d,0) * 12%),var(--line,#2a2e3d))}
+.vf-depth{color:var(--text,#e6e8f0);opacity:1}
+
 </style>
 </head>
 <body>
@@ -4189,7 +4214,7 @@ function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]
 function applyChrome(){let b=state.behavior;document.querySelector('.topbar').style.display=b.showTopbar?'flex':'none';document.querySelector('.contextbar').style.display=b.showContextbar?'flex':'none';document.querySelector('.statusbar').style.display=b.showStatusbar?'flex':'none';let chip=$('#restoreChrome');let hidden=!b.showTopbar||!b.showContextbar||!b.showStatusbar;chip.classList.toggle('show',hidden);chip.innerHTML=icon('reset')+'Restore interface'}
 function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
 function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
-function renderContext(){let bc=$('#breadcrumbs'),r=locate(doc().selectedId);bc.innerHTML=r?r.path.map((n,i)=>`<button class="crumb" data-select="${n.id}" title="${escapeHTML(plainText(n.text)||'Untitled note')}">${escapeHTML(plainText(n.text)||'Untitled note')}</button>${i<r.path.length-1?'<span class="chev">›</span>':''}`).join(''):'';bc.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectNode(b.dataset.select));renderToolbarButtons($('#contextActions'))}
+function renderContext(){let bc=$('#breadcrumbs'),r=locate(doc().selectedId);bc.innerHTML=r?r.path.map((n,i)=>`<button class="crumb" data-select="${n.id}" title="${escapeHTML(readableText(n.text)||'Untitled note')}" aria-label="${escapeHTML(readableText(n.text)||'Untitled note')}"><span class="crumb-label">${crumbLabelHTML(n.text)}</span></button>${i<r.path.length-1?'<span class="chev">›</span>':''}`).join(''):'';bc.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectNode(b.dataset.select));renderToolbarButtons($('#contextActions'))}
 function noteHTML(n,depth,path){let related=isRelated(n,path),cls=['note',depth<2?'heading':'',n.id===doc().selectedId?'active':'',n.id===UI.revealedId?'tools-revealed':'',path.includes(n.id)?'path':'',related?'related':''].filter(Boolean).join(' ');return `<article class="${cls}" data-id="${n.id}"><div class="grip" draggable="true" data-grip="${n.id}" title="Drag note">${icon('grip')}</div><div class="note-body"><div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="${depth===0?'Type a main topic…':'Type here…'}" data-edit-id="${n.id}">${writingHTML(n.text)}</div><div class="note-tools"><button title="Add child" aria-label="Add child" data-mini="addChild">${icon('child')}</button><button title="Move up" aria-label="Move up" data-mini="moveUp">${icon('arrowUp')}</button><button title="Move down" aria-label="Move down" data-mini="moveDown">${icon('arrowDown')}</button><button title="More note actions" aria-label="More note actions" aria-haspopup="menu" data-note-more>${icon('more')}</button><span class="tool-gap"></span><button title="Delete" aria-label="Delete note" class="danger" data-mini="deleteNode">${icon('trash')}</button></div>${imageHTML(n)}</div><button class="swipe-delete" data-swipe-delete tabindex="-1" aria-label="Delete note">${icon('trash')}<span>Delete</span></button></article>`}
 function renderWorkspace(){let w=$('#workspace'),d=doc();let tabs=d.mode==='split'&&UI.size==='phone';w.className='workspace '+(d.mode==='split'?'split':'')+(tabs?' split-tabs tab-'+UI.splitTab:'');let branch=d.mode!=='read'?'<section class="branch-pane" id="branchPane"><div class="columns" id="columns"></div></section>':'';let read=d.mode!=='branch'?'<section class="read-pane" id="readPane"></section>':'';let bar=tabs?`<div class="split-tabs-bar" role="tablist" aria-label="Split view"><button type="button" role="tab" data-split-tab="branch" aria-selected="${UI.splitTab==='branch'}">${icon('branch')}<span>Branches</span></button><button type="button" role="tab" data-split-tab="read" aria-selected="${UI.splitTab==='read'}">${icon('book')}<span>Reading</span></button></div>`:'';w.innerHTML=bar+branch+read;w.querySelectorAll('[data-split-tab]').forEach(b=>b.onclick=()=>{UI.splitTab=b.dataset.splitTab;renderWorkspace()});if(d.mode!=='read')renderBranches();if(d.mode!=='branch')renderReading();renderStatus()}
 function renderBranches(){let c=$('#columns');if(!tree().length){c.innerHTML='<div class="empty-doc">No notes yet.</div>';return}let path=pathIds(),columns=collectColumns();c.innerHTML=columns.map((col,depth)=>`<section class="column ${depth?'child-column':''}" data-depth="${depth}" data-parent="${col.parentId||''}"><div class="group">${col.nodes.map(n=>noteHTML(n,depth,path)).join('')}${state.behavior.showAddButtons?`<button class="add-row" data-add-parent="${col.parentId||''}">${icon('plus')}<span class=\"label\">${depth?'Add child':'Add topic'}</span></button>`:''}</div></section>`).join('');bindEditors(c);bindNoteTools(c);bindDrag(c);c.querySelectorAll('[data-add-parent]').forEach(b=>b.onclick=()=>addNode(b.dataset.addParent||null));requestAnimationFrame(alignBranchColumns)}
@@ -4436,6 +4461,80 @@ function richToMarkdown(text){
     out+=ch;i++;
   }
   return out.replace(/\n{3,}/g,'\n\n').trim();
+}
+
+// ---------- maths as readable text / static render (breadcrumbs, titles, compact labels) ----------
+const LATEX_SYM={pi:'π',Pi:'Π',alpha:'α',beta:'β',gamma:'γ',Gamma:'Γ',delta:'δ',Delta:'Δ',epsilon:'ε',varepsilon:'ε',zeta:'ζ',eta:'η',theta:'θ',Theta:'Θ',iota:'ι',kappa:'κ',lambda:'λ',Lambda:'Λ',mu:'μ',nu:'ν',xi:'ξ',rho:'ρ',sigma:'σ',Sigma:'Σ',tau:'τ',phi:'φ',varphi:'φ',Phi:'Φ',chi:'χ',psi:'ψ',Psi:'Ψ',omega:'ω',Omega:'Ω',
+  times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',le:'≤',leq:'≤',ge:'≥',geq:'≥',ne:'≠',neq:'≠',approx:'≈',equiv:'≡',sim:'∼',propto:'∝',infty:'∞',to:'→',rightarrow:'→',leftarrow:'←',Rightarrow:'⇒',implies:'⇒',iff:'⇔',sum:'Σ',prod:'Π',int:'∫',oint:'∮',partial:'∂',nabla:'∇',degree:'°',circ:'°',in:'∈',notin:'∉',subset:'⊂',cup:'∪',cap:'∩',forall:'∀',exists:'∃',emptyset:'∅',ldots:'…',cdots:'⋯',angle:'∠',perp:'⊥',parallel:'∥',sqrt:'√'};
+const LATEX_FN=['sin','cos','tan','sec','csc','cot','arcsin','arccos','arctan','sinh','cosh','tanh','log','ln','exp','lim','max','min','det','gcd','mod'];
+const SUPS={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻','=':'⁼','(':'⁽',')':'⁾','n':'ⁿ','i':'ⁱ','x':'ˣ','y':'ʸ','a':'ᵃ','b':'ᵇ','c':'ᶜ','d':'ᵈ','e':'ᵉ','k':'ᵏ','m':'ᵐ','t':'ᵗ'};
+const SUBS={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','+':'₊','-':'₋','=':'₌','(':'₍',')':'₎','a':'ₐ','e':'ₑ','i':'ᵢ','j':'ⱼ','k':'ₖ','n':'ₙ','o':'ₒ','r':'ᵣ','t':'ₜ','x':'ₓ'};
+function latexToText(src){
+  let s=String(src||'').replace(/\\(?:href|url)\s*\{[^{}]*\}/g,'');
+  for(let k=0;k<6;k++){let prev=s;
+    s=s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,(m,a,b)=>{const w=x=>/^[\w.]+$/.test(x.trim())?x.trim():'('+x.trim()+')';return w(a)+'/'+w(b)})
+       .replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g,'$1√($2)').replace(/\\sqrt\s*\{([^{}]*)\}/g,(m,a)=>/^[\w.]+$/.test(a)?'√'+a:'√('+a+')')
+       .replace(/\\(?:text|mathrm|mathbf|mathit|operatorname|mathbb|mathcal|boldsymbol)\s*\{([^{}]*)\}/g,'$1')
+       .replace(/\^\{([^{}]*)\}|\^(\\?[A-Za-z0-9+\-=()])/g,(m,a,b)=>{let x=a??b;return [...x].every(ch=>SUPS[ch])?[...x].map(ch=>SUPS[ch]).join(''):'^('+x+')'})
+       .replace(/_\{([^{}]*)\}|_([A-Za-z0-9+\-=()])/g,(m,a,b)=>{let x=a??b;return [...x].every(ch=>SUBS[ch])?[...x].map(ch=>SUBS[ch]).join(''):'_'+x});
+    if(s===prev)break}
+  s=s.replace(/\\(left|right|displaystyle|textstyle|limits|nolimits|big|Big|bigg|Bigg)\b/g,'').replace(/\\[,;:! ]|\\quad|\\qquad/g,' ')
+     .replace(/\\([A-Za-z]+)\s?/g,(m,c)=>LATEX_SYM[c]??(LATEX_FN.includes(c)?c+' ':''))
+     .replace(/\\([{}%$&#_])/g,'$1').replace(/[{}]/g,'').replace(/\s+/g,' ').trim();
+  return s;
+}
+function readableText(t){return plainText(t).replace(/\$\$([\s\S]*?)\$\$|\$([^$\n]*)\$/g,(m,a,b)=>latexToText(a??b)).replace(/\s+/g,' ').trim()}
+function mathStaticHTML(src){
+  let alt=latexToText(src)||src;
+  try{
+    if(window.MathLive&&typeof MathLive.convertLatexToMarkup==='function'){
+      let t=document.createElement('template');t.innerHTML=MathLive.convertLatexToMarkup(src);
+      t.content.querySelectorAll('script,style,iframe,object,embed,img,image,foreignObject,link,meta').forEach(e=>e.remove());
+      t.content.querySelectorAll('a').forEach(e=>e.replaceWith(...e.childNodes));
+      t.content.querySelectorAll('*').forEach(e=>{for(const at of Array.from(e.attributes))if(/^on|^(href|src|xlink:href|action|formaction)$/i.test(at.name))e.removeAttribute(at.name)});
+      return `<span class="crumb-math" role="img" aria-label="${escapeHTML(alt)}">${t.innerHTML}</span>`;
+    }
+  }catch(e){}
+  return `<span class="crumb-math-text">${escapeHTML(alt)}</span>`;
+}
+function crumbLabelHTML(text){
+  let plain=plainText(text);if(!plain)return 'Untitled note';
+  return plain.replace(/\s+/g,' ').split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*\$)/g).map(part=>{
+    let m=/^\$\$([\s\S]*)\$\$$/.exec(part)||(part.length>=2&&/^\$([^$\n]*)\$$/.exec(part));
+    return m?mathStaticHTML(m[1]):escapeHTML(part);
+  }).join('');
+}
+// formulas are atomic: if one crosses the label's clip edge, hide it whole (never a half-drawn glyph after the ellipsis)
+function fitCrumbMath(){
+  document.querySelectorAll('#breadcrumbs .crumb-label').forEach(l=>{
+    let ms=l.querySelectorAll('.crumb-math,.crumb-math-text');if(!ms.length)return;
+    ms.forEach(m=>m.style.visibility='');
+    if(l.scrollWidth<=l.clientWidth+1)return;
+    let edge=l.getBoundingClientRect().right-1;
+    ms.forEach(m=>{if(m.getBoundingClientRect().right>edge)m.style.visibility='hidden'});
+  });
+}
+if(typeof renderContext==='function'){const _rc=renderContext;renderContext=function(){_rc.apply(this,arguments);fitCrumbMath();requestAnimationFrame(fitCrumbMath)}}
+addEventListener('resize',()=>requestAnimationFrame(fitCrumbMath));
+document.fonts&&document.fonts.ready&&document.fonts.ready.then(()=>fitCrumbMath());
+
+// ---------- legible faded text: computed from the theme so it always clears ~4.5:1 ----------
+function hexRgb(h){h=String(h||'').trim().replace('#','');if(/^[0-9a-f]{3}$/i.test(h))h=h.split('').map(c=>c+c).join('');if(!/^[0-9a-f]{6}$/i.test(h))return null;return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+function relLum(c){let [r,g,b]=c.map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b}
+function contrastRatio(a,b){let x=relLum(a),y=relLum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+function mixRgb(a,b,t){return a.map((v,i)=>Math.round(v*t+b[i]*(1-t)))}
+function rgbHex(c){return '#'+c.map(v=>v.toString(16).padStart(2,'0')).join('')}
+function legibleText(text,bgs,min){for(let t=.3;t<=1.0001;t+=.01){let c=mixRgb(text,bgs[0],t);if(bgs.every(b=>contrastRatio(c,b)>=min))return c}return text}
+function applyFadedText(){
+  let a=state.appearance,root=document.documentElement;
+  let bg=hexRgb(a.bg)||[35,38,52],panel=hexRgb(a.panel)||[41,44,61];
+  let text=hexRgb(getComputedStyle(root).getPropertyValue('--text'))||[230,232,240];
+  let f=Math.min(1,(a.inactiveOpacity??28)/100+.2);
+  let surf=mixRgb(panel,bg,f);
+  let bgs=[surf,bg,panel];
+  root.style.setProperty('--fade-surface',String(f));
+  root.style.setProperty('--faded-text',rgbHex(legibleText(text,bgs,4.8)));
+  root.style.setProperty('--related-text',rgbHex(legibleText(text,bgs,7)));
 }
 
 // ---------- smart paste: sanitize to b/i/u/a/ul/ol/li/br ----------
@@ -4924,7 +5023,7 @@ renderWorkspace=function(){
 const _adoptState=adoptState;
 adoptState=function(s){ANIM.known=null;return _adoptState(s)};
 const _applyAppearance=applyAppearance;
-applyAppearance=function(){_applyAppearance();applyAnimClasses()};
+applyAppearance=function(){_applyAppearance();applyAnimClasses();try{applyFadedText()}catch(err){}};
 // Settings > Appearance: "Animations" toggle
 const _renderAppearanceSettings=renderAppearanceSettings;
 renderAppearanceSettings=function(){
@@ -4970,7 +5069,7 @@ function vfNodeType(n){
   if(n.children&&n.children.length)return 'list';
   return 'text';
 }
-function vfPlain(n){return String(typeof plainText==='function'?plainText(n.text):(n.text||'')).replace(/\$\$[\s\S]*?\$\$|\$[^$\n]*\$/g,'').replace(/\s+/g,' ').trim()||'Untitled'}
+function vfPlain(n){let t=typeof readableText==='function'?readableText(n.text):String(n.text||'').replace(/\$\$[\s\S]*?\$\$|\$[^$\n]*\$/g,'');return t.replace(/\s+/g,' ').trim()||'Untitled'}
 function vfLevel(dist){return dist<=0?0:dist===1?1:dist===2?2:3}
 function vfDepthLabel(d){return d===0?'Topic':'L'+d}
 function vfHintSeen(){try{return localStorage.getItem(VF.HINT_KEY)==='1'}catch(e){return false}}
