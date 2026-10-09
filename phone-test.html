@@ -3840,6 +3840,110 @@ html[data-input="touch"] math-field::part(virtual-keyboard-toggle):hover{opacity
 
 .write-bar.wb-pc.wb-tight .wb-btn{padding:0 4px!important;gap:3px}
 .write-bar.wb-pc.wb-tight .wb-l{font-size:11px!important}
+/* ===== persona features: shared ===== */
+.menu-pop{max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain}
+#moreTopBtn{display:grid!important;place-items:center}
+.note-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:4px 0 2px;font:500 11px/1 var(--font-ui);color:var(--muted);user-select:none;-webkit-user-select:none}
+.note-meta:empty{display:none}
+.vf-body > .note-meta{margin:6px 0 0}
+.px-chip{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:0 8px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent);color:var(--muted);font:inherit;font-size:11px;letter-spacing:.02em;cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.px-chip .bi{font-size:12px}
+.px-chip:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 60%,var(--line))}
+.px-chip[aria-pressed="true"],.px-chip.on{color:var(--text);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.px-chip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* 44px touch pads on the small chips */
+html[data-input^="touch"] .px-chip::after,html[data-size="phone"] .px-chip::after{content:"";position:absolute;inset:-10px -2px}
+html[data-input^="touch"] .px-chip,html[data-size="phone"] .px-chip{overflow:visible;min-height:26px}
+html[data-input^="touch"] .note-meta,html[data-size="phone"] .note-meta{gap:18px 6px;margin:10px 0 8px}
+.px-status{display:inline-flex;gap:8px;align-items:center}
+.px-schip{font:inherit;color:inherit;background:none;border:0;padding:0 4px;cursor:pointer;min-height:24px}
+.px-schip:hover{color:var(--text)}
+.px-flash{outline:2px solid var(--accent);outline-offset:2px;transition:outline-color .6s}
+/* dialogs */
+.px-dlg{width:min(560px,94vw)}
+.px-dlg.px-wide{width:min(760px,94vw)}
+.px-body{padding:16px;overflow:auto;max-height:calc(88vh - 60px);display:flex;flex-direction:column;gap:12px;font-family:var(--font-ui)}
+.px-field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.px-input{font:14px/1.4 var(--font-note);color:var(--text);background:var(--panel);border:1px solid var(--line);padding:10px 12px;min-height:44px;width:100%;box-sizing:border-box}
+textarea.px-input{resize:vertical}
+.px-input:focus{outline:none;border-color:var(--accent)}
+.px-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.px-row > .px-input{flex:1;min-width:160px}
+.px-end{justify-content:flex-end}
+.px-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 16px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:600 13px var(--font-ui);cursor:pointer}
+.px-btn.primary{background:var(--accent);border-color:var(--accent);color:#0c0e10}
+.px-btn:hover{border-color:var(--accent)}
+.px-btn:disabled{opacity:.45;cursor:default}
+.px-muted{color:var(--muted);font-size:12px;margin:0}
+.px-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.px-h{font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:6px 0 0}
+.px-chips{display:flex;flex-wrap:wrap;gap:6px}
+.px-chips .px-chip{min-height:36px;font-size:12px}
+.px-link{background:none;border:0;padding:0;color:var(--text);font:inherit;text-align:left;cursor:pointer;min-height:44px;display:inline-flex;align-items:center}
+.px-link:hover{color:var(--accent);text-decoration:underline}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:700px){.px-dlg,.px-dlg.px-wide{width:100vw}.px-body{max-height:calc(100dvh - 60px)}}
+/* ===== essay writer ===== */
+sup.rt-fn{position:relative;display:inline-block;min-width:1.1em;padding:0 2px;margin:0 1px;font:600 .68em/1 var(--font-ui);color:var(--accent);vertical-align:super;cursor:pointer;text-align:center;user-select:none;-webkit-user-select:none}
+sup.rt-fn::after{content:attr(data-n)}
+sup.rt-fn:empty:not([data-n])::after{content:"*"}
+html[data-input^="touch"] sup.rt-fn::before,html[data-size="phone"] sup.rt-fn::before{content:"";position:absolute;inset:-14px -12px}
+sup.rt-fn:hover{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.px-wc .px-bar{display:inline-block;width:36px;height:3px;background:color-mix(in srgb,var(--muted) 30%,transparent);position:relative;overflow:hidden}
+.px-wc .px-bar::before,.px-num .px-bar::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--p);background:var(--accent)}
+.px-wc.met{color:var(--text)}
+.px-wc.met .px-bar::before{background:#8fae86}
+.px-st.done{color:#8fae86;border-color:color-mix(in srgb,#8fae86 60%,var(--line))}
+.px-st.draft{border-style:dashed}
+.px-total{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.px-total b{font-size:22px;font-family:var(--font-note)}
+.px-tgt{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto}
+.px-tgt input{width:96px;min-height:44px;padding:0 8px;background:var(--panel);border:1px solid var(--line);color:var(--text);font:13px var(--font-ui)}
+.px-wclist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.px-wcrow{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:2px 0}
+.px-wcrow .px-link{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;line-height:44px}
+.px-wcrow .px-tgt{margin:0}
+.px-wcrow .px-st{min-height:44px;min-width:82px;justify-content:center}
+.px-num{font:12px var(--font-ui);color:var(--muted);display:inline-flex;align-items:center;gap:6px;min-width:70px;justify-content:flex-end}
+.px-num .px-bar{display:inline-block;width:40px;height:3px;background:color-mix(in srgb,var(--muted) 30%,transparent);position:relative;overflow:hidden}
+@media (max-width:560px){.px-wcrow{grid-template-columns:1fr auto;}.px-wcrow .px-tgt{grid-column:1}.px-num{justify-content:flex-start}}
+.px-reflist,.px-fnlist{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:2px}
+.px-reflist li{display:list-item}
+.px-reflist li > span{display:inline-block;width:calc(100% - 52px);vertical-align:middle;font:14px/1.4 var(--font-note)}
+.px-reflist .px-del{vertical-align:middle;width:44px;height:44px}
+/* section done: quiet tick on the card */
+article.note.px-is-done > .note-body > .note-editor,.px-is-done > .read-head > .read-editor{opacity:.92}
+/* focus mode */
+html.px-focus .topbar,html.px-focus .contextbar,html.px-focus .statusbar,html.px-focus #phoneBar,html.px-focus .help-chip,html.px-focus #vfTop,html.px-focus .write-bar,html.px-focus .ctx-toolbar{display:none!important}
+html.px-focus .app{grid-template-rows:0 0 1fr 0!important}
+html.px-focus article.note:not(.active):not(.px-cur),html.px-focus .read-node:not(.selected):not(.px-cur) > .read-head,html.px-focus .read-block:not(.selected):not(.px-cur){opacity:.28;transition:opacity .25s}
+html.px-focus article.note:hover,html.px-focus .read-block:hover,html.px-focus .read-node > .read-head:hover{opacity:1}
+html.px-focus .note-meta{display:none}
+.px-focus-exit{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:250;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--muted);font:500 12px var(--font-ui);cursor:pointer;opacity:.55}
+.px-focus-exit:hover,.px-focus-exit:focus-visible{opacity:1;color:var(--text)}
+html[data-size="phone"] .px-focus-exit span{display:none}
+html[data-size="phone"] .px-focus-exit{width:44px;padding:0;justify-content:center}
+/* print / PDF export */
+#printDoc{display:none}
+@media print{
+  html.px-printing body > *:not(#printDoc){display:none!important}
+  html.px-printing,html.px-printing body{background:#fff!important;color:#111!important;height:auto!important;overflow:visible!important}
+  html.px-printing body::before,html.px-printing body::after{display:none!important}
+  html.px-printing #printDoc{display:block!important;font:11.5pt/1.55 "IBM Plex Sans",Georgia,serif;color:#111;max-width:none;padding:0}
+  @page{size:A4;margin:22mm 20mm}
+}
+#printDoc .p-title{font-size:24pt;font-weight:600;margin:0 0 14pt}
+#printDoc h2,#printDoc h3,#printDoc h4{break-after:avoid;margin:16pt 0 6pt;font-weight:600}
+#printDoc h2{font-size:16pt}#printDoc h3{font-size:13pt}#printDoc h4{font-size:11.5pt}
+#printDoc .p-node{margin:0 0 7pt}
+#printDoc .p-node h1,#printDoc .p-node h2,#printDoc .p-node h3{font-size:inherit;margin:0}
+#printDoc sup{font-size:.7em;line-height:0}
+#printDoc .p-sec{font-size:13pt;margin-top:20pt;border-top:.5pt solid #999;padding-top:8pt}
+#printDoc .p-notes,#printDoc .p-refs{font-size:9.5pt}
+#printDoc img{max-width:60%;max-height:80mm}
+#printDoc mark{background:#fff3a6}
+#printDoc .rt-c{color:#333!important}
+#printDoc .wl{color:inherit}
 </style>
 <style id="vf-css">
 /* Vertical focus-node layout — phone test */
@@ -5785,6 +5889,7 @@ serializeEditor=function(ed){
     if(n==='MATH-FIELD'){let d=node.dataset.display==='true'?'$$':'$';let v=node.value??node.textContent??'';return d+v+d}
     if(n==='BR')return trailingBr(node)?'':'\n';
     if(n==='SCRIPT'||n==='STYLE'||n==='TEMPLATE')return '';
+    if(node.classList&&node.classList.contains('wl'))return '[['+String(node.dataset.wl||node.textContent||'').replace(/[\[\]\n\uE000-\uE002]/g,'')+']]';
     let isList=n==='UL'||n==='OL';
     let text=Array.from(node.childNodes||[]).map(c=>walk(c,isList)).join('');
     if(node===ed)return text;
@@ -6700,6 +6805,450 @@ function hitRect(el){
   return new DOMRect(r.left+l,r.top+t,r.width-l-rr,r.height-t-bb);
 }
 
+// ===================== Persona features: shared core (commands, dialogs, note meta rows) =====================
+const PX={run:{},keys:{},providers:[],classers:[],actions:{},topItems:[],noteItems:[],stat:[]};
+// ---- commands + shortcuts: same tables as the rest of the app, so Settings → Keyboard lists them ----
+function registerCommands(defs){
+  for(const [id,d] of Object.entries(defs)){
+    COMMANDS[id]={label:d.label,icon:id};
+    BOOTSTRAP_ICONS[id]=d.bi;
+    PX.run[id]=d.run;
+    PC_SHORTCUTS[id]=d.pc||'';APPLE_SHORTCUTS[id]=d.apple??d.pc??'';
+    let def=IS_MAC?APPLE_SHORTCUTS[id]:PC_SHORTCUTS[id];
+    DEFAULT_SHORTCUTS[id]=def;PX.keys[id]=def;
+  }
+  pxFixShortcuts(state);
+}
+// A new key never steals one the person already gave to another command.
+function pxFixShortcuts(s){
+  if(!s||!s.shortcuts)return s;
+  for(const [id,def] of Object.entries(PX.keys)){
+    if(id in s.shortcuts)continue;
+    let want=normalizeShortcut(def);
+    s.shortcuts[id]=want&&Object.entries(s.shortcuts).some(([o,v])=>normalizeShortcut(v)===want)?'':def;
+  }
+  return s;
+}
+{const _ns=normalizeState;normalizeState=function(s){return pxFixShortcuts(_ns(s))}}
+{const _rc=runCommand;runCommand=function(id){if(PX.run[id]){closeMenu();PX.run[id]();return}return _rc(id)}}
+// ⌘P / Ctrl+P is Quick jump: the print dialog must never open, even from a text field.
+for(const k of ['Ctrl+P']){let i=RESERVED_SHORTCUTS.indexOf(k);if(i>=0)RESERVED_SHORTCUTS.splice(i,1)}
+window.addEventListener('keydown',e=>{
+  let s=shortcutFromEvent(e);if(!s)return;
+  if(s==='Ctrl+P'||s==='Ctrl+Shift+P')e.preventDefault();
+  if(capturingCommand||e.defaultPrevented&&s!=='Ctrl+P')return;
+  // keys that must work from text fields too (search boxes, editors): Quick jump, Search, Focus mode
+  for(const id of ['quickJump','searchAll','focusMode']){
+    if(state.shortcuts[id]&&normalizeShortcut(state.shortcuts[id])===s){
+      if(document.querySelector('dialog[open]:not(.px-pal)'))return;
+      e.preventDefault();e.stopPropagation();runCommand(id);return;
+    }
+  }
+},true);
+
+// ---- small helpers ----
+const pxEsc=s=>escapeHTML(String(s??''));
+function pxAllNodes(d=doc()){let out=[];const w=(list,depth,parent)=>list.forEach(n=>{out.push({node:n,depth,parent});w(n.children||[],depth+1,n)});w(d.tree||[],0,null);return out}
+function pxTitle(n){return (typeof noteTitleText==='function'?plainText(noteTitleText(n.text)):plainText(n.text)).replace(/\s+/g,' ').trim()}
+function pxChange(){doc().updatedAt=Date.now();saveState()}
+function pxRerender(){try{renderAll()}catch(e){}if(window.VF&&VF.active){try{vfRender({animate:false})}catch(e){}}}
+function pxSelect(id,{edit=false}={}){
+  let d=doc();if(!locate(id))return;
+  d.selectedId=id;saveState();
+  if(window.VF&&VF.active){if(typeof vfSetView==='function'&&VF.view==='reading')vfSetView('focus');else vfRender({animate:false})}
+  else{if(d.mode==='read'){renderAll();let b=document.querySelector(`[data-read-id="${id}"]`);b&&b.scrollIntoView({block:'center'});b&&b.classList.add('px-flash');setTimeout(()=>b&&b.classList.remove('px-flash'),900)}else selectNode(id)}
+  if(edit)setTimeout(()=>{try{focusNodeEditor(id)}catch(e){}},30);
+}
+
+// ---- dialogs: one simple modal, full-screen sheet on phones ----
+function pxDialog({title,body,cls='',onClose,wide}){
+  let dl=document.createElement('dialog');dl.className='modal px-dlg '+cls+(wide?' px-wide':'');
+  dl.innerHTML=`<div class="modal-head"><h2>${pxEsc(title)}</h2><button class="icon-btn" data-px-close title="Close" aria-label="Close">${icon('x')}</button></div><div class="px-body">${body||''}</div>`;
+  document.body.appendChild(dl);
+  dl.querySelector('[data-px-close]').onclick=()=>dl.close();
+  dl.addEventListener('close',()=>{onClose&&onClose(dl);dl.remove()});
+  dl.addEventListener('click',e=>{if(e.target===dl)dl.close()});
+  dl.showModal();return dl;
+}
+function askDialog(title,{value='',label='',ok='OK',placeholder='',type='text'}={}){
+  return new Promise(res=>{
+    let done=false;
+    let dl=pxDialog({title,cls:'px-ask',body:`<label class="px-field"><span>${pxEsc(label)}</span><input type="${type}" class="px-input" value="${pxEsc(value)}" placeholder="${pxEsc(placeholder)}"></label><div class="px-row px-end"><button type="button" class="px-btn" data-x>Cancel</button><button type="button" class="px-btn primary" data-ok>${pxEsc(ok)}</button></div>`,onClose:()=>{if(!done)res(null)}});
+    let inp=dl.querySelector('input');
+    const fin=v=>{done=true;res(v);dl.close()};
+    dl.querySelector('[data-ok]').onclick=()=>fin(inp.value);
+    dl.querySelector('[data-x]').onclick=()=>dl.close();
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fin(inp.value)}};
+    setTimeout(()=>{inp.focus();inp.select()},20);
+  });
+}
+
+// ---- note meta rows: each persona adds chips/buttons under a note (branch, reading, phone focus card) ----
+function pxMetaHTML(n,ctx){return PX.providers.map(p=>{try{return p(n,ctx)||''}catch(e){console.warn(e);return ''}}).join('')}
+function pxDecorateOne(el,id,ctx){
+  let r=locate(id);if(!r)return;let n=r.node;
+  let host,after;
+  if(ctx==='branch'){host=el.querySelector(':scope > .note-body')||el;after=host.querySelector(':scope > .note-editor')}
+  else if(ctx==='vf'){host=el.querySelector('.vf-body');after=host&&host.querySelector(':scope > .note-editor')}
+  else{host=el.querySelector(':scope > .read-head')||el;after=host.querySelector(':scope > .read-editor, :scope > .note-editor')}
+  if(!host)return;
+  let html=pxMetaHTML(n,{ctx,depth:r.path.length-1,path:r.path});
+  let row=host.querySelector(':scope > .note-meta');
+  if(!html){row&&row.remove()}
+  else{
+    if(!row){row=document.createElement('div');row.className='note-meta';row.contentEditable='false';if(after)after.after(row);else host.appendChild(row)}
+    if(row.dataset.h!==html){row.innerHTML=html;row.dataset.h=html}
+  }
+  for(const c of PX.classers){try{c(el,n,ctx)}catch(e){}}
+}
+function decorateNotes(root=document){
+  root.querySelectorAll('article.note[data-id]').forEach(el=>pxDecorateOne(el,el.dataset.id,'branch'));
+  root.querySelectorAll('[data-read-id]').forEach(el=>pxDecorateOne(el,el.dataset.readId,'read'));
+  root.querySelectorAll('.vf-node.lv0[data-id]').forEach(el=>pxDecorateOne(el,el.dataset.id,'vf'));
+  root.querySelectorAll('.vf-node[data-id]:not(.lv0)').forEach(el=>{let r=locate(el.dataset.id);if(r)for(const c of PX.classers){try{c(el,r.node,'vf')}catch(e){}}});
+  if(typeof fnRenumber==='function')fnRenumber();
+  if(typeof mxCrumbs==='function')try{mxCrumbs()}catch(e){}
+}
+function pxRefresh(){decorateNotes(document);try{renderStatus()}catch(e){}}
+{const _rb=renderBranches;renderBranches=function(...a){let r=_rb.apply(this,a);try{decorateNotes($('#branchPane')||document)}catch(e){console.warn(e)}return r}}
+{const _rr=renderReading;renderReading=function(...a){let r=_rr.apply(this,a);try{decorateNotes($('#readPane')||document)}catch(e){console.warn(e)}return r}}
+{const _rs=renderStatus;renderStatus=function(){_rs();let ns=$('#nodeStatus');if(!ns)return;let s=$('#pxStatus');if(!s){s=document.createElement('span');s.id='pxStatus';s.className='px-status';ns.after(s)}let parts=PX.stat.map(f=>{try{return f()}catch(e){return ''}}).filter(Boolean);s.innerHTML=parts.join('');s.hidden=!parts.length}}
+let pxRefreshT=0;
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('.note-editor,.read-editor,math-field')){clearTimeout(pxRefreshT);pxRefreshT=setTimeout(pxRefresh,350)}},true);
+// meta-row buttons: one delegated handler
+document.addEventListener('click',e=>{
+  let b=e.target.closest&&e.target.closest('[data-px]');if(!b)return;
+  let host=b.closest('[data-id],[data-read-id]');let id=b.dataset.pxId||(host&&(host.dataset.id||host.dataset.readId));
+  let fn=PX.actions[b.dataset.px];if(!fn)return;
+  e.preventDefault();e.stopPropagation();fn(id,b,e);
+},true);
+document.addEventListener('pointerdown',e=>{let b=e.target.closest&&e.target.closest('.note-meta [data-px]');if(b)e.stopPropagation()},true);
+
+// ---- top "More" (all sizes) and note menu additions ----
+function pxTopMenu(anchor){
+  let items=[...PX.topItems.map(f=>typeof f==='function'?f():f).flat().filter(Boolean),{sep:1},
+    cmdItem('documents'),cmdItem('importDoc'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),
+    ...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])];
+  openMenu(anchor,items,{title:'More'});
+}
+function pxItem(id,extra={}){return cmdItem(id,extra)}
+{const _ec=ensureChrome;ensureChrome=function(){_ec();let m=$('#moreTopBtn');if(m&&!m.dataset.px){m.dataset.px='1';m.onclick=()=>pxTopMenu(m)}}}
+function pxEditorFor(id){
+  let c=[...document.querySelectorAll(`[data-edit-id="${id}"],[data-read-edit="${id}"]`)];
+  return c.find(e=>e.offsetParent!==null&&e.getClientRects().length)||c[0]||null;
+}
+function pxFocusEditor(id,atEnd=true){
+  let ed=pxEditorFor(id);if(!ed)return null;ed.focus({preventScroll:false});
+  if(atEnd){try{let r=document.createRange();r.selectNodeContents(ed);r.collapse(false);let s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}}
+  return ed;
+}
+function pxNoteItems(){return PX.noteItems.map(f=>{try{return f()}catch(e){return null}}).flat().filter(Boolean)}
+function pxTopItems(){return PX.topItems.map(f=>typeof f==='function'?f():f).flat().filter(Boolean)}
+openNoteMenu=function(anchor){
+  let extra=pxNoteItems();
+  openMenu(anchor,[...noteClipItems(),{sep:1},cmdItem('addChild'),cmdItem('image'),cmdItem('math'),...(extra.length?[{sep:1},...extra]:[]),{sep:1},cmdItem('deleteNode')],{title:'This note'});
+};
+// parse stored rich text into a tree: {t,val,children:[string|node]}
+function rtParse(text){
+  text=String(text||'');let root={t:'',children:[]},stack=[root],i=0,buf='';
+  const flush=()=>{if(buf){stack[stack.length-1].children.push(buf);buf=''}};
+  while(i<text.length){
+    let ch=text[i];
+    if(ch===RT.O){flush();let t=text[i+1],val='',j=i+2;
+      if(RT_VALUED[t]){let e=text.indexOf(RT.U,j);if(e<0){i+=2;continue}val=text.slice(j,e);j=e+1}
+      let n={t,val,children:[]};stack[stack.length-1].children.push(n);stack.push(n);i=j;continue}
+    if(ch===RT.C){flush();if(stack.length>1)stack.pop();i++;continue}
+    if(ch===RT.U){i++;continue}
+    buf+=ch;i++;
+  }
+  flush();return root;
+}
+
+// ===================== Persona 1: essay writer =====================
+// ---- footnotes: a valued marker 'n' holding the note text; shown as an auto-numbered superscript ----
+RT_VALUED.n=1;
+{const _t=rtTagHTML;rtTagHTML=function(t,val){if(t==='n'){let v=String(val||'');return [`<sup class="rt-fn" contenteditable="false" data-fn="${escapeHTML(v)}" title="${escapeHTML(v)}">`,'</sup>']}return _t(t,val)}}
+{const _k=richTokenFor;richTokenFor=function(node){if(node.nodeName==='SUP'&&node.classList&&node.classList.contains('rt-fn'))return {open:RT.O+'n'+String(node.dataset.fn||'').replace(/[\uE000-\uE002\n]/g,' ')+RT.U,keepEmpty:true};return _k(node)}}
+const FN_RE=/\uE000n([^\uE002]*)\uE002\uE001/g;
+{const _p=plainText;plainText=function(t){return _p(String(t||'').replace(FN_RE,''))}}
+{const _m=richToMarkdown;richToMarkdown=function(t){t=String(t||'');let fns=[];t=t.replace(FN_RE,(m,v)=>{fns.push(v);return '\uF8F4'+(fns.length-1)+'\uF8F5'});return _m(t).replace(/\uF8F4(\d+)\uF8F5/g,(m,k)=>'\uF8F4'+fns[+k]+'\uF8F5')}}
+// Markdown export: footnotes become [^1] with definitions at the end, then the references list
+{const _md=markdown;markdown=function(nodes,depth=0){let out=_md(nodes,depth);if(depth)return out;let defs=[];out=out.replace(/\uF8F4([^\uF8F5]*)\uF8F5/g,(m,v)=>{defs.push(v);return `[^${defs.length}]`});let refs=essRefs();
+  if(refs.length)out+='\n\n## References\n\n'+refs.map(r=>'- '+r).join('\n');
+  if(defs.length)out+='\n\n'+defs.map((v,i)=>`[^${i+1}]: ${v}`).join('\n');return out}}
+function essFootnotes(){let out=[];flatten().forEach(({node})=>{let m;FN_RE.lastIndex=0;while((m=FN_RE.exec(node.text||'')))out.push({id:node.id,text:m[1]})});return out}
+function fnRenumber(){
+  let off={},k=0;flatten().forEach(({node})=>{off[node.id]=k;k+=((node.text||'').match(FN_RE)||[]).length});
+  document.querySelectorAll('[data-edit-id],[data-read-edit]').forEach(ed=>{let id=ed.dataset.editId||ed.dataset.readEdit;if(!(id in off))return;
+    ed.querySelectorAll('sup.rt-fn').forEach((s,i)=>{let n=String(off[id]+i+1);if(s.dataset.n!==n)s.dataset.n=n})});
+}
+function essRefs(){let d=doc();return Array.isArray(d.refs)?d.refs:[]}
+// insert at the caret of the note being written
+let essSavedRange=null;
+function essCaret(){let s=getSelection();if(!s||!s.rangeCount)return null;let r=s.getRangeAt(0);let el=r.startContainer.nodeType===1?r.startContainer:r.startContainer.parentElement;let ed=el&&el.closest&&el.closest('.note-editor,.read-editor');if(!ed||el.closest('math-field,.math-container'))return null;return {ed,range:r.cloneRange()}}
+function essInsertAtom(ed,range,html){
+  ed.focus({preventScroll:true});let s=getSelection();s.removeAllRanges();s.addRange(range);
+  range.deleteContents();let t=document.createElement('template');t.innerHTML=html;let frag=t.content,last=frag.lastChild;range.insertNode(frag);
+  let r=document.createRange();r.setStartAfter(last);r.collapse(true);s.removeAllRanges();s.addRange(r);
+  ed.dispatchEvent(new Event('input',{bubbles:true}));
+}
+async function essInsertFootnote(){
+  let c=essCaret();
+  if(!c){let id=doc().selectedId;let ed=pxFocusEditor(id,true);if(ed)c=essCaret()}
+  if(!c){toast('Click into a note first');return}
+  let refs=essRefs();
+  let v=await essFootnoteDialog('',refs);
+  if(v==null||!v.trim())return;
+  v=v.trim().replace(/[\uE000-\uE002\n]/g,' ');
+  snapshot();
+  essInsertAtom(c.ed,c.range,`<sup class="rt-fn" contenteditable="false" data-fn="${escapeHTML(v)}" title="${escapeHTML(v)}"></sup>\u200B`);
+  fnRenumber();forceToast('Footnote added',1400);
+}
+function essFootnoteDialog(value,refs){
+  return new Promise(res=>{let done=false;
+    let dl=pxDialog({title:value?'Edit footnote':'Footnote',cls:'px-ask',body:`<label class="px-field"><span>Footnote text (a comment or a source, e.g. "Smith 2020, p. 4")</span><textarea class="px-input" rows="3">${pxEsc(value)}</textarea></label>${refs.length?`<div class="px-sub">From your references</div><div class="px-chips">${refs.map((r,i)=>`<button type="button" class="px-chip" data-ref="${i}">${pxEsc(r.length>60?r.slice(0,58)+'…':r)}</button>`).join('')}</div>`:''}<div class="px-row px-end"><button type="button" class="px-btn" data-x>Cancel</button><button type="button" class="px-btn primary" data-ok>${value?'Save':'Add footnote'}</button></div>`,onClose:()=>{if(!done)res(null)}});
+    let ta=dl.querySelector('textarea');
+    dl.querySelectorAll('[data-ref]').forEach(b=>b.onclick=()=>{ta.value=refs[+b.dataset.ref];ta.focus()});
+    dl.querySelector('[data-x]').onclick=()=>dl.close();
+    const fin=()=>{done=true;res(ta.value);dl.close()};
+    dl.querySelector('[data-ok]').onclick=fin;
+    ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fin()}};
+    setTimeout(()=>ta.focus(),20);
+  });
+}
+// tap a footnote number: edit or remove it
+document.addEventListener('click',async e=>{
+  let s=e.target.closest&&e.target.closest('sup.rt-fn');if(!s)return;
+  let ed=s.closest('.note-editor,.read-editor');if(!ed)return;
+  e.preventDefault();e.stopPropagation();
+  openMenu(s,[{icon:'edit',label:'Edit footnote '+(s.dataset.n||''),run:async()=>{let v=await essFootnoteDialog(s.dataset.fn||'',essRefs());if(v==null)return;v=v.trim();snapshot();if(!v){s.remove()}else{s.dataset.fn=v;s.title=v}ed.dispatchEvent(new Event('input',{bubbles:true}));fnRenumber()}},
+    {icon:'trash',label:'Remove footnote',danger:true,run:()=>{snapshot();s.remove();ed.dispatchEvent(new Event('input',{bubbles:true}));fnRenumber();toastAction('Footnote removed','Undo',()=>runCommand('undo'))}}],{title:'Footnote '+(s.dataset.n||'')});
+},true);
+
+// ---- word counts ----
+const WC_MATH=/\$\$[\s\S]*?\$\$|\$[^$\n]+\$/g;
+function wcText(t){t=String(t||'');let maths=(t.match(WC_MATH)||[]).length;let p=plainText(t.replace(WC_MATH,' '));return (p.match(/[\p{L}\p{N}]+(?:['’\-.][\p{L}\p{N}]+)*/gu)||[]).length+maths}
+function wcNode(n){return wcText(n.text)+(n.children||[]).reduce((a,c)=>a+wcNode(c),0)}
+function wcDoc(){return tree().reduce((a,n)=>a+wcNode(n),0)}
+const fmtN=n=>Number(n).toLocaleString('en-US');
+function essSections(){return tree().filter(n=>plainText(n.text).trim()||n.children.length)}
+function essIsSection(n,depth){return depth===0&&(n.children.length>0||!!n.status||!!n.target)}
+function wcBar(w,t){if(!t)return '';let p=Math.min(100,Math.round(w/t*100));return `<i class="px-bar" style="--p:${p}%" aria-hidden="true"></i>`}
+PX.providers.push((n,{ctx,depth})=>{
+  let show=ctx==='read'?essIsSection(n,depth):(!!n.status||!!n.target);
+  if(!show)return '';
+  let w=wcNode(n),t=+n.target||0,st=n.status;
+  return `<button type="button" class="px-chip px-wc${t&&w>=t?' met':''}" data-px="wordCount" title="Words in this section">${icon('wordCount')}<span>${fmtN(w)}${t?' / '+fmtN(t):''} words</span>${wcBar(w,t)}</button>`+
+    `<button type="button" class="px-chip px-st ${st==='done'?'done':'draft'}" data-px="toggleDone" aria-pressed="${st==='done'}" title="Mark this section draft or done">${icon(st==='done'?'essDone':'essDraft')}<span>${st==='done'?'Done':'Draft'}</span></button>`;
+});
+PX.classers.push((el,n)=>{el.classList.toggle('px-is-done',n.status==='done')});
+PX.stat.push(()=>{let w=wcDoc(),t=+doc().wordTarget||0;let secs=essSections().filter(n=>n.status);let done=secs.filter(n=>n.status==='done').length;
+  return `<button type="button" class="px-schip" data-px="wordCount" title="Word count and targets">${fmtN(w)}${t?' / '+fmtN(t):''} words</button>`+(secs.length?`<span class="px-schip">${done}/${secs.length} done</span>`:'')});
+PX.actions.wordCount=()=>essWordCountDialog();
+PX.actions.toggleDone=id=>essToggleDone(id);
+function essSectionOf(id){let r=locate(id);return r?r.path[0]:null}
+function essToggleDone(id){let r=locate(id||doc().selectedId);if(!r)return;let n=r.node;snapshot();n.status=n.status==='done'?'draft':'done';pxChange();pxRefresh();toast(n.status==='done'?'Marked done':'Marked draft')}
+function essWordCountDialog(){
+  let d=doc();
+  const rows=()=>essSections().map(n=>{let w=wcNode(n),t=+n.target||0;return `<div class="px-wcrow" data-sid="${n.id}"><button type="button" class="px-link" data-go="${n.id}">${pxEsc(pxTitle(n)||'Untitled')}</button><span class="px-num">${fmtN(w)}${wcBar(w,t)}</span><label class="px-tgt"><span class="sr">Target</span><input type="number" min="0" step="50" inputmode="numeric" placeholder="Target" value="${t||''}" data-tgt="${n.id}" aria-label="Target words for ${pxEsc(pxTitle(n))}"></label><button type="button" class="px-chip px-st ${n.status==='done'?'done':'draft'}" data-st="${n.id}" aria-pressed="${n.status==='done'}">${icon(n.status==='done'?'essDone':'essDraft')}<span>${n.status==='done'?'Done':'Draft'}</span></button></div>`}).join('')||'<p class="px-muted">No sections yet. Top-level notes are sections.</p>';
+  let dl=pxDialog({title:'Word count',wide:true,cls:'px-wcdlg',body:`<div class="px-total"><b id="essTotal">${fmtN(wcDoc())}</b> words in this document<label class="px-tgt">Target <input type="number" min="0" step="100" inputmode="numeric" id="essDocTarget" value="${+d.wordTarget||''}" placeholder="None"></label></div><div class="px-wclist">${rows()}</div><p class="px-muted">Footnotes are not counted. Each maths field counts as one word.</p>`,onClose:()=>pxRefresh()});
+  const wire=()=>{
+    dl.querySelectorAll('[data-tgt]').forEach(inp=>inp.onchange=()=>{let r=locate(inp.dataset.tgt);if(!r)return;snapshot();let v=Math.max(0,Math.round(+inp.value||0));if(v)r.node.target=v;else delete r.node.target;pxChange();redraw()});
+    dl.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{let r=locate(b.dataset.st);if(!r)return;snapshot();r.node.status=r.node.status==='done'?'draft':'done';pxChange();redraw()});
+    dl.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{dl.close();pxSelect(b.dataset.go)});
+  };
+  const redraw=()=>{dl.querySelector('.px-wclist').innerHTML=rows();wire()};
+  dl.querySelector('#essDocTarget').onchange=e=>{let v=Math.max(0,Math.round(+e.target.value||0));if(v)d.wordTarget=v;else delete d.wordTarget;pxChange();try{renderStatus()}catch(_){}};
+  wire();
+}
+function essReferencesDialog(){
+  let d=doc();if(!Array.isArray(d.refs))d.refs=[];
+  const fnList=()=>{let f=essFootnotes();return f.length?`<ol class="px-fnlist">${f.map(x=>`<li><button type="button" class="px-link" data-go="${x.id}">${pxEsc(x.text)}</button></li>`).join('')}</ol>`:'<p class="px-muted">No footnotes yet. Use “Insert footnote” while writing.</p>'};
+  const refList=()=>d.refs.length?`<ol class="px-reflist">${d.refs.map((r,i)=>`<li><span>${pxEsc(r)}</span><button type="button" class="icon-btn px-del" data-del="${i}" title="Remove" aria-label="Remove reference">${icon('trash')}</button></li>`).join('')}</ol>`:'<p class="px-muted">No references yet.</p>';
+  let dl=pxDialog({title:'References & footnotes',wide:true,cls:'px-refdlg',body:`<h3 class="px-h">References</h3><div id="essRefs">${refList()}</div><div class="px-row"><input class="px-input" id="essRefIn" placeholder="Add a source, e.g. Smith, J. (2020) Title. Publisher."><button type="button" class="px-btn primary" id="essRefAdd">Add</button></div><h3 class="px-h">Footnotes <span class="px-muted">numbered in document order</span></h3><div id="essFns">${fnList()}</div><div class="px-row px-end"><button type="button" class="px-btn" id="essFnAdd">${icon('footnote')} Insert footnote</button></div>`});
+  const wire=()=>{dl.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{snapshot();d.refs.splice(+b.dataset.del,1);pxChange();dl.querySelector('#essRefs').innerHTML=refList();wire()});
+    dl.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{dl.close();pxSelect(b.dataset.go)})};
+  const add=()=>{let i=dl.querySelector('#essRefIn'),v=i.value.trim();if(!v)return;snapshot();d.refs.push(v);pxChange();i.value='';dl.querySelector('#essRefs').innerHTML=refList();wire();i.focus()};
+  dl.querySelector('#essRefAdd').onclick=add;dl.querySelector('#essRefIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}};
+  dl.querySelector('#essFnAdd').onclick=()=>{dl.close();setTimeout(essInsertFootnote,30)};
+  wire();
+}
+
+// ---- focus mode: chrome hidden, everything but the note being written dimmed ----
+function essFocusMode(on){
+  let h=document.documentElement;on=on??!h.classList.contains('px-focus');
+  h.classList.toggle('px-focus',on);
+  let b=$('#pxFocusExit');
+  if(on&&!b){document.body.insertAdjacentHTML('beforeend',`<button type="button" class="px-focus-exit" id="pxFocusExit" title="Exit focus mode (Esc)" aria-label="Exit focus mode">${icon('focusExit')}<span>Exit focus</span></button>`);$('#pxFocusExit').onclick=()=>essFocusMode(false)}
+  if(!on&&b)b.remove();
+  if(on){let id=doc().selectedId;setTimeout(()=>{let ed=pxEditorFor(id);ed&&ed.scrollIntoView({block:'center'})},60)}
+  try{fitToolbar()}catch(e){}
+  toast(on?'Focus mode. Esc to exit':'Focus mode off');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.documentElement.classList.contains('px-focus')&&!document.querySelector('dialog[open],.menu-pop')){let a=document.activeElement;if(a&&a.closest&&a.closest('.note-editor,.read-editor,math-field'))return;e.preventDefault();essFocusMode(false)}});
+// mark the paragraph being written so the rest can dim
+document.addEventListener('focusin',e=>{let n=e.target.closest&&e.target.closest('article.note,.read-node,.read-block,.vf-node');document.querySelectorAll('.px-cur').forEach(x=>x!==n&&x.classList.remove('px-cur'));n&&n.classList.add('px-cur')});
+
+// ---- .docx export: OOXML written here, zipped with a tiny STORE zip writer (no libraries) ----
+const CRC_T=(()=>{let t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipStore(files){
+  let enc=new TextEncoder(),parts=[],central=[],off=0,now=new Date();
+  let dt=((now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1))&0xFFFF,dd=(((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate())&0xFFFF;
+  for(const f of files){
+    let name=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+    let h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,dt,true);h.setUint16(12,dd,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),name,data);
+    let c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,dt,true);c.setUint16(14,dd,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);
+    off+=30+name.length+data.length;
+  }
+  let csize=central.reduce((a,b)=>a+b.length,0);
+  let e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csize,true);e.setUint32(16,off,true);
+  let all=[...parts,...central,new Uint8Array(e.buffer)],len=all.reduce((a,b)=>a+b.length,0),out=new Uint8Array(len),p=0;
+  for(const a of all){out.set(a,p);p+=a.length}
+  return out;
+}
+const xmlEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uE000-\uF8FF]/g,'');
+// rich text → paragraphs [{style,align,list,runs:[{text|fn|br, b,i,u,s,h,k,color,size,link,math}]}]
+function rtParas(text,baseStyle='Normal'){
+  let paras=[],cur=null,afterBlock=false,root=rtParse(text);
+  const np=ctx=>{cur={style:ctx.style,align:ctx.align,list:ctx.list,check:ctx.check,runs:[]};paras.push(cur);afterBlock=false;return cur};
+  const pushText=(s,fmt,ctx)=>{
+    s.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g).forEach(part=>{if(!part)return;
+      let m=part.match(/^\$\$([\s\S]*)\$\$$|^\$([^$\n]+)\$$/);
+      (cur||np(ctx)).runs.push(m?{...fmt,text:latexToText(m[1]??m[2]),math:true}:{...fmt,text:part.replace(/\u200B/g,'')})});
+  };
+  function walk(node,fmt,ctx){
+    for(const c of node.children){
+      if(typeof c==='string'){
+        c.split('\n').forEach((p,k)=>{
+          if(k>0){if(afterBlock&&!cur){afterBlock=false}else if(ctx.style==='Code'&&cur)cur.runs.push({br:1});else np(ctx)}
+          if(p)pushText(p,fmt,ctx);
+        });
+        continue;
+      }
+      let t=c.t;
+      if('biushk'.includes(t)&&t.length===1){walk(c,{...fmt,[t]:1},ctx);continue}
+      if(t==='a'){walk(c,{...fmt,link:safeHref(c.val)},ctx);continue}
+      if(t==='c'){walk(c,{...fmt,color:c.val},ctx);continue}
+      if(t==='z'){walk(c,{...fmt,size:c.val},ctx);continue}
+      if(t==='n'){(cur||np(ctx)).runs.push({fn:c.val});continue}
+      let ctx2={...ctx};
+      if(t==='1'||t==='2'||t==='3')ctx2.style='Heading'+t;
+      else if(t==='q')ctx2.style='Quote';
+      else if(t==='p')ctx2.style='Code';
+      else if(t==='g')ctx2.align=c.val;
+      else if(t==='l'||t==='o'||t==='x'){ctx2.listType=t;ctx2.listId=(rtParas.lid=(rtParas.lid||0)+1);walk(c,fmt,ctx2);cur=null;afterBlock=true;continue}
+      else if(t==='L'||t==='K'){ctx2.list={type:ctx.listType||'l',id:ctx.listId||0};ctx2.check=ctx.listType==='x'?(t==='K'?'☑ ':'☐ '):'';np(ctx2);walk(c,fmt,ctx2);cur=null;afterBlock=true;continue}
+      else{walk(c,fmt,ctx);continue}
+      np(ctx2);walk(c,fmt,ctx2);cur=null;afterBlock=true;
+    }
+  }
+  walk(root,{},{style:baseStyle});
+  return paras.filter((p,i)=>p.runs.length||i===0);
+}
+const DOCX_COLORS={red:'B5533C',orange:'B86F2E',yellow:'9C7F2A',green:'4F7A45',blue:'3F6A8C',purple:'5F6B73',gray:'6B7174'};
+const DOCX_SIZES={sm:18,lg:28,xl:36};
+function docxBuild(){
+  let d=doc(),fns=[],links=[],nums=[],body=[];
+  const run=r=>{
+    if(r.br)return '<w:r><w:br/></w:r>';
+    if(r.fn!=null){fns.push(r.fn);return `<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteReference w:id="${fns.length+1}"/></w:r>`}
+    let p='';if(r.b)p+='<w:b/>';if(r.i||r.math)p+='<w:i/>';if(r.u||r.link)p+='<w:u w:val="single"/>';if(r.s)p+='<w:strike/>';
+    if(r.k||r.math)p+=`<w:rFonts w:ascii="${r.math?'Cambria Math':'Consolas'}" w:hAnsi="${r.math?'Cambria Math':'Consolas'}"/>`;
+    if(r.color&&DOCX_COLORS[r.color])p+=`<w:color w:val="${DOCX_COLORS[r.color]}"/>`;else if(r.link)p+='<w:color w:val="2B5D8A"/>';
+    if(r.size&&DOCX_SIZES[r.size])p+=`<w:sz w:val="${DOCX_SIZES[r.size]}"/>`;
+    if(r.h)p+='<w:highlight w:val="yellow"/>';
+    let x=`<w:r>${p?`<w:rPr>${p}</w:rPr>`:''}<w:t xml:space="preserve">${xmlEsc(r.text)}</w:t></w:r>`;
+    if(r.link){links.push(r.link);x=`<w:hyperlink r:id="rIdL${links.length}">${x}</w:hyperlink>`}
+    return x;
+  };
+  const numFor=list=>{if(list.type==='o'){let k=nums.findIndex(n=>n.id===list.id);if(k<0){nums.push({id:list.id});k=nums.length-1}return 10+k}return list.type==='x'?3:1};
+  const para=p=>{
+    let pp='';if(p.style&&p.style!=='Normal')pp+=`<w:pStyle w:val="${p.style}"/>`;
+    if(p.list&&p.list.type!=='x')pp+=`<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numFor(p.list)}"/></w:numPr>`;
+    if(p.align)pp+=`<w:jc w:val="${p.align==='justify'?'both':p.align}"/>`;
+    let runs=(p.check?[{text:p.check}]:[]).concat(p.runs);
+    return `<w:p>${pp?`<w:pPr>${pp}</w:pPr>`:''}${runs.map(run).join('')}</w:p>`;
+  };
+  if(plainText(d.title||'').trim())body.push(para({style:'Title',runs:[{text:d.title}]}));
+  const node=(n,depth)=>{
+    let heading=n.children.length>0;
+    let ps=rtParas(n.text,heading?'Heading'+Math.min(depth+1,3):'Normal');
+    if(heading){ps.forEach((p,i)=>{if(i>0&&p.style&&p.style.startsWith('Heading')&&!p.list)p.style='Normal'})}
+    ps.forEach(p=>body.push(para(p)));
+    n.children.forEach(c=>node(c,depth+1));
+  };
+  tree().forEach(n=>node(n,0));
+  let refs=essRefs();
+  if(refs.length){body.push(para({style:'Heading1',runs:[{text:'References'}]}));refs.forEach(r=>body.push(para({style:'Bibliography',runs:[{text:r}]})))}
+  const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  let documentXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W}><w:body>${body.join('')}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  let footXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:footnotes ${W}><w:footnote w:type="separator" w:id="0"><w:p><w:r><w:separator/></w:r></w:p></w:footnote><w:footnote w:type="continuationSeparator" w:id="1"><w:p><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>${fns.map((f,i)=>`<w:footnote w:id="${i+2}"><w:p><w:pPr><w:pStyle w:val="FootnoteText"/></w:pPr><w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteRef/></w:r><w:r><w:t xml:space="preserve"> ${xmlEsc(f)}</w:t></w:r></w:p></w:footnote>`).join('')}</w:footnotes>`;
+  // footnote reference ids: run() numbered from 2 (0/1 are separators)
+  documentXml=documentXml.replace(/w:footnoteReference w:id="(\d+)"/g,(m,k)=>`w:footnoteReference w:id="${+k}"`);
+  const lvl=(fmt,txt)=>`<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="${fmt}"/><w:lvlText w:val="${txt}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl>`;
+  let numXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering ${W}><w:abstractNum w:abstractNumId="0">${lvl('bullet','•')}</w:abstractNum><w:abstractNum w:abstractNumId="1">${lvl('decimal','%1.')}</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>${nums.map((n,k)=>`<w:num w:numId="${10+k}"><w:abstractNumId w:val="1"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>`).join('')}</w:numbering>`;
+  const st=(id,name,ppr,rpr,type='paragraph')=>`<w:style w:type="${type}" w:styleId="${id}"><w:name w:val="${name}"/>${type==='paragraph'?'<w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/>':''}${ppr?`<w:pPr>${ppr}</w:pPr>`:''}${rpr?`<w:rPr>${rpr}</w:rPr>`:''}</w:style>`;
+  let stylesXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>`+
+    st('Title','Title','<w:spacing w:after="240"/>','<w:sz w:val="48"/>')+
+    st('Heading1','heading 1','<w:keepNext/><w:spacing w:before="360" w:after="120"/><w:outlineLvl w:val="0"/>','<w:b/><w:sz w:val="32"/>')+
+    st('Heading2','heading 2','<w:keepNext/><w:spacing w:before="240" w:after="80"/><w:outlineLvl w:val="1"/>','<w:b/><w:sz w:val="26"/>')+
+    st('Heading3','heading 3','<w:keepNext/><w:spacing w:before="200" w:after="60"/><w:outlineLvl w:val="2"/>','<w:b/><w:sz w:val="23"/>')+
+    st('Quote','Quote','<w:ind w:left="720" w:right="720"/>','<w:i/>')+
+    st('Code','Code','<w:spacing w:after="0"/>','<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="20"/>')+
+    st('Bibliography','Bibliography','<w:ind w:left="720" w:hanging="720"/>','')+
+    st('FootnoteText','footnote text','<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>','<w:sz w:val="18"/>')+
+    `<w:style w:type="character" w:styleId="FootnoteReference"><w:name w:val="footnote reference"/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style></w:styles>`;
+  let rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdN" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/><Relationship Id="rIdF" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>${links.map((l,i)=>`<Relationship Id="rIdL${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${xmlEsc(l)}" TargetMode="External"/>`).join('')}</Relationships>`;
+  let ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  let rootRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  let iso=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  let core=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xmlEsc(d.title||'Untitled')}</dc:title><dc:creator>Branch Studio</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${iso}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${iso}</dcterms:modified></cp:coreProperties>`;
+  return zipStore([{name:'[Content_Types].xml',data:ct},{name:'_rels/.rels',data:rootRels},{name:'docProps/core.xml',data:core},{name:'word/document.xml',data:documentXml},{name:'word/styles.xml',data:stylesXml},{name:'word/numbering.xml',data:numXml},{name:'word/footnotes.xml',data:footXml},{name:'word/_rels/document.xml.rels',data:rels}]);
+}
+function exportDocx(){flushSave();let bytes=docxBuild();downloadFile(safeName(doc().title)+'.docx',bytes,'application/vnd.openxmlformats-officedocument.wordprocessingml.document');forceToast('Word document exported',1600)}
+
+// ---- PDF export: a print-styled copy of the document, then the system print / Save as PDF ----
+function essPrintHTML(){
+  let d=doc(),fnn=0,notes=[];
+  const html=t=>{let h=writingHTML(t);let tpl=document.createElement('template');tpl.innerHTML=h;
+    tpl.content.querySelectorAll('.math-container').forEach(m=>{let f=m.querySelector('math-field');let s=document.createElement('span');s.className='p-math';s.innerHTML=mathStaticHTML(f?f.textContent:'');m.replaceWith(s)});
+    tpl.content.querySelectorAll('sup.rt-fn').forEach(s=>{fnn++;notes.push(s.dataset.fn);s.removeAttribute('contenteditable');s.textContent=fnn;s.id='pfr'+fnn});
+    tpl.content.querySelectorAll('.wl').forEach(s=>s.replaceWith(document.createTextNode(s.textContent)));
+    tpl.content.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
+    let div=document.createElement('div');div.appendChild(tpl.content);return div.innerHTML};
+  const node=(n,depth)=>{let tag=n.children.length?'h'+Math.min(depth+2,4):'div';let imgs=(n.images||[]).map(i=>`<img src="${i.src}" alt="">`).join('');
+    return `<${tag} class="p-node p-d${Math.min(depth,3)}">${html(n.text)}</${tag}>${imgs?`<div class="p-imgs">${imgs}</div>`:''}${n.children.map(c=>node(c,depth+1)).join('')}`};
+  let main=tree().map(n=>node(n,0)).join('');
+  let refs=essRefs();
+  return `<h1 class="p-title">${escapeHTML(d.title||'Untitled')}</h1>${main}${refs.length?`<h2 class="p-sec">References</h2><ol class="p-refs">${refs.map(r=>`<li>${escapeHTML(r)}</li>`).join('')}</ol>`:''}${notes.length?`<h2 class="p-sec">Notes</h2><ol class="p-notes">${notes.map(n=>`<li>${escapeHTML(n)}</li>`).join('')}</ol>`:''}`;
+}
+function exportPdf(){
+  flushSave();
+  let p=$('#printDoc');if(!p){p=document.createElement('div');p.id='printDoc';document.body.appendChild(p)}
+  p.innerHTML=essPrintHTML();
+  document.documentElement.classList.add('px-printing');
+  let old=document.title;document.title=safeName(doc().title);
+  const done=()=>{document.documentElement.classList.remove('px-printing');document.title=old;window.removeEventListener('afterprint',done)};
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>{try{window.print()}catch(e){forceToast('Printing is not available here',2000)}if(!('onafterprint' in window))setTimeout(done,1000)},50);
+}
+
+registerCommands({
+  wordCount:{label:'Word count & targets',bi:'123',run:essWordCountDialog,pc:'Alt+Shift+W',apple:'Ctrl+Meta+W'},
+  footnote:{label:'Insert footnote',bi:'asterisk',run:essInsertFootnote,pc:'Alt+Shift+O',apple:'Ctrl+Meta+U'},
+  references:{label:'References & footnotes',bi:'bookmarks',run:essReferencesDialog,pc:'',apple:''},
+  focusMode:{label:'Focus mode',bi:'fullscreen',run:()=>essFocusMode(),pc:'Alt+Shift+F',apple:'Ctrl+Meta+J'},
+  toggleDone:{label:'Mark section draft / done',bi:'check2-circle',run:()=>essToggleDone(doc().selectedId),pc:'',apple:''},
+  exportDocx:{label:'Export Word (.docx)',bi:'file-earmark-word',run:exportDocx,pc:'',apple:''},
+  exportPdf:{label:'Export PDF / print',bi:'file-earmark-pdf',run:exportPdf,pc:'',apple:''}
+});
+Object.assign(BOOTSTRAP_ICONS,{essDone:'check-circle-fill',essDraft:'pencil',focusExit:'fullscreen-exit'});
+PX.topItems.push(()=>[cmdItem('wordCount'),cmdItem('references'),cmdItem('focusMode'),cmdItem('exportDocx'),cmdItem('exportPdf')]);
+PX.noteItems.push(()=>{let n=locate(doc().selectedId)?.node;return [cmdItem('footnote'),cmdItem('toggleDone',{label:n&&n.status==='done'?'Mark as draft':'Mark as done',icon:n&&n.status==='done'?'essDraft':'toggleDone'})]});
+
 init();
 </script>
 
@@ -6816,7 +7365,9 @@ function vfEnsureShell(){
 function vfOpenMore(anchor){
   openMenu(anchor,[
     ...(typeof noteClipItems==='function'?noteClipItems():[]),
+    ...(typeof pxNoteItems==='function'?pxNoteItems():[]),
     {sep:1},
+    ...(typeof pxTopItems==='function'?[...pxTopItems(),{sep:1}]:[]),
     cmdItem('addTopic',{label:'New topic'}),
     cmdItem('importDoc',{label:'Import document'}),
     cmdItem('exportMd',{label:'Export Markdown'}),
@@ -6961,6 +7512,7 @@ function vfRender(opts={}){
   $('#vfCrumb').textContent=r.path.map(n=>vfPlain(typeof noteTitleText==='function'?{text:noteTitleText(n.text)}:n)).join(' › ');
   $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
   bindEditors(stack);
+  if(typeof decorateNotes==='function')decorateNotes(stack);
   stack.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{
     e.stopPropagation();let rr=locate(doc().selectedId);if(!rr)return;
     snapshot();rr.node.images.splice(Number(b.dataset.removeImage),1);
@@ -6999,6 +7551,7 @@ function vfRenderReading(){
     });
   });
   bindEditors(pane,true);
+  if(typeof decorateNotes==='function')decorateNotes(pane);
   $('#vfCrumb').textContent='Reading';
   $$('[data-vf-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vfView===VF.view?'true':'false'));
   let h=$('#vfHint');if(h)h.hidden=true;
