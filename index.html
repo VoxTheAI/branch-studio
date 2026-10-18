@@ -5076,6 +5076,44 @@ function downloadFile(name,content,type){let blob=new Blob([content],{type});if(
 function exportMarkdown(){let d=doc(),content=`# ${d.title||'Untitled'}\n\n${markdown(d.tree)}`;downloadFile(safeName(d.title)+'.md',content,'text/markdown;charset=utf-8');toast('Markdown exported')}
 function exportBackup(){flushSave();let stamp=new Date().toISOString().slice(0,10);downloadFile(`branch-studio-backup-${stamp}.json`,JSON.stringify({app:'branch-studio',format:1,exportedAt:new Date().toISOString(),state},null,1),'application/json');Store.backupNeeded=false;forceToast('Backup exported',1500)}
 function importBackup(){let input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;let reader=new FileReader();reader.onload=()=>{let data;try{data=JSON.parse(reader.result)}catch(e){forceToast('That file is not a Branch Studio backup',2500);return}let incoming=normalizeState(deep(data&&data.state?data.state:data));if(!incoming){forceToast('That file is not a Branch Studio backup',2500);return}snapshot();let added=0;for(let d of incoming.documents){let existing=state.documents.find(x=>x.id===d.id);if(existing&&JSON.stringify(existing.tree)===JSON.stringify(d.tree)&&existing.title===d.title)continue;if(existing){d.id=uid('d');d.title=(d.title||'Untitled')+' (restored)'}state.documents.push(d);added++}if(added)state.activeDocumentId=state.documents[state.documents.length-1].id;saveState();renderAll();forceToast(added?`Restored ${added} document${added===1?'':'s'}`:'Backup already up to date',2000)};reader.readAsText(f)};input.click()}
+// minimal .docx -> text: unzip word/document.xml via DecompressionStream and pull <w:t> runs
+async function docxToText(buf){
+  try{
+    let bytes=new Uint8Array(buf);
+    let idx=0, xml=null;
+    while(idx<bytes.length-30){
+      if(bytes[idx]===0x50&&bytes[idx+1]===0x4b&&bytes[idx+2]===0x03&&bytes[idx+3]===0x04){
+        let method=bytes[idx+8]|(bytes[idx+9]<<8);
+        let csize=bytes[idx+18]|(bytes[idx+19]<<8)|(bytes[idx+20]<<16)|(bytes[idx+21]<<24);
+        let fnlen=bytes[idx+26]|(bytes[idx+27]<<8);
+        let eflen=bytes[idx+28]|(bytes[idx+29]<<8);
+        let name=String.fromCharCode(...bytes.slice(idx+30,idx+30+fnlen));
+        let dataStart=idx+30+fnlen+eflen;
+        if(name==='word/document.xml'){
+          let raw=bytes.slice(dataStart,dataStart+csize);
+          if(method===0){xml=new TextDecoder().decode(raw)}
+          else if(method===8&&window.DecompressionStream){
+            let ds=new DecompressionStream('deflate-raw');
+            let w=ds.writable.getWriter();w.write(raw);w.close();
+            let r=ds.readable.getReader();let chunks=[];let done=false;
+            while(!done){let res=await r.read();if(res.done){done=true;break}chunks.push(res.value)}
+            let out=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));let off=0;
+            for(let c of chunks){out.set(c,off);off+=c.length}
+            xml=new TextDecoder().decode(out);
+          }
+          break;
+        }
+        idx=dataStart+csize;
+      } else idx++;
+    }
+    if(!xml)return '';
+    let text=xml.replace(/<w:br[^>]*\/>/g,'\n').replace(/<\/w:p>/g,'\n');
+    text=text.replace(/<[^>]+>/g,'');
+    text=text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+    return text.replace(/\n{3,}/g,'\n\n').trim();
+  }catch(e){return ''}
+}
+
 function chooseImage(){let id=doc().selectedId;let input=document.createElement('input');input.type='file';input.accept='image/*';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;downscaleImage(f).then(src=>addImageToNode(id,{name:f.name,src}))};input.click()}
 function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r||!img||!/^data:image\//.test(img.src||''))return false;snapshot();let rec={name:img.name||'Image',src:img.src};(r.node.images??=[]).push(rec);doc().selectedId=r.node.id;doc().updatedAt=Date.now();saveState();renderAll();toast('Image added');if(!rec.w){measureImg(rec.src).then(d=>{if(!d)return;let idx=r.node.images.indexOf(rec);if(idx<0)return;rec.w=d.w;rec.h=d.h;saveState();let imgs=document.querySelectorAll(`#columns .note[data-id="${r.node.id}"] .image-editor img`);if(imgs[idx]){imgs[idx].width=d.w;imgs[idx].height=d.h}})}return true}
 function insertMath(){let id=doc().selectedId,sel=getSelection(),anchorEd=sel?.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement)?.closest?.('.note-editor,.read-editor'):null;let ed=(anchorEd&&(anchorEd.dataset.editId||anchorEd.dataset.readEdit)===id?anchorEd:null)||(doc().mode==='read'?document.querySelector(`[data-read-edit="${id}"]`):document.querySelector(`[data-edit-id="${id}"]`))||document.querySelector(`[data-read-edit="${id}"]`);if(!ed||!window.customElements?.get('math-field')){toast('Math editor unavailable');return}snapshot();let range;if(sel?.rangeCount&&ed.contains(sel.anchorNode)&&!sel.anchorNode.parentElement?.closest?.('.math-container'))range=sel.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});let wrap=document.createElement('span');wrap.className='math-container';wrap.contentEditable='false';let mf=document.createElement('math-field');mf.dataset.display='false';wrap.appendChild(mf);range.deleteContents();let spacer=document.createTextNode('\u200B');range.insertNode(spacer);range.insertNode(wrap);if(ed.innerHTML.startsWith('<br>'))ed.querySelector('br')?.remove();bindMath(ed);requestAnimationFrame(()=>{try{mf.focus()}catch{}});let r=locate(doc().selectedId);if(r){r.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}toast('Math field inserted')}
@@ -6933,7 +6971,7 @@ function openImporter(src){
       <div class="imp-tree" id="impTree" role="tree" aria-label="Preview of the branches"></div>
     </section>
   </div>
-  <div class="button-row imp-foot"><span class="imp-hint">Promote, demote, merge or rename before importing. One undo removes the whole import.</span><button type="button" class="secondary" data-imp-close>Cancel</button><button type="button" class="primary" id="impGo">Import</button></div>`;
+  <div class="button-row imp-foot"><span class="imp-hint">Promote, demote, merge or rename before importing. One undo removes the whole import.</span><button type="button" class="secondary" id="impFileBtn">${icon('file-earmark-arrow-up')} File</button><button type="button" class="secondary" data-imp-close>Cancel</button><button type="button" class="primary" id="impGo">Import</button></div>`;
   let ta=$('#impText');ta.value=impSourceText(IMP.src);
   const note=()=>{$('#impSrcNote').textContent=IMP.src.html?'Formatted paste: headings, bold, lists and maths are kept.':''};note();
   ta.addEventListener('paste',e=>{let dt=e.clipboardData;if(!dt)return;let h='',t='';try{h=dt.getData('text/html');t=dt.getData('text/plain')}catch(x){}if(!h&&!t)return;e.preventDefault();IMP.src={html:h||'',text:t||''};ta.value=impSourceText(IMP.src)||ta.value;note();impReparse()});
@@ -6944,6 +6982,27 @@ function openImporter(src){
   d.querySelectorAll('[data-imp-close]').forEach(b=>b.onclick=()=>d.close());
   $('#impTree').onclick=e=>{let b=e.target.closest('[data-imp-op]');if(!b||b.disabled)return;let i=+b.closest('.imp-row').dataset.i;if(b.dataset.impOp==='rename')impRename(i);else impOp(b.dataset.impOp,i)};
   $('#impGo').onclick=()=>{let n=impInsert();if(n)d.close()};
+  // file-based import: read .txt/.md directly, .docx via a minimal zip+XML pass, .pdf via pdf.js
+  let fi=document.createElement('input');fi.type='file';fi.accept='.txt,.md,.markdown,.docx,.pdf,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';fi.style.display='none';document.body.appendChild(fi);
+  $('#impFileBtn').onclick=()=>fi.click();
+  fi.onchange=async()=>{let f=fi.files&&fi.files[0];fi.value='';if(!f)return;
+    let name=f.name.toLowerCase();
+    try{
+      if(name.endsWith('.txt')||name.endsWith('.md')||name.endsWith('.markdown')){
+        let r=new FileReader();r.onload=()=>{IMP.src={html:'',text:r.result||''};ta.value=impSourceText(IMP.src)||ta.value;note();impReparse()};r.readAsText(f);
+      } else if(name.endsWith('.pdf')){
+        let buf=await f.arrayBuffer();let pdf=await pdfjsLib.getDocument({data:buf}).promise;let parts=[];
+        for(let i=1;i<=pdf.numPages;i++){let page=await pdf.getPage(i);let tc=await page.getTextContent();parts.push(tc.items.map(x=>x.str).join(' '))}
+        IMP.src={html:'',text:parts.join('\n\n')};ta.value=impSourceText(IMP.src)||ta.value;note();impReparse();
+      } else if(name.endsWith('.docx')){
+        let buf=await f.arrayBuffer();let text=await docxToText(buf);
+        if(!text){forceToast('Could not read that .docx (no text found)',2500);return}
+        IMP.src={html:'',text};ta.value=impSourceText(IMP.src)||ta.value;note();impReparse();
+      } else {
+        forceToast('Unsupported file type. Use .txt, .md, .docx or .pdf',2500);
+      }
+    }catch(e){forceToast('Could not read that file',2500)}
+  };
   impReparse();
   if(!d.open)d.showModal();
   if(!IMP.src.text)setTimeout(()=>ta.focus(),0);
