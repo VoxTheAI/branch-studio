@@ -844,7 +844,9 @@ async function run(){
   // ---------- ticket 07: Ctrl+K command palette ----------
   await soft(`(function(){const d=document.querySelector('#settingsDialog');if(d&&d.open)d.close();const S=eval('state');S.documents.find(x=>x.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
   await sleep(250);
-  await soft(`window.__palKey=function(key,opts){const ev=new KeyboardEvent('keydown',Object.assign({key:key,bubbles:true,cancelable:true},eval('IS_MAC')?{metaKey:true}:{ctrlKey:true},opts||{}));document.dispatchEvent(ev);return ev.defaultPrevented}`);
+  // ticket 13: Ctrl is the modifier on every platform now, Mac included — the chord the app
+  // listens for is the Control key, so a synthetic app chord always carries ctrlKey.
+  await soft(`window.__palKey=function(key,opts){const ev=new KeyboardEvent('keydown',Object.assign({key:key,bubbles:true,cancelable:true},{ctrlKey:true},opts||{}));document.dispatchEvent(ev);return ev.defaultPrevented}`);
 
   const palOpen=await je(`(function(){const prevented=window.__palKey('k');const P=eval('paletteProbe')();
     return JSON.stringify({prevented,open:P.open,rows:P.rows,commands:Object.keys(eval('COMMANDS')).length})})()`,{});
@@ -876,11 +878,11 @@ async function run(){
     `palette: typing narrows the registry (reading → ${palFilter.n} row, first ${palFilter.first})`);
 
   const palByKey=await je(`
-    (function(){const inp=document.querySelector('#palQ');inp.value='ctrl z';inp.dispatchEvent(new Event('input',{bubbles:true}));
+    (function(){const inp=document.querySelector('#palQ');inp.value=eval('IS_MAC')?'meta z':'ctrl z';inp.dispatchEvent(new Event('input',{bubbles:true}));
       const P=eval('paletteProbe')();
-      return JSON.stringify({n:P.items.length,items:P.items.slice(0,5)})})()`,{});
+      return JSON.stringify({q:inp.value,n:P.items.length,items:P.items.slice(0,5)})})()`,{});
   log(palByKey.n>=1&&(palByKey.items||[]).includes('undo')?'pass':'fail',
-    `palette: a query can be the key itself (ctrl z → ${(palByKey.items||[]).join(', ')||'nothing'})`);
+    `palette: a query can be the key itself (${palByKey.q} → ${(palByKey.items||[]).join(', ')||'nothing'})`);
 
   const palNav=await je(`
     (function(){const inp=document.querySelector('#palQ');inp.value='';inp.dispatchEvent(new Event('input',{bubbles:true}));
@@ -964,7 +966,7 @@ async function run(){
       const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');
       if(!e)return JSON.stringify({skip:'no-editor'});
       e.focus();
-      const ev=new KeyboardEvent('keydown',Object.assign({key:'k',bubbles:true,cancelable:true},eval('IS_MAC')?{metaKey:true}:{ctrlKey:true}));
+      const ev=new KeyboardEvent('keydown',Object.assign({key:'k',bubbles:true,cancelable:true},{ctrlKey:true}));
       e.dispatchEvent(ev);
       return JSON.stringify({skip:false,inEditor:!!eval('isNoteEditor')(e),prevented:ev.defaultPrevented,open:eval('paletteProbe')().open})})()`,{});
   log(palTyping.skip===false&&palTyping.open===true?'pass':'fail',
@@ -991,18 +993,22 @@ async function run(){
     `palette: the chord is swallowed while a shortcut is being remapped (opened=${palCapture.opened})`);
 
   const palMigrate=await je(`
-    (function(){const S=eval('state'),norm=eval('normalizeState');
+    (function(){const S=eval('state'),norm=eval('normalizeState'),mac=eval('IS_MAC');
       const v4=JSON.parse(JSON.stringify(eval('V4_DEFAULT_SHORTCUTS')));
       const base=()=>({version:1,documents:S.documents,activeDocumentId:S.activeDocumentId,shortcutsVersion:4,shortcuts:JSON.parse(JSON.stringify(v4))});
       const absent=!('palette' in v4);
       const custom=base();custom.shortcuts.addSibling='Ctrl+Shift+P';
       const plain=base();
-      const clash=base();clash.shortcuts.undo='Ctrl+K';
+      // v4/v5 chords predate the flip, so on Apple the migration swaps tokens to keep the physical
+      // key: ⌘⇧P stays ⌘⇧P. Its old ⌃K (stored "Meta+K") lands on the palette's new ⌃K and takes it;
+      // "Ctrl+K" would mean ⌘K on this build and the palette would get its chord.
+      const clash=base();clash.shortcuts.undo=mac?'Meta+K':'Ctrl+K';
       const a=norm(JSON.parse(JSON.stringify(custom))),b=norm(JSON.parse(JSON.stringify(plain))),c=norm(JSON.parse(JSON.stringify(clash)));
       const holders=Object.entries(c.shortcuts).filter(([o,v])=>o!=='palette'&&v&&eval('normalizeShortcut')(v)==='Ctrl+K').map(([o])=>o);
-      return JSON.stringify({absent,kept:a.shortcuts.addSibling,added:b.shortcuts.palette,version:b.shortcutsVersion,
+      return JSON.stringify({absent,kept:a.shortcuts.addSibling,keptOk:eval('normalizeShortcut')(a.shortcuts.addSibling)===eval('normalizeShortcut')(mac?'Meta+Shift+P':'Ctrl+Shift+P'),
+        added:b.shortcuts.palette,version:b.shortcutsVersion,
         clashPalette:c.shortcuts.palette===undefined?'missing':c.shortcuts.palette,clashUndo:c.shortcuts.undo,holders})})()`,{});
-  log(palMigrate.absent===true&&palMigrate.kept==='Ctrl+Shift+P'&&palMigrate.added==='Ctrl+K'&&palMigrate.version>=5
+  log(palMigrate.absent===true&&palMigrate.keptOk===true&&palMigrate.added==='Ctrl+K'&&palMigrate.version>=5
       &&palMigrate.clashPalette===''&&palMigrate.clashUndo==='Ctrl+K'&&(palMigrate.holders||[]).join()==='undo'?'pass':'fail',
     `palette: a v4 save keeps its own bindings and gains the chord only when it is free (palette=${palMigrate.added == null ? 'missing' : JSON.stringify(palMigrate.added)}, custom kept=${palMigrate.kept}; with Ctrl+K already taken the palette lands Unassigned=${JSON.stringify(palMigrate.clashPalette)}, its holder keeps ${palMigrate.clashUndo}, and ${(palMigrate.holders||[]).join()||'no'} command holds Ctrl+K)`);
 
@@ -1045,6 +1051,73 @@ async function run(){
       return JSON.stringify({found:!!hit,hint,expect})})()`,{});
   log(palMenu.found===true&&palMenu.hint===palMenu.expect&&!!palMenu.expect?'pass':'fail',
     `palette: the More menu offers it with the live chord as its hint (found=${palMenu.found}, hint=${palMenu.hint||'none'} vs ${palMenu.expect||'none'}${palMenu.skip?' skip='+palMenu.skip:''})`);
+
+  // ---------- ticket 13: Ctrl is the modifier, on Apple too ----------
+  await soft(`(function(){const d=document.querySelector('#settingsDialog');if(d&&d.open)d.close();const S=eval('state');S.documents.find(x=>x.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
+  await sleep(220);
+
+  // R1 — the stored token "Ctrl" reads the Control key; "Meta" reads Command.
+  const t13sem=await je(`(function(){const sf=eval('shortcutFromEvent'),S=eval('state'),n=eval('normalizeShortcut');
+    const ev=m=>{const e={isComposing:false,keyCode:75,key:'k',code:'KeyK',altKey:false,shiftKey:false,metaKey:false,ctrlKey:false};Object.assign(e,m);return sf(e)};
+    return JSON.stringify({isMac:eval('IS_MAC'),stored:n(S.shortcuts.palette),ctrl:ev({ctrlKey:true}),meta:ev({metaKey:true})})})()`,{});
+  log(t13sem.stored==='Ctrl+K'&&t13sem.ctrl==='Ctrl+K'&&t13sem.meta==='Meta+K'?'pass':'fail',
+    `ctrl: the stored token reads the Control key on every platform (isMac=${t13sem.isMac}, stored=${t13sem.stored||'?'}, ctrlKey→${t13sem.ctrl||'nothing'}, metaKey→${t13sem.meta||'nothing'})`);
+
+  // R1/R2 — the keycap renderer, both directions.
+  const t13glyph=await je(`(function(){const p=eval('prettyShortcut'),S=eval('state'),isMac=eval('IS_MAC');
+    return JSON.stringify({isMac,palette:p(S.shortcuts.palette),undo:p(S.shortcuts.undo),branch:p(S.shortcuts.branchView),
+      save:p(typeof eval('SAVE_CHORD')==='string'?eval('SAVE_CHORD'):'Ctrl+S'),ctrl:p('Ctrl+K'),meta:p('Meta+K')})})()`,{});
+  const t13wantPal=t13glyph.isMac?'⌃K':'Ctrl+K',t13wantUndo=t13glyph.isMac?'⌘Z':'Ctrl+Z';
+  const t13wantBranch=t13glyph.isMac?'⌃⌘B':'Ctrl+Meta+B';
+  log(t13glyph.palette===t13wantPal&&t13glyph.undo===t13wantUndo&&t13glyph.branch===t13wantBranch&&(t13glyph.isMac?t13glyph.ctrl==='⌃K'&&t13glyph.meta==='⌘K':t13glyph.ctrl==='Ctrl+K')?'pass':'fail',
+    `ctrl: keycaps read the right way round (palette=${t13glyph.palette||'?'}, undo=${t13glyph.undo||'?'}, views=${t13glyph.branch||'?'}, save=${t13glyph.save||'?'}; Ctrl+K→${t13glyph.ctrl||'?'}, Meta+K→${t13glyph.meta||'?'})`);
+
+  // R2/R4 — ⌘K is not the palette any more; it belongs to Insert link.
+  const t13cmd=await je(`(function(){const S=eval('state'),n=eval('normalizeShortcut'),isMac=eval('IS_MAC');
+    const want=n(isMac?'Meta+K':'Ctrl+K');
+    const owner=Object.entries(S.shortcuts).filter(([o,v])=>v&&n(v)===want).map(([o])=>o);
+    const a=document.activeElement;if(a&&a.blur)a.blur();
+    const e=new KeyboardEvent('keydown',Object.assign({key:'k',code:'KeyK',bubbles:true,cancelable:true},isMac?{metaKey:true}:{}));
+    document.dispatchEvent(e);
+    const opened=eval('paletteProbe')().open;
+    const ld=document.querySelector('#linkDlg');if(ld&&ld.open)ld.close();
+    return JSON.stringify({isMac,owner,opened,prevented:e.defaultPrevented})})()`,{});
+  log((t13cmd.isMac?t13cmd.opened!==true&&(t13cmd.owner||[]).includes('fmtLink'):true)?'pass':'fail',
+    `ctrl: the old chord is freed for Insert link, not the palette (owners of ${t13cmd.isMac?'⌘K':'Ctrl+K'}=${(t13cmd.owner||[]).join(',')||'nobody'}, palette opened=${t13cmd.opened})`);
+
+  // R3 — the Command keepers must stay claimed, or the browser takes over.
+  const t13keep=await je(`(function(){if(!eval('IS_MAC'))return JSON.stringify({skip:'not-mac'});
+    const fire=(key,code)=>{const e=new KeyboardEvent('keydown',{key:key,code:code,bubbles:true,cancelable:true,metaKey:true});document.dispatchEvent(e);return e.defaultPrevented};
+    return JSON.stringify({z:fire('z','KeyZ'),s:fire('s','KeyS'),b:fire('b','KeyB')})})()`,{});
+  log(t13keep.skip==='not-mac'||(t13keep.z===true&&t13keep.s===true&&t13keep.b===true)?'pass':'fail',
+    `ctrl: the Command keepers are still claimed (⌘Z=${t13keep.z}, ⌘S=${t13keep.s}, ⌘B=${t13keep.b})`);
+
+  // R8 — a v5 save migrates: unmodified chords take the new default, custom ones keep their key.
+  const t13mig=await je(`(function(){if(!eval('IS_MAC'))return JSON.stringify({skip:'not-mac'});
+    const N=eval('normalizeState'),S=eval('state'),p=eval('prettyShortcut');
+    const v5={newDocument:'Ctrl+Meta+N',addTopic:'Ctrl+Meta+Enter',addSibling:'Ctrl+Enter',addChild:'Ctrl+Shift+Enter',deleteNode:'Ctrl+Shift+Backspace',moveUp:'Shift+Meta+ArrowUp',moveDown:'Shift+Meta+ArrowDown',indent:'Shift+Meta+ArrowRight',outdent:'Shift+Meta+ArrowLeft',image:'Ctrl+Meta+I',math:'Ctrl+Meta+M',navUp:'Ctrl+Meta+ArrowUp',navDown:'Ctrl+Meta+ArrowDown',navParent:'Ctrl+Meta+ArrowLeft',navChild:'Ctrl+Meta+ArrowRight',branchView:'Meta+1',splitView:'Meta+2',readView:'Meta+3',zen:'Ctrl+Meta+Z',undo:'Ctrl+Z',redo:'Ctrl+Shift+Z',settings:'Ctrl+Meta+,',documents:'Ctrl+Meta+O',exportMd:'Ctrl+Meta+E',shortcutsHelp:'Meta+/',palette:'Ctrl+K'};
+    const base=()=>({version:1,documents:S.documents,activeDocumentId:S.activeDocumentId,shortcutsVersion:5,shortcuts:JSON.parse(JSON.stringify(v5))});
+    const A=N(base());
+    const b=base();b.shortcuts.addSibling='Ctrl+Shift+P';b.shortcuts.undo='Meta+U';b.shortcuts.palette='';const B=N(b);
+    return JSON.stringify({version:A.shortcutsVersion,palette:p(A.shortcuts.palette),undo:p(A.shortcuts.undo),
+      help:p(A.shortcuts.shortcutsHelp),branch:p(A.shortcuts.branchView),moved:p(A.shortcuts.moveUp),
+      keptCustom:B.shortcuts.addSibling,keptUndo:B.shortcuts.undo,cleared:B.shortcuts.palette})})()`,{});
+  const t13migOk=!!t13mig.skip||(t13mig.version===6&&t13mig.palette==='⌃K'&&t13mig.undo==='⌘Z'&&t13mig.help==='⌃/'
+    &&t13mig.branch==='⌃⌘B'
+    &&/⌃/.test(t13mig.moved||'')&&/⌘/.test(t13mig.moved||'')&&/⇧/.test(t13mig.moved||'')&&/↑$/.test(t13mig.moved||'')
+    &&!!t13mig.keptCustom&&/Meta/.test(t13mig.keptCustom)&&!/Ctrl/.test(t13mig.keptCustom)
+    &&!!t13mig.keptUndo&&/Ctrl/.test(t13mig.keptUndo)&&!/Meta/.test(t13mig.keptUndo)
+    &&t13mig.cleared==='');
+  log(t13migOk?'pass':'fail',
+    `ctrl: a v5 save migrates to v6 (v=${t13mig.version}, palette=${t13mig.palette||'?'}, undo=${t13mig.undo||'?'}, sheet=${t13mig.help||'?'}, views=${t13mig.branch||'?'}, move=${t13mig.moved||'?'}; custom ⌘⇧P kept as ${t13mig.keptCustom||'?'}, custom ⌃U kept as ${t13mig.keptUndo||'?'}, cleared stays ${JSON.stringify(t13mig.cleared)})`);
+
+  // R6 — the reserved list is literal and never claims one of the app's own defaults.
+  const t13res=await je(`(function(){const R=eval('RESERVED_SHORTCUTS'),n=eval('normalizeShortcut'),D=eval('DEFAULT_SHORTCUTS');
+    const own=[...new Set(Object.values(D).map(v=>n(v)).filter(Boolean))];
+    const clash=own.filter(v=>R.map(n).includes(v));
+    return JSON.stringify({isMac:eval('IS_MAC'),count:R.length,metaT:R.includes('Meta+T'),ctrlT:R.includes('Ctrl+T'),paletteFree:!R.map(n).includes(n('Ctrl+K')),clash:clash.slice(0,6)})})()`,{});
+  log((t13res.isMac?t13res.metaT===true&&t13res.ctrlT===false:true)&&t13res.paletteFree===true&&(t13res.clash||[]).length===0?'pass':'fail',
+    `ctrl: the reserved list is written literally and claims none of the app's own chords (⌘T reserved=${t13res.metaT}, Ctrl+T reserved=${t13res.ctrlT}, ${t13res.count} entries, ${(t13res.clash||[]).length} collisions${(t13res.clash||[]).length?': '+(t13res.clash||[]).join(','):''})`);
 
   await soft(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
   await sleep(200);
