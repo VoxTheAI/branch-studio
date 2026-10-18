@@ -856,15 +856,12 @@ async function run(){
   log(palFocus.active==='palQ'?'pass':'fail',`palette: the search field holds the caret on open (activeElement=#${palFocus.active})`);
 
   const palKeys=await je(`
-    (function(){const S=eval('state'),norm=eval('normalizeShortcut'),pretty=eval('prettyShortcut');
-      const want=id=>{const used=new Set(Object.entries(S.shortcuts).filter(([o])=>o!==id).map(([,v])=>norm(v)));
-        return [S.shortcuts[id],...(eval('SHORTCUT_ALIASES')[id]||[]).filter(a=>!used.has(norm(a)))].filter(Boolean).map(pretty)};
-      const rows={};document.querySelectorAll('#palR [data-p]').forEach(b=>{rows[b.querySelector('.pal-label').textContent.trim()]=[...b.querySelectorAll('kbd')].map(k=>k.textContent)});
+    (function(){window.__palRows={};document.querySelectorAll('#palR [data-id]').forEach(b=>{window.__palRows[b.dataset.id]=[...b.querySelectorAll('kbd')].map(k=>k.textContent)});
       const ids=Object.keys(eval('COMMANDS'));
-      const bad=ids.filter(id=>{const got=rows[eval('COMMANDS')[id].label]||[],exp=want(id);return got.length!==exp.length||exp.some((v,i)=>got[i]!==v)});
-      return JSON.stringify({checked:ids.length,bad:bad.slice(0,4),chips:rows['Command palette']||[]})})()`,{});
-  log(palKeys.checked>0&&(palKeys.bad||[]).length===0?'pass':'fail',
-    `palette: every row is followed by the same key the Keyboard panel shows (${palKeys.checked||0} rows checked, ${(palKeys.bad||[]).length} mismatched${(palKeys.bad||[]).length?': '+(palKeys.bad||[]).join(','):''})`);
+      const missing=ids.filter(id=>!(id in window.__palRows));
+      return JSON.stringify({checked:ids.length,missing:missing.slice(0,5),chips:(window.__palRows||{})['palette']||[]})})()`,{});
+  log(palKeys.checked>0&&(palKeys.missing||[]).length===0?'pass':'fail',
+    `palette: every command is listed exactly once (${palKeys.checked||0} commands, ${(palKeys.missing||[]).length} missing${(palKeys.missing||[]).length?': '+(palKeys.missing||[]).join(','):''})`);
 
   const aliasTaken=await je(`(function(){const S=eval('state'),n=eval('normalizeShortcut');
     return JSON.stringify(Object.values(S.shortcuts).some(v=>n(v)===n('Ctrl+/')))})()`,{});
@@ -896,6 +893,22 @@ async function run(){
       return JSON.stringify({n,first,up,back,one,on})})()`,{});
   log(palNav.first===0&&palNav.up===palNav.n-1&&palNav.back===0&&palNav.one===1&&palNav.on===1?'pass':'fail',
     `palette: ↑ wraps to the end and ↓ back to the start, with one row highlighted (0→${palNav.up}→${palNav.back}→${palNav.one}, ${palNav.on} highlighted)`);
+
+  const palHomeEnd=await je(`
+    (function(){const inp=document.querySelector('#palQ');const go=k=>inp.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
+      inp.value='';inp.dispatchEvent(new Event('input',{bubbles:true}));
+      const n=eval('paletteProbe')().items.length;
+      go('End');const end=eval('paletteProbe')().sel;
+      go('Home');const home=eval('paletteProbe')().sel;
+      inp.value='zzzzno command matches this';inp.dispatchEvent(new Event('input',{bubbles:true}));
+      go('End');const emptySel=eval('paletteProbe')().sel;
+      const emptyRows=document.querySelectorAll('#palR [data-p]').length;
+      inp.value='';inp.dispatchEvent(new Event('input',{bubbles:true}));
+      const backSel=eval('paletteProbe')().sel;
+      const hi=document.querySelectorAll('#palR .pal-item.on').length;
+      return JSON.stringify({n,end,home,emptySel,emptyRows,backSel,hi})})()`,{});
+  log(palHomeEnd.end===palHomeEnd.n-1&&palHomeEnd.home===0&&palHomeEnd.emptySel>=0&&palHomeEnd.emptyRows===0&&palHomeEnd.hi===1?'pass':'fail',
+    `palette: Home/End jump, and an empty result list cannot strand the highlight (End→${palHomeEnd.end} of ${palHomeEnd.n}, Home→${palHomeEnd.home}; empty list: sel=${palHomeEnd.emptySel} ${palHomeEnd.emptyRows} rows; back: sel=${palHomeEnd.backSel} ${palHomeEnd.hi} highlighted)`);
 
   const palScroll=await je(`
     (function(){const dl=document.querySelector('.px-palette');if(!dl)return JSON.stringify({skip:'no-palette'});
@@ -933,7 +946,15 @@ async function run(){
   log(palStack.dialogs===1&&palStack.pals===1?'pass':'fail',
     `palette: a repeated chord does not stack palettes (${palStack.dialogs} open dialog, ${palStack.pals} palette)`);
   await soft(`(function(){const inp=document.querySelector('#palQ');inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));return 1})()`);
-  await sleep(520);
+  const palExitWindow=await je(`(function(){window.__palKey('k');
+    return JSON.stringify({during:eval('paletteProbe')().open,pals:document.querySelectorAll('#palQ').length})})()`,{});
+  await sleep(620);
+  const palAfterExit=await je(`(function(){window.__palKey('k');
+    return JSON.stringify({open:eval('paletteProbe')().open,pals:document.querySelectorAll('#palQ').length,dialogs:document.querySelectorAll('dialog[open]').length})})()`,{});
+  log(palAfterExit.open===true&&palAfterExit.pals===1&&palAfterExit.dialogs===1?'pass':'fail',
+    `palette: the chord works again as soon as the exit animation finishes, and never stacks (mid-exit open=${palExitWindow.during} with ${palExitWindow.pals} palette; after open=${palAfterExit.open} with ${palAfterExit.pals} palette, ${palAfterExit.dialogs} dialog)`);
+  await soft(`(function(){const inp=document.querySelector('#palQ');inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));return 1})()`);
+  await sleep(620);
 
   await soft(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
   await sleep(320);
@@ -970,14 +991,20 @@ async function run(){
     `palette: the chord is swallowed while a shortcut is being remapped (opened=${palCapture.opened})`);
 
   const palMigrate=await je(`
-    (function(){const S=eval('state'),norm=eval('normalizeState'),def=JSON.parse(JSON.stringify(eval('DEFAULT_SHORTCUTS')));
-      const base=()=>({version:1,documents:S.documents,activeDocumentId:S.activeDocumentId,shortcutsVersion:4,shortcuts:def});
+    (function(){const S=eval('state'),norm=eval('normalizeState');
+      const v4=JSON.parse(JSON.stringify(eval('V4_DEFAULT_SHORTCUTS')));
+      const base=()=>({version:1,documents:S.documents,activeDocumentId:S.activeDocumentId,shortcutsVersion:4,shortcuts:JSON.parse(JSON.stringify(v4))});
+      const absent=!('palette' in v4);
       const custom=base();custom.shortcuts.addSibling='Ctrl+Shift+P';
       const plain=base();
-      const a=norm(JSON.parse(JSON.stringify(custom))),b=norm(JSON.parse(JSON.stringify(plain)));
-      return JSON.stringify({kept:a.shortcuts.addSibling,added:a.shortcuts.palette,plain:b.shortcuts.palette,version:a.shortcutsVersion})})()`,{});
-  log(palMigrate.kept==='Ctrl+Shift+P'&&palMigrate.added==='Ctrl+K'&&palMigrate.plain==='Ctrl+K'&&palMigrate.version>=5?'pass':'fail',
-    `palette: a v4 save keeps its own bindings and gains the new chord (custom kept ${palMigrate.kept}, palette ${palMigrate.added}, version ${palMigrate.version})`);
+      const clash=base();clash.shortcuts.undo='Ctrl+K';
+      const a=norm(JSON.parse(JSON.stringify(custom))),b=norm(JSON.parse(JSON.stringify(plain))),c=norm(JSON.parse(JSON.stringify(clash)));
+      const holders=Object.entries(c.shortcuts).filter(([o,v])=>o!=='palette'&&v&&eval('normalizeShortcut')(v)==='Ctrl+K').map(([o])=>o);
+      return JSON.stringify({absent,kept:a.shortcuts.addSibling,added:b.shortcuts.palette,version:b.shortcutsVersion,
+        clashPalette:c.shortcuts.palette===undefined?'missing':c.shortcuts.palette,clashUndo:c.shortcuts.undo,holders})})()`,{});
+  log(palMigrate.absent===true&&palMigrate.kept==='Ctrl+Shift+P'&&palMigrate.added==='Ctrl+K'&&palMigrate.version>=5
+      &&palMigrate.clashPalette===''&&palMigrate.clashUndo==='Ctrl+K'&&(palMigrate.holders||[]).join()==='undo'?'pass':'fail',
+    `palette: a v4 save keeps its own bindings and gains the chord only when it is free (palette=${palMigrate.added == null ? 'missing' : JSON.stringify(palMigrate.added)}, custom kept=${palMigrate.kept}; with Ctrl+K already taken the palette lands Unassigned=${JSON.stringify(palMigrate.clashPalette)}, its holder keeps ${palMigrate.clashUndo}, and ${(palMigrate.holders||[]).join()||'no'} command holds Ctrl+K)`);
 
   const palLists=await je(`
     (function(){const d0=eval('$')('#settingsDialog');if(d0&&d0.open)d0.close();
@@ -991,6 +1018,20 @@ async function run(){
       return JSON.stringify({inPanel,inSheet})})()`,{});
   log(palLists.inPanel&&palLists.inSheet?'pass':'fail',
     `palette: the chord is remappable in Settings ▸ Keyboard (${palLists.inPanel}) and listed in the shortcut sheet (${palLists.inSheet})`);
+
+  const palOracle=await je(`
+    (function(){const got=window.__palRows||{};
+      const d0=eval('$')('#settingsDialog');if(d0&&d0.open)d0.close();
+      eval('openSettings')('keyboard');
+      const expect={};
+      document.querySelectorAll('[data-capture]').forEach(b=>{const row=b.closest('tr');
+        expect[b.dataset.capture]=[b.textContent.trim()].concat([...row.querySelectorAll('.kb-alias .keycap')].map(k=>k.textContent.trim())).filter(t=>t&&t!=='Unassigned')});
+      const d=eval('$')('#settingsDialog');if(d&&d.open)d.close();
+      const ids=Object.keys(eval('COMMANDS')).filter(id=>id in expect);
+      const bad=ids.filter(id=>{const a=got[id]||[],b=expect[id]||[];return a.length!==b.length||b.some((v,i)=>a[i]!==v)});
+      return JSON.stringify({panel:ids.length,bad:bad.slice(0,5),paletteRow:expect.palette||[]})})()`,{});
+  log(palOracle.panel>=60&&(palOracle.bad||[]).length===0?'pass':'fail',
+    `palette: read out of Settings ▸ Keyboard's own DOM, every row agrees — primary key and aliases (${palOracle.panel||0} rows compared, ${(palOracle.bad||[]).length} mismatched${(palOracle.bad||[]).length?': '+(palOracle.bad||[]).join(','):''})`);
 
   const palMenu=await je(`
     (function(){const b=document.querySelector('#moreTopBtn');if(!b)return JSON.stringify({skip:'no-more-button'});

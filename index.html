@@ -4787,7 +4787,7 @@ const Store={ls:false,idb:null,idbTried:false,status:'pending',lastError:'',dirt
 Store.ls=(()=>{try{let k='__branch_studio_probe__';localStorage.setItem(k,'1');let ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}})();
 let state=loadState();let undoStack=[],redoStack=[],draggedId=null,dropTarget=null,settingsSection='appearance',capturingCommand=null,toolbarDrag=null,saveTimer=null,lastTextSnap={id:null,time:0};
 function normalizeSound(raw){let d=deep(DEFAULT_SOUND);if(!raw||typeof raw!=='object')return d;d.enabled=!!raw.enabled;for(let k of ['typing','creation','movement'])if(raw[k]!==undefined)d[k]=!!raw[k];let v=Number(raw.volume);if(Number.isFinite(v))d.volume=Math.max(0,Math.min(1,v));if(SOUND_THEMES[raw.theme])d.theme=raw.theme;return d}
-function normalizeState(s){if(!s||typeof s!=='object'||!Array.isArray(s.documents)||!s.documents.length)return null;s.appearance={...DEFAULT_APPEARANCE,...s.appearance};s.behavior={...DEFAULT_BEHAVIOR,...s.behavior};s.sound=normalizeSound(s.sound);let sc={...DEFAULT_SHORTCUTS,...s.shortcuts};if((s.shortcutsVersion||1)<SHORTCUTS_VERSION){for(let id of Object.keys(DEFAULT_SHORTCUTS)){let cur=normalizeShortcut(sc[id]);let missing=!s.shortcuts||!(id in s.shortcuts);let oldDefault=cur&&(cur===normalizeShortcut(V1_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V2_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V3_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V4_DEFAULT_SHORTCUTS[id]));if(!missing&&!oldDefault)continue;let want=normalizeShortcut(DEFAULT_SHORTCUTS[id]);let taken=Object.entries(sc).some(([o,v])=>o!==id&&normalizeShortcut(v)===want&&normalizeShortcut(DEFAULT_SHORTCUTS[o])!==want);if(!taken)sc[id]=DEFAULT_SHORTCUTS[id]}s.shortcutsVersion=SHORTCUTS_VERSION}s.shortcuts=sc;s.toolbar=Array.isArray(s.toolbar)?s.toolbar:deep(DEFAULT_TOOLBAR);s.customCSS=s.customCSS||'';s.documents.forEach(d=>{if(!Array.isArray(d.tree))d.tree=[];if(!d.tree.length)d.tree.push({id:uid(),text:'',children:[]});(function fix(ns){ns.forEach(n=>{n.children=Array.isArray(n.children)?n.children:[];n.text=n.text==null?'':String(n.text);fix(n.children)})})(d.tree);d.mode=['branch','split','read'].includes(d.mode)?d.mode:'branch'});if(!s.documents.some(d=>d.id===s.activeDocumentId))s.activeDocumentId=s.documents[0].id;return s}
+function normalizeState(s){if(!s||typeof s!=='object'||!Array.isArray(s.documents)||!s.documents.length)return null;s.appearance={...DEFAULT_APPEARANCE,...s.appearance};s.behavior={...DEFAULT_BEHAVIOR,...s.behavior};s.sound=normalizeSound(s.sound);let sc={...DEFAULT_SHORTCUTS,...s.shortcuts};if((s.shortcutsVersion||1)<SHORTCUTS_VERSION){for(let id of Object.keys(DEFAULT_SHORTCUTS)){let cur=normalizeShortcut(sc[id]);let missing=!s.shortcuts||!(id in s.shortcuts);let oldDefault=cur&&(cur===normalizeShortcut(V1_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V2_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V3_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V4_DEFAULT_SHORTCUTS[id]));if(!missing&&!oldDefault)continue;let want=normalizeShortcut(DEFAULT_SHORTCUTS[id]);let taken=Object.entries(sc).some(([o,v])=>o!==id&&normalizeShortcut(v)===want&&normalizeShortcut(DEFAULT_SHORTCUTS[o])!==want);if(taken){if(missing)sc[id]=''}else sc[id]=DEFAULT_SHORTCUTS[id]}s.shortcutsVersion=SHORTCUTS_VERSION}s.shortcuts=sc;s.toolbar=Array.isArray(s.toolbar)?s.toolbar:deep(DEFAULT_TOOLBAR);s.customCSS=s.customCSS||'';s.documents.forEach(d=>{if(!Array.isArray(d.tree))d.tree=[];if(!d.tree.length)d.tree.push({id:uid(),text:'',children:[]});(function fix(ns){ns.forEach(n=>{n.children=Array.isArray(n.children)?n.children:[];n.text=n.text==null?'':String(n.text);fix(n.children)})})(d.tree);d.mode=['branch','split','read'].includes(d.mode)?d.mode:'branch'});if(!s.documents.some(d=>d.id===s.activeDocumentId))s.activeDocumentId=s.documents[0].id;return s}
 function readLocal(){if(!Store.ls)return null;try{let raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):null}catch(e){return null}}
 function loadState(){let s=null;try{s=normalizeState(readLocal())}catch(e){s=null;try{let raw=localStorage.getItem(STORAGE_KEY);if(raw)localStorage.setItem(STORAGE_KEY+'-recovery-'+Date.now(),raw)}catch(err){}}if(s){Store.lastSavedJSON='';return s}let d=defaultState();d.shortcutsVersion=SHORTCUTS_VERSION;return d}
 function idbOpen(){if(Store.idb)return Promise.resolve(Store.idb);return new Promise((res,rej)=>{try{if(!window.indexedDB)return rej(new Error('no indexedDB'));let r=indexedDB.open(IDB_NAME,1);r.onupgradeneeded=()=>{try{r.result.createObjectStore(IDB_STORE)}catch(e){}};r.onsuccess=()=>{Store.idb=r.result;res(r.result)};r.onerror=()=>rej(r.error||new Error('idb error'));r.onblocked=()=>rej(new Error('idb blocked'))}catch(e){rej(e)}})}
@@ -5169,7 +5169,7 @@ let PAL=null;
 function paletteEntries(q){
  let tokens=String(q||'').trim().toLowerCase().split(/\s+/).filter(Boolean),out=[];
  for(let id of Object.keys(COMMANDS)){
-  let c=COMMANDS[id],used=new Set(Object.entries(state.shortcuts).filter(([o])=>o!==id).map(([,v])=>normalizeShortcut(v)));
+  let c=COMMANDS[id],used=new Set(Object.values(state.shortcuts).map(normalizeShortcut));
   let keys=[state.shortcuts[id],...(SHORTCUT_ALIASES[id]||[]).filter(a=>!used.has(normalizeShortcut(a)))].filter(Boolean);
   let pretty=keys.map(k=>prettyShortcut(k)).filter(Boolean);
   let label=String(c.label||id),lower=label.toLowerCase();
@@ -5195,9 +5195,9 @@ function openPalette(){
  const runPal=i=>{let it=st.items[i];if(!it)return;closeLayer(dl);runCommand(it.id)};
  const draw=()=>{
   st.items=paletteEntries(inp.value);
-  if(st.sel>=st.items.length)st.sel=Math.max(0,st.items.length-1);
+  if(!st.items.length)st.sel=0;else if(st.sel<0||st.sel>=st.items.length)st.sel=Math.min(Math.max(0,st.sel),st.items.length-1);
   R.innerHTML=st.items.length
-   ?st.items.map((it,i)=>`<button type="button" class="pal-item${i===st.sel?' on':''}" data-p="${i}" role="option" aria-selected="${i===st.sel}"><span class="pal-ic">${icon(it.icon)}</span><span class="pal-label">${pxEsc(it.label)}</span>${it.keys.map(k=>`<kbd>${pxEsc(k)}</kbd>`).join('')}</button>`).join('')
+   ?st.items.map((it,i)=>`<button type="button" class="pal-item${i===st.sel?' on':''}" data-p="${i}" data-id="${it.id}" role="option" aria-selected="${i===st.sel}"><span class="pal-ic">${icon(it.icon)}</span><span class="pal-label">${pxEsc(it.label)}</span>${it.keys.map(k=>`<kbd>${pxEsc(k)}</kbd>`).join('')}</button>`).join('')
    :`<p class="px-muted">No command matches “${pxEsc(inp.value)}”.</p>`;
   R.querySelectorAll('[data-p]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>runPal(+b.dataset.p);b.onpointerenter=()=>{let i=+b.dataset.p;if(st.sel!==i){st.sel=i;mark()}}});
   mark();
@@ -5206,7 +5206,7 @@ function openPalette(){
  inp.oninput=draw;
  inp.onkeydown=e=>{
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!st.items.length)return;st.sel=(st.sel+(e.key==='ArrowDown'?1:-1)+st.items.length)%st.items.length;mark();return}
-  if(e.key==='Home'||e.key==='End'){e.preventDefault();st.sel=e.key==='Home'?0:st.items.length-1;mark();return}
+  if(e.key==='Home'||e.key==='End'){e.preventDefault();if(!st.items.length)return;st.sel=e.key==='Home'?0:st.items.length-1;mark();return}
   if(e.key==='Enter'){e.preventDefault();runPal(st.sel)}
  };
  draw();
