@@ -676,9 +676,30 @@ async function run(){
     `sound settings: a Sound section carries the master toggle, volume, one control per cue class and a preview each (classes=${sec.classes} previews=${sec.previews})`);
   log((sec.voices||[]).join(',')==='soft,crisp,deep,glass'?'pass':'fail',`sound settings: four voices (${(sec.voices||[]).join(', ')})`);
 
+  const sOffVoice=await je(`
+    (function(){const sel=document.querySelector('[data-section="sound"] [data-sound="theme"]');
+      if(!sel)throw new Error('no voice select');
+      sel.value='deep';sel.dispatchEvent(new Event('change',{bubbles:true}));
+      const S=eval('SOUND');
+      return JSON.stringify({theme:S.s.theme,enabled:S.s.enabled,ctx:!!S.ctx,counts:{...S.counts}})})()`,{});
+  log(sOffVoice.theme==='deep'&&sOffVoice.enabled===false&&sOffVoice.ctx===false&&(sOffVoice.counts||{}).creation===0?'pass':'fail',
+    `sound: changing the voice while sound is off neither plays a cue nor seizes a context (voice=${sOffVoice.theme} context=${sOffVoice.ctx} cues=${JSON.stringify(sOffVoice.counts)})`);
+
+  const sDisabled=await je(`
+    (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
+      return JSON.stringify({n:b.length,off:b.filter(x=>x.disabled).length,all:!!all&&all.disabled})})()`,{});
+  log(sDisabled.n===3&&sDisabled.off===3&&sDisabled.all?'pass':'fail',
+    `sound: the audition buttons are inert while sound is off (${sDisabled.off}/${sDisabled.n} previews disabled, preview-all disabled=${sDisabled.all})`);
+
   await clickSound('[data-section="sound"] [data-sound-toggle="enabled"]');
   const s2=await sProbe();
   log(!!s2&&s2.enabled&&!s2.hasCtx?'pass':'fail',`sound: the UI switch turns sound on without seizing an audio context until something actually plays (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx})`);
+
+  const sAudition=await je(`
+    (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
+      return JSON.stringify({on:b.filter(x=>!x.disabled).length,all:!!all&&!all.disabled})})()`,{});
+  log(sAudition.on===3&&sAudition.all?'pass':'fail',
+    `sound: turning sound on wakes the audition buttons (${sAudition.on}/3 previews enabled, preview-all enabled=${sAudition.all})`);
 
   await soft('window.__type()');
   await sleep(140);
@@ -690,6 +711,32 @@ async function run(){
     return JSON.stringify({added:S.counts.typing-a,throttled:S.throttled-t})})()`,{});
   log(burst.added+burst.throttled===40&&burst.added<=1?'pass':'fail',
     `sound: a 40-tick burst collapses into at most one cue (played ${burst.added}, throttled ${burst.throttled})`);
+
+  const sPrevBefore=await sProbe();
+  await clickSound('[data-section="sound"] [data-sound-preview="movement"]');
+  const sPrevAfter=await sProbe();
+  log(!!sPrevBefore&&!!sPrevAfter&&sPrevAfter.counts.movement===sPrevBefore.counts.movement+1&&sPrevAfter.counts.typing===sPrevBefore.counts.typing?'pass':'fail',
+    `sound: a Preview button plays that class's cue and nothing else (movement ${sPrevBefore&&sPrevBefore.counts.movement}→${sPrevAfter&&sPrevAfter.counts.movement})`);
+
+  const sAllBefore=await sProbe();
+  await soft(`(function(){const b=document.querySelector('#soundPreviewAll');if(b)b.click();return 1})()`);
+  await sleep(1100);
+  const sAllAfter=await sProbe();
+  log(!!sAllBefore&&!!sAllAfter&&sAllAfter.counts.typing===sAllBefore.counts.typing+1&&sAllAfter.counts.creation===sAllBefore.counts.creation+1&&sAllAfter.counts.movement===sAllBefore.counts.movement+1?'pass':'fail',
+    `sound: “Preview all cues” plays one cue from each class (typing ${sAllBefore&&sAllBefore.counts.typing}→${sAllAfter&&sAllAfter.counts.typing}, creation ${sAllBefore&&sAllBefore.counts.creation}→${sAllAfter&&sAllAfter.counts.creation}, movement ${sAllBefore&&sAllBefore.counts.movement}→${sAllAfter&&sAllAfter.counts.movement})`);
+
+  const sDelBefore=await sProbe();
+  await soft(`(function(){const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');if(!e)return 0;
+    e.focus();e.textContent=(e.textContent||'').replace(/x+$/,'');e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'deleteContentBackward'}));return 1})()`);
+  await sleep(140);
+  const sDelAfter=await sProbe();
+  log(!!sDelBefore&&!!sDelAfter&&sDelAfter.counts.typing===sDelBefore.counts.typing?'pass':'fail',
+    `sound: deleting a character does not tick — only characters added do (typing ${sDelBefore&&sDelBefore.counts.typing}→${sDelAfter&&sDelAfter.counts.typing})`);
+
+  const sClip=await je(`(function(){const T=eval('SOUND_THEMES'),v=Object.values(T);
+    return JSON.stringify({voices:Object.keys(T).length,worst:+Math.max(...v.map(t=>t.pop.gain+t.pop.gain*.45)).toFixed(4)})})()`,{});
+  log(sClip.voices===4&&sClip.worst<1?'pass':'fail',
+    `sound: the two creation tones stay under unity gain in every voice (worst sum ${sClip.worst})`);
 
   const vol=await je(`
     (function(){const r=document.querySelector('[data-section="sound"] [data-sound="volume"]');
@@ -746,6 +793,10 @@ async function run(){
   log(!!b3&&!!a3&&!a3.enabled&&a3.counts.typing===b3.counts.typing&&a3.counts.creation===b3.counts.creation&&a3.counts.movement===b3.counts.movement?'pass':'fail',
     `sound: the master switch silences every class at once (typing ${b3&&b3.counts.typing}→${a3&&a3.counts.typing}, creation ${b3&&b3.counts.creation}→${a3&&a3.counts.creation}, movement ${b3&&b3.counts.movement}→${a3&&a3.counts.movement})`);
 
+  const sPvOff=await je(`(function(){const S=eval('SOUND');
+    return JSON.stringify({ret:S.preview('typing'),typing:S.counts.typing})})()`,{});
+  log(sPvOff.ret===false?'pass':'fail',`sound: an audition is refused outright while sound is off (returned ${sPvOff.ret})`);
+
   await soft(`eval('saveState')()`);
   await sleep(420);
   const persisted=await je(`
@@ -768,7 +819,7 @@ async function run(){
       try{
         Object.defineProperty(window,'AudioContext',{value:undefined,configurable:true});
         Object.defineProperty(window,'webkitAudioContext',{value:undefined,configurable:true});
-        S.ctx=null;S.master=null;st.sound.enabled=true;ret=S.emit('creation',true);
+        S.ctx=null;S.master=null;st.sound.enabled=true;ret=S.preview('creation');
       }catch(e){threw=true}
       S.ctx=ctx;S.master=master;st.sound.enabled=enabled;
       try{Object.defineProperty(window,'AudioContext',{value:AC,configurable:true});Object.defineProperty(window,'webkitAudioContext',{value:WAC,configurable:true})}catch(e){}
@@ -776,11 +827,13 @@ async function run(){
   log(noac.threw===false&&noac.ret===false?'pass':'fail',`sound: with no AudioContext at all the cue no-ops instead of throwing (threw=${noac.threw} returned=${noac.ret})`);
 
   const susp=await je(`
-    (async function(){const S=eval('SOUND');
+    (async function(){const S=eval('SOUND'),st=eval('state');
       if(!S.ctx)return JSON.stringify({skip:true});
+      const was=st.sound.enabled;st.sound.enabled=true;
       let threw=false,ret=null;const state0=S.ctx.state;
-      try{await S.ctx.suspend();ret=S.emit('creation',true)}catch(e){threw=true}
+      try{await S.ctx.suspend();ret=S.emit('creation')}catch(e){threw=true}
       const state1=S.ctx.state;try{await S.ctx.resume()}catch(e){}
+      st.sound.enabled=was;
       return JSON.stringify({skip:false,state0,state1,threw,ret})})()`,{skip:true});
   log(!susp.skip&&susp.threw===false&&susp.ret===true?'pass':'fail',
     `sound: a suspended context is resumed rather than throwing (state ${susp.state0}→${susp.state1}, cue played=${susp.ret})`);
