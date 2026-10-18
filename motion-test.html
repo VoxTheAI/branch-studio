@@ -674,7 +674,7 @@ async function run(){
     })()`,{missing:true});
   log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===3&&sec.previews===3?'pass':'fail',
     `sound settings: a Sound section carries the master toggle, volume, one control per cue class and a preview each (classes=${sec.classes} previews=${sec.previews})`);
-  log((sec.voices||[]).join(',')==='soft,crisp,deep,glass'?'pass':'fail',`sound settings: four voices (${(sec.voices||[]).join(', ')})`);
+  log((sec.voices||[]).join(',')==='soft,crisp,deep,glass,jarvis,mechanical,typewriter'?'pass':'fail',`sound settings: seven voices (${(sec.voices||[]).join(', ')})`);
 
   const sOffVoice=await je(`
     (function(){const sel=document.querySelector('[data-section="sound"] [data-sound="theme"]');
@@ -735,7 +735,7 @@ async function run(){
 
   const sClip=await je(`(function(){const T=eval('SOUND_THEMES'),v=Object.values(T);
     return JSON.stringify({voices:Object.keys(T).length,worst:+Math.max(...v.map(t=>t.pop.gain+t.pop.gain*.45)).toFixed(4)})})()`,{});
-  log(sClip.voices===4&&sClip.worst<1?'pass':'fail',
+  log(sClip.voices===7&&sClip.worst<1?'pass':'fail',
     `sound: the two creation tones stay under unity gain in every voice (worst sum ${sClip.worst})`);
 
   const vol=await je(`
@@ -809,7 +809,7 @@ async function run(){
     (function(){const r=JSON.parse(localStorage.getItem(eval('STORAGE_KEY')));
       delete r.sound;const n=eval('normalizeState')(JSON.parse(JSON.stringify(r)));
       return JSON.stringify(n?n.sound:null)})()`,null);
-  log(!!legacy&&legacy.enabled===false&&legacy.volume===.5&&legacy.theme==='soft'&&legacy.typing&&legacy.creation&&legacy.movement?'pass':'fail',
+  log(!!legacy&&legacy.enabled===false&&legacy.volume===.5&&legacy.theme==='mechanical'&&legacy.typing&&legacy.creation&&legacy.movement?'pass':'fail',
     `sound: a save from before this feature normalises to silent defaults, it does not throw (${JSON.stringify(legacy)})`);
 
   const noac=await je(`

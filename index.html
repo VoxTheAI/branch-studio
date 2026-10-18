@@ -4685,41 +4685,76 @@ const DEFAULT_APPEARANCE={animations:true,cardRadius:8,uiRadius:8,buttonRadius:7
 const DEFAULT_BEHAVIOR={showAddButtons:false,showFeedback:true,shortcutsEnabled:true,confirmDelete:false,focusNewNote:true,showTopbar:true,showContextbar:true,showStatusbar:true,nestedReading:false,inputMode:'auto'};
 // ---- sound: synthesised, offline, silent until asked for ----------------------------------
 // Every voice is built from oscillators and generated noise, so the app keeps shipping as one
-// file with no assets. A theme only re-tunes the three event classes below.
+// file with no assets. A theme only re-tunes the three event classes below. Each voice is a
+// small kit: a sharp attack transient, a low-mid body resonance (the "thock"), a pitch sweep,
+// an optional bandpass filter sweep, light saturation for analogue warmth, and per-key jitter
+// so a run of keystrokes never sounds like a machine gun.
 const SOUND_THEMES={
- soft:{label:'Soft',tick:{wave:'sine',freq:1760,decay:.032,gain:.30,noise:.30},pop:{wave:'triangle',f0:620,f1:930,decay:.22,gain:.60},move:{wave:'sine',f0:560,f1:300,decay:.15,gain:.50,noise:.45}},
- crisp:{label:'Crisp',tick:{wave:'square',freq:2240,decay:.018,gain:.20,noise:.55},pop:{wave:'square',f0:760,f1:1140,decay:.15,gain:.42},move:{wave:'triangle',f0:700,f1:360,decay:.11,gain:.42,noise:.55}},
- deep:{label:'Deep',tick:{wave:'sine',freq:900,decay:.045,gain:.34,noise:.20},pop:{wave:'sine',f0:330,f1:500,decay:.34,gain:.62},move:{wave:'sine',f0:320,f1:170,decay:.24,gain:.62,noise:.25}},
- glass:{label:'Glass',tick:{wave:'triangle',freq:2600,decay:.055,gain:.20,noise:.25},pop:{wave:'triangle',f0:880,f1:1320,decay:.40,gain:.36},move:{wave:'triangle',f0:940,f1:540,decay:.20,gain:.34,noise:.30}}
+ soft:{label:'Soft',tick:{wave:'sine',f0:1760,f1:1056,decay:.04,gain:.22,attack:.002,noise:.22,noiseFreq:3520,noiseDecay:.022,body:{wave:'sine',freq:440,gain:.07,decay:.06},sat:.08},
+  pop:{wave:'triangle',f0:620,f1:930,decay:.24,gain:.46,attack:.003,noise:.12,body:{wave:'sine',freq:330,gain:.14,decay:.30},sat:.06},
+  move:{wave:'sine',f0:560,f1:300,decay:.18,gain:.36,attack:.004,noise:.30,noiseFreq:1120,noiseDecay:.12,body:{wave:'sine',freq:280,gain:.10,decay:.22},sat:.06}},
+ crisp:{label:'Crisp',tick:{wave:'square',f0:2240,f1:1344,decay:.018,gain:.14,attack:.001,noise:.45,noiseFreq:4480,noiseDecay:.010,filter:{type:'highpass',freq:1800,Q:1.2},sat:.12},
+  pop:{wave:'square',f0:760,f1:1140,decay:.15,gain:.34,attack:.002,noise:.25,body:{wave:'square',freq:380,gain:.10,decay:.18},sat:.10},
+  move:{wave:'triangle',f0:700,f1:360,decay:.11,gain:.34,attack:.002,noise:.45,noiseFreq:1400,noiseDecay:.08,filter:{type:'bandpass',freq:1400,Q:2,sweep:700},sat:.10}},
+ deep:{label:'Deep',tick:{wave:'sine',f0:900,f1:540,decay:.055,gain:.26,attack:.003,noise:.12,body:{wave:'sine',freq:220,gain:.16,decay:.09},sat:.25},
+  pop:{wave:'sine',f0:330,f1:500,decay:.36,gain:.50,attack:.004,noise:.10,body:{wave:'sine',freq:165,gain:.22,decay:.45},sat:.20},
+  move:{wave:'sine',f0:320,f1:170,decay:.26,gain:.50,attack:.005,noise:.18,body:{wave:'sine',freq:160,gain:.20,decay:.30},sat:.18}},
+ glass:{label:'Glass',tick:{wave:'triangle',f0:2600,f1:1560,decay:.06,gain:.16,attack:.002,noise:.18,body:{wave:'sine',freq:660,gain:.05,decay:.08},sat:.05},
+  pop:{wave:'triangle',f0:880,f1:1320,decay:.42,gain:.28,attack:.003,noise:.12,body:{wave:'triangle',freq:440,gain:.09,decay:.50},sat:.04},
+  move:{wave:'triangle',f0:940,f1:540,decay:.22,gain:.26,attack:.003,noise:.22,noiseFreq:1880,noiseDecay:.15,body:{wave:'sine',freq:470,gain:.07,decay:.25},sat:.04}},
+ jarvis:{label:'Jarvis',tick:{wave:'sine',f0:1500,f1:2250,decay:.07,gain:.18,attack:.001,noise:.12,noiseFreq:3000,noiseDecay:.04,body:{wave:'sine',freq:750,gain:.04,decay:.10},sat:.12,drift:.03,reverb:.12},
+  pop:{wave:'sine',f0:440,f1:880,decay:.30,gain:.36,attack:.002,noise:.08,body:{wave:'sine',freq:220,gain:.10,decay:.40},sat:.08,reverb:.15},
+  move:{wave:'sine',f0:660,f1:330,decay:.25,gain:.26,attack:.003,noise:.22,noiseFreq:1320,noiseDecay:.18,filter:{type:'bandpass',freq:1320,Q:2.5,sweep:660},body:{wave:'sine',freq:330,gain:.08,decay:.30},sat:.08,reverb:.10}},
+ mechanical:{label:'Mechanical',tick:{wave:'square',f0:1200,f1:720,decay:.03,gain:.18,attack:.0005,noise:.55,noiseFreq:2400,noiseDecay:.012,body:{wave:'sine',freq:180,gain:.22,decay:.06},sat:.35},
+  pop:{wave:'square',f0:480,f1:720,decay:.18,gain:.40,attack:.001,noise:.30,body:{wave:'sine',freq:240,gain:.18,decay:.25},sat:.25},
+  move:{wave:'triangle',f0:400,f1:200,decay:.14,gain:.36,attack:.002,noise:.50,noiseFreq:800,noiseDecay:.10,body:{wave:'sine',freq:200,gain:.16,decay:.18},sat:.30}},
+ typewriter:{label:'Typewriter',tick:{wave:'square',f0:3000,f1:1800,decay:.015,gain:.24,attack:.0003,noise:.65,noiseFreq:6000,noiseDecay:.008,body:{wave:'sine',freq:300,gain:.06,decay:.04},sat:.15},
+  pop:{wave:'triangle',f0:520,f1:780,decay:.25,gain:.46,attack:.002,noise:.18,body:{wave:'sine',freq:260,gain:.14,decay:.30},sat:.10},
+  move:{wave:'sawtooth',f0:200,f1:100,decay:.12,gain:.32,attack:.003,noise:.38,noiseFreq:400,noiseDecay:.08,body:{wave:'sine',freq:100,gain:.18,decay:.15},sat:.18}}
 };
-const DEFAULT_SOUND={enabled:false,volume:.5,theme:'soft',typing:true,creation:true,movement:true};
+const DEFAULT_SOUND={enabled:false,volume:.5,theme:'mechanical',typing:true,creation:true,movement:true};
 const SOUND_TYPING_GAP=26; // ms — faster than this and ticks merge into one
 const SOUND={
- ctx:null,master:null,lastTick:0,counts:{typing:0,creation:0,movement:0},throttled:0,
+ ctx:null,master:null,lastTick:0,counts:{typing:0,creation:0,movement:0},throttled:0,satCache:{},
  get s(){return state.sound},
- get voice(){return SOUND_THEMES[this.s.theme]||SOUND_THEMES.soft},
+ get voice(){return SOUND_THEMES[this.s.theme]||SOUND_THEMES.mechanical},
  ensure(){ // called only from a sound request, i.e. after a user gesture
   if(this.ctx)return this.ctx;
   const AC=window.AudioContext||window.webkitAudioContext;
   if(!AC)return null;
   try{this.ctx=new AC()}catch(e){return null}
   try{this.master=this.ctx.createGain();this.master.gain.value=this.s.volume;this.master.connect(this.ctx.destination)}catch(e){this.ctx=null;return null}
+  // a small feedback delay for the Jarvis reverb tail — created lazily and reused
+  try{this.delay=this.ctx.createDelay(.3);this.delay.delayTime.value=.08;this.fb=this.ctx.createGain();this.fb.gain.value=.22;this.delay.connect(this.fb);this.fb.connect(this.delay);this.delay.connect(this.master)}catch(e){this.delay=null;this.fb=null}
   return this.ctx;
  },
+ satCurve(amount){const k=Math.max(0,Math.min(1,amount||0));const key=k.toFixed(3);if(this.satCache[key])return this.satCache[key];const n=256,c=new Float32Array(n);for(let i=0;i<n;i++){const x=(i/128)-1;c[i]=((1+k)*x)/(1+k*Math.abs(x))}this.satCache[key]=c;return c},
  tone(p){let ctx=this.ctx,t=ctx.currentTime;
+  const attack=Math.max(.0001,p.attack||.002);const decay=Math.max(.01,p.decay||.1);
+  const f0=Math.max(40,p.f0||800);const f1=Math.max(40,p.f1||f0*.6);
+  const gain=Math.max(.0002,p.gain||.4);
   const o=ctx.createOscillator();o.type=p.wave||'sine';
-  o.frequency.setValueAtTime(Math.max(40,p.f0),t);
-  if(p.f1)o.frequency.exponentialRampToValueAtTime(Math.max(40,p.f1),t+p.decay);
-  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(Math.max(.0002,p.gain||.4),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+p.decay);
-  o.connect(g);g.connect(this.master);o.start(t);o.stop(t+p.decay+.02)},
- noise(p){let ctx=this.ctx,t=ctx.currentTime,n=Math.max(1,Math.floor(ctx.sampleRate*p.decay));
+  o.frequency.setValueAtTime(f0,t);
+  if(p.f1)o.frequency.exponentialRampToValueAtTime(f1,t+decay);
+  // optional pitch drift (Jarvis)
+  if(p.drift){const lfo=ctx.createOscillator();lfo.frequency.value=6+lfo.frequency.value*0;const lg=ctx.createGain();lg.gain.value=f0*p.drift; lfo.connect(lg);lg.connect(o.frequency);lfo.start(t);lfo.stop(t+decay+.02)}
+  const g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+decay);
+  let node=o;
+  if(p.filter){const f=ctx.createBiquadFilter();f.type=p.filter.type||'bandpass';f.Q.value=p.filter.Q||1.5;f.frequency.setValueAtTime(Math.max(40,p.filter.freq||2000),t);if(p.filter.sweep)f.frequency.exponentialRampToValueAtTime(Math.max(40,p.filter.sweep),t+decay);o.connect(f);node=f}
+  if(p.sat&&p.sat>0){const ws=ctx.createWaveShaper();ws.curve=this.satCurve(p.sat);ws.oversample='2x';node.connect(ws);ws.connect(g)}else node.connect(g);
+  // body resonance — the thock
+  if(p.body){const bo=ctx.createOscillator();bo.type=p.body.wave||'sine';const bf=Math.max(40,p.body.freq||180);bo.frequency.setValueAtTime(bf,t);const bg=ctx.createGain();const bdecay=Math.max(.01,p.body.decay||decay*1.5);bg.gain.setValueAtTime(.0001,t);bg.gain.exponentialRampToValueAtTime(Math.max(.0002,p.body.gain||.2),t+attack);bg.gain.exponentialRampToValueAtTime(.0001,t+bdecay);bo.connect(bg);bg.connect(this.master);if(p.reverb&&this.delay)bg.connect(this.delay);bo.start(t);bo.stop(t+bdecay+.02)}
+  g.connect(this.master);if(p.reverb&&this.delay)g.connect(this.delay);
+  o.start(t);o.stop(t+decay+.02)},
+ noise(p){let ctx=this.ctx,t=ctx.currentTime;
+  const decay=Math.max(.01,p.decay||.1);const n=Math.max(1,Math.floor(ctx.sampleRate*decay));
   const buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
-  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+  const exp=p.exp||2.2;for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,exp);
   const src=ctx.createBufferSource();src.buffer=buf;
-  const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=1.1;f.frequency.setValueAtTime(Math.max(80,p.freq||1800),t);
-  if(p.f1)f.frequency.exponentialRampToValueAtTime(Math.max(60,p.f1),t+p.decay);
+  const f=ctx.createBiquadFilter();f.type=p.filterType||'bandpass';f.Q.value=p.Q||1.2;f.frequency.setValueAtTime(Math.max(40,p.freq||2000),t);if(p.f1)f.frequency.exponentialRampToValueAtTime(Math.max(40,p.f1),t+decay);
   const g=ctx.createGain();g.gain.value=Math.max(0,p.gain||.3);
-  src.connect(f);f.connect(g);g.connect(this.master);src.start(t);src.stop(t+p.decay+.02)},
+  src.connect(f);f.connect(g);g.connect(this.master);if(p.reverb&&this.delay)g.connect(this.delay);
+  src.start(t);src.stop(t+decay+.02)},
  emit(kind,skipThrottle){ // the master switch and the class switch gate every cue, previews included
   if(!this.s.enabled||!this.s[kind])return false;
   if(kind==='typing'&&!skipThrottle){let now=performance.now();if(now-this.lastTick<SOUND_TYPING_GAP){this.throttled++;return false}this.lastTick=now}
@@ -4728,9 +4763,9 @@ const SOUND={
   this.counts[kind]=(this.counts[kind]||0)+1;
   try{
    const v=this.voice;
-   if(kind==='typing'){let t=v.tick,f=t.freq*(1+Math.random()*.07-.035);this.tone({wave:t.wave,f0:f,f1:f*.6,decay:t.decay,gain:t.gain});if(t.noise)this.noise({freq:f*2.1,f1:f*1.3,decay:t.decay,gain:t.gain*t.noise})}
-   else if(kind==='creation'){let p=v.pop;this.tone({wave:p.wave,f0:p.f0,f1:p.f1,decay:p.decay,gain:p.gain});this.tone({wave:p.wave,f0:p.f1,f1:p.f1*1.5,decay:p.decay*.6,gain:p.gain*.45})}
-   else{let m=v.move;if(m.noise)this.noise({freq:m.f0,f1:m.f1,decay:m.decay,gain:m.gain*m.noise});this.tone({wave:m.wave,f0:m.f0*1.6,f1:m.f1,decay:m.decay,gain:m.gain*.4})}
+   if(kind==='typing'){let t=v.tick,j=t.jitter||.07,f=t.f0*(1+Math.random()*j-j/2);this.tone({...t,f0:f,f1:f*(t.f1/t.f0)});if(t.noise)this.noise({freq:t.noiseFreq||f*2,f1:t.noiseFreq?t.noiseFreq*.7:f*1.3,decay:t.noiseDecay||t.decay*.7,gain:t.gain*(t.noise||.3),filterType:t.noiseFilter||'bandpass',Q:t.noiseQ||1.2,reverb:t.reverb})}
+   else if(kind==='creation'){let p=v.pop;this.tone({...p});this.tone({...p,f0:p.f1,f1:p.f1*1.5,gain:p.gain*.45,decay:p.decay*.6,body:p.body?{...p.body,gain:(p.body.gain||.15)*.6,decay:(p.body.decay||p.decay)*.6}:undefined,reverb:p.reverb})}
+   else{let m=v.move;if(m.noise)this.noise({freq:m.noiseFreq||m.f0,f1:m.noiseFreq?m.noiseFreq*.5:m.f1,decay:m.noiseDecay||m.decay,gain:m.gain*(m.noise||.4),filterType:m.filterType||'bandpass',Q:m.filterQ||1.5,reverb:m.reverb});this.tone({...m,f0:m.f0*1.6,f1:m.f1,gain:m.gain*.4,reverb:m.reverb})}
   }catch(e){}
   return true;
  },
@@ -4742,6 +4777,7 @@ const SOUND={
  setTheme(id){if(SOUND_THEMES[id])this.s.theme=id;return this.s.theme}
 };
 function soundProbe(){return {enabled:!!SOUND.s.enabled,volume:SOUND.s.volume,theme:SOUND.s.theme,typing:!!SOUND.s.typing,creation:!!SOUND.s.creation,movement:!!SOUND.s.movement,hasCtx:!!SOUND.ctx,ctxState:SOUND.ctx?SOUND.ctx.state:null,counts:{...SOUND.counts},throttled:SOUND.throttled}}
+
 const COMMANDS={
  newDocument:{label:'New document',icon:'file'},addTopic:{label:'New main topic',icon:'topic'},addSibling:{label:'Add sibling',icon:'plus'},addChild:{label:'Add child',icon:'child'},deleteNode:{label:'Delete note',icon:'trash'},moveUp:{label:'Move note up',icon:'arrowUp'},moveDown:{label:'Move note down',icon:'arrowDown'},indent:{label:'Indent under previous note',icon:'indent'},outdent:{label:'Outdent note',icon:'outdent'},image:{label:'Add image',icon:'photo'},math:{label:'Insert math',icon:'math'},
  navUp:{label:'Navigate up',icon:'arrowUp'},navDown:{label:'Navigate down',icon:'arrowDown'},navParent:{label:'Navigate to parent',icon:'outdent'},navChild:{label:'Navigate to child',icon:'indent'},branchView:{label:'Branch view',icon:'branch'},splitView:{label:'Split view',icon:'columns'},readView:{label:'Reading view',icon:'book'},undo:{label:'Undo',icon:'undo'},redo:{label:'Redo',icon:'redo'},settings:{label:'Settings',icon:'settings'},documents:{label:'Documents',icon:'files'},exportMd:{label:'Export Markdown',icon:'download'},shortcutsHelp:{label:'Show keyboard shortcuts',icon:'keyboard'},
