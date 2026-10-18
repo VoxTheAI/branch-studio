@@ -205,6 +205,142 @@ async function run(){
   // select the second root and indent it into the first -> the third root glides up
   await trajectory(w,'indent (card leaves the root column)',1,2,"runCommand('indent')");
 
+  // ---------- overlay teardown ----------
+  // Every surface below survives its close: it stays in the DOM and gets shown
+  // again. An exit that keeps its forwards fill, or its inline pointer-events,
+  // bricks that surface for the rest of the session. Re-enter it, then check it.
+  const CYCLES=5;
+  async function probe(w,sel){
+    return JSON.parse(await w.eval(`
+      (function(){
+        const el=document.querySelector(${JSON.stringify(sel)});
+        if(!el)return JSON.stringify({missing:true});
+        const cs=getComputedStyle(el);
+        let fills=0;
+        try{for(const a of el.getAnimations())if(a.effect&&a.effect.getComputedTiming().fill!=='none')fills++}catch(e){}
+        const r=el.getBoundingClientRect();
+        let hit='no-box';
+        if(r.width>=1&&r.height>=1){
+          const t=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+          hit=t?(t===el||el.contains(t))?'hit':'blocked-by:'+((t.className||'')+''||t.tagName):'null';
+        }
+        return JSON.stringify({connected:el.isConnected,opacity:+(+cs.opacity).toFixed(3),pe:cs.pointerEvents,
+          inlinePE:el.style.pointerEvents||'',inlineOpacity:el.style.opacity||'',fills,hit,w:Math.round(r.width)});
+      })()`));
+  }
+  const filled=p=>p.fills>0||p.inlinePE!==''||p.inlineOpacity!=='';
+  const alive=p=>p.connected&&!filled(p);
+
+  // --- toast: closed 5x in a row, and the Undo button must stay clickable every time
+  for(let i=0;i<CYCLES;i++){
+    await w.eval(`eval('toastAction')('Cycle ${i+1}','Undo',()=>{},700)`);
+    await sleep(1200);   // 700ms of toast + 150ms exit + settle
+    const p=await probe(w,'#toast');
+    log(alive(p)?'pass':'fail',`toast ${i+1}/${CYCLES}: closed cleanly — connected=${p.connected} fills=${p.fills} inlinePE="${p.inlinePE}"`);
+  }
+  for(let i=0;i<CYCLES;i++){
+    const r=JSON.parse(await w.eval(`
+      (function(){
+        window.__undone=0;
+        eval('toastAction')('Undo me','Undo',()=>{window.__undone++},5000);
+        const b=document.querySelector('#toast .toast-action');
+        if(!b)return JSON.stringify({err:'no Undo button'});
+        const r0=b.getBoundingClientRect();
+        const t=document.elementFromPoint(r0.left+r0.width/2,r0.top+r0.height/2);
+        const hittable=!!t&&(t===b||b.contains(t));
+        if(hittable)b.click();
+        return JSON.stringify({hittable,hitEl:t?((t.className||'')+''||t.tagName):'null',
+          fired:window.__undone,pe:getComputedStyle(document.querySelector('#toast')).pointerEvents});
+      })()`));
+    if(r.err){log('fail',`toast Undo ${i+1}/${CYCLES}: ${r.err}`);continue}
+    log(r.hittable&&r.fired===1?'pass':'fail',`toast Undo ${i+1}/${CYCLES}: clickable and clicked — hittable=${r.hittable} hitEl=${r.hitEl} handler=${r.fired} pointer-events=${r.pe}`);
+    await sleep(150);
+  }
+  // stale exit: a toast raised while a previous toast's exit is still running.
+  // forceToast animates out with exitEl; its deferred class removal must not land
+  // on the toast that replaced it.
+  await w.eval(`(function(){eval('forceToast')('Old',100);setTimeout(()=>eval('toastAction')('New','Undo',()=>{},60000),150);1})()`);
+  await sleep(1200);
+  const stale=JSON.parse(await w.eval(`JSON.stringify({text:(document.querySelector('#toast span')||{}).textContent,show:document.querySelector('#toast').classList.contains('show')})`));
+  log((stale.text==='New'&&stale.show)?'pass':'fail',`toast: a toast raised mid-exit is not undone by the stale exit (text="${stale.text}" show=${stale.show})`);
+  await w.eval(`(function(){const t=document.querySelector('#toast');t.classList.remove('show','has-action');t.textContent=''})()`);
+  await sleep(400);
+
+  // --- context menu: opens and closes 5x; nothing is orphaned, and a reopened
+  //     menu must not be removed by the previous menu's exit
+  for(let i=0;i<CYCLES;i++){
+    await w.eval(`(function(){const a=document.querySelector('#undoBtn');eval('openMenu')(a,[{icon:'edit',label:'Item',run:()=>{}}],{title:'Harness'});eval('closeMenu')()})()`);
+    await sleep(400);
+    const p=JSON.parse(await w.eval(`JSON.stringify({pops:document.querySelectorAll('.menu-pop').length,backs:document.querySelectorAll('.menu-backdrop').length})`));
+    log(p.pops===0&&p.backs===0?'pass':'fail',`menu ${i+1}/${CYCLES}: fully removed after close (pops=${p.pops} backdrops=${p.backs})`);
+  }
+  await w.eval(`(function(){const a=document.querySelector('#undoBtn');eval('openMenu')(a,[{icon:'edit',label:'A',run:()=>{}}]);eval('closeMenu')();window.__keep=eval('openMenu')(a,[{icon:'edit',label:'C',run:()=>{}}])})()`);
+  await sleep(700);
+  const gen=JSON.parse(await w.eval(`JSON.stringify({alive:!!window.__keep&&window.__keep.isConnected,live:document.body.contains(window.__keep),items:window.__keep?window.__keep.querySelectorAll('.menu-item').length:0})`));
+  log(gen.alive&&gen.live&&gen.items===1?'pass':'fail',`generation guard: a menu reopened mid-exit survives it (connected=${gen.alive} inBody=${gen.live} items=${gen.items})`);
+  await w.eval(`eval('closeMenu')()`); await sleep(400);
+
+  // --- settings dialog closed with its ✕, 5x: reopen, prove it is visible and live, close again
+  for(let i=0;i<CYCLES;i++){
+    await w.eval(`eval('openSettings')('appearance')`);
+    await sleep(360);
+    const open=await probe(w,'#settingsDialog');
+    const isOpen=await w.eval(`document.querySelector('#settingsDialog').open===true`);
+    log(isOpen&&open.opacity>0.9&&!filled(open)&&open.hit==='hit'?'pass':'fail',`settings ✕ ${i+1}/${CYCLES}: reopen is visible and interactive — open=${isOpen} opacity=${open.opacity} fills=${open.fills} hit=${open.hit}`);
+    await w.eval(`document.querySelector('#settingsDialog [data-close]').click()`);
+    await sleep(420);
+    const shut=await probe(w,'#settingsDialog');
+    const closed=await w.eval(`document.querySelector('#settingsDialog').open===false`);
+    log(closed&&alive(shut)?'pass':'fail',`settings ✕ ${i+1}/${CYCLES}: closed cleanly — open=${closed} connected=${shut.connected} fills=${shut.fills} inlinePE="${shut.inlinePE}"`);
+  }
+
+  // --- Escape takes the same animated path as ✕
+  await w.eval(`eval('openSettings')('appearance')`);
+  await sleep(360);
+  await w.eval(`eval('closeTopLayer')()`);
+  await sleep(420);
+  const esc=await probe(w,'#settingsDialog');
+  const escClosed=await w.eval(`document.querySelector('#settingsDialog').open===false`);
+  log(escClosed&&alive(esc)?'pass':'fail',`Escape closes Settings through the animated path — open=${escClosed} fills=${esc.fills} inlinePE="${esc.inlinePE}"`);
+
+  // --- documents drawer, 5x
+  for(let i=0;i<CYCLES;i++){
+    await w.eval(`eval('openDocuments')()`);
+    await sleep(360);
+    const open=await probe(w,'#documentOverlay .drawer');
+    log(open.opacity>0.9&&open.hit==='hit'&&!filled(open)?'pass':'fail',`drawer ${i+1}/${CYCLES}: reopen is visible and interactive — opacity=${open.opacity} hit=${open.hit} fills=${open.fills}`);
+    await w.eval(`eval('closeDocuments')()`);
+    await sleep(420);
+    const shut=await probe(w,'#documentOverlay .drawer');
+    log(alive(shut)?'pass':'fail',`drawer ${i+1}/${CYCLES}: closed cleanly — connected=${shut.connected} fills=${shut.fills} inlinePE="${shut.inlinePE}"`);
+  }
+  // Escape on the drawer as well
+  await w.eval(`eval('openDocuments')()`); await sleep(320);
+  await w.eval(`eval('closeTopLayer')()`); await sleep(420);
+  const dEsc=await probe(w,'#documentOverlay .drawer');
+  log(alive(dEsc)?'pass':'fail',`drawer closed with Escape is clean too — fills=${dEsc.fills} inlinePE="${dEsc.inlinePE}"`);
+
+  // --- zen in and out, 5x: the workspace must come back every time
+  for(let i=0;i<CYCLES;i++){
+    await w.eval(`eval('zenSet')(true)`);
+    await sleep(650);
+    await w.eval(`eval('zenSet')(false)`);
+    await sleep(750);
+    const p=await probe(w,'#workspace');
+    log(p.connected&&p.opacity>0.9&&p.pe!=='none'&&p.hit==='hit'&&!filled(p)?'pass':'fail',
+      `zen ${i+1}/${CYCLES}: workspace interactive again — connected=${p.connected} opacity=${p.opacity} pointer-events=${p.pe} hit=${p.hit} fills=${p.fills} inlinePE="${p.inlinePE}"`);
+    const typing=JSON.parse(await w.eval(`(function(){
+        const e=document.querySelector('#columns .note-editor');
+        if(!e)return JSON.stringify({err:'no editor'});
+        const r=e.getBoundingClientRect();
+        const t=r.width>=1?document.elementFromPoint(r.left+r.width/2,r.top+Math.min(12,r.height/2)):null;
+        const hittable=!!t&&(t===e||e.contains(t)||t.closest?.('.note')===e.closest('.note'));
+        if(hittable)e.focus();
+        return JSON.stringify({hittable,hitEl:t?((t.className||'')+''||t.tagName):'null',focused:document.activeElement===e});
+      })()`));
+    log(typing.hittable&&typing.focused?'pass':'fail',`zen ${i+1}/${CYCLES}: the editing surface is hittable and takes focus — hittable=${typing.hittable} hitEl=${typing.hitEl} focused=${typing.focused}`);
+  }
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';
