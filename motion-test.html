@@ -633,6 +633,161 @@ async function run(){
   await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
   await sleep(300);
 
+  // ---------- sound: synthesised cues, silent by default ----------
+  await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
+  await sleep(250);
+  await w.eval(`window.__type=function(){const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');if(!e)return false;
+    e.focus();e.textContent=(e.textContent||'')+'x';e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText'}));return true}`);
+  // All probes here degrade to null/{} so a build without the sound engine reports labelled
+  // failures instead of one opaque crash.
+  const je=async(code,fallback)=>{try{return JSON.parse(await w.eval(code))}catch(e){return fallback}};
+  const soft=async(code,fallback)=>{try{return await w.eval(code)}catch(e){return fallback}};
+  const sProbe=()=>je('JSON.stringify(soundProbe())',null);
+  const openSound=async()=>{await soft(`(function(){const d=eval('$')('#settingsDialog');if(d&&d.open)d.close();eval('openSettings')('sound')})()`);await sleep(280)};
+  const clickSound=async sel=>{await soft(`(function(){const b=document.querySelector('${sel}');if(b)b.click();return 1})()`);await sleep(140)};
+  const closeSettings=async()=>{await soft(`(function(){const d=eval('$')('#settingsDialog');if(d&&d.open)d.close();return 1})()`);await sleep(150)};
+
+  await soft(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
+  await sleep(250);
+  await soft(`window.__type=function(){const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');if(!e)return false;
+    e.focus();e.textContent=(e.textContent||'')+'x';e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText'}));return true}`);
+
+  const s0=await sProbe();
+  log(!!s0&&!s0.enabled&&!s0.hasCtx?'pass':'fail',`sound: silent by default, no AudioContext is built at boot (enabled=${s0&&s0.enabled} context=${s0&&s0.hasCtx})`);
+
+  await soft('window.__type()');
+  await sleep(90);
+  const s1=await sProbe();
+  log(!!s1&&s1.counts.typing===0&&!s1.hasCtx?'pass':'fail',`sound: typing while sound is off plays nothing and still builds no context (typing=${s1&&s1.counts.typing} context=${s1&&s1.hasCtx})`);
+
+  await openSound();
+  const sec=await je(`
+    (function(){
+      const s=document.querySelector('[data-section="sound"]');
+      if(!s)return JSON.stringify({missing:true});
+      return JSON.stringify({tab:!!document.querySelector('[data-settings-tab="sound"]'),
+        active:getComputedStyle(s).display!=='none'&&s.getBoundingClientRect().height>0,
+        master:!!s.querySelector('[data-sound-toggle="enabled"]'),range:!!s.querySelector('[data-sound="volume"]'),
+        classes:['typing','creation','movement'].filter(k=>s.querySelector('[data-sound-toggle="'+k+'"]')).length,
+        previews:s.querySelectorAll('[data-sound-preview]').length,
+        voices:s.querySelector('[data-sound="theme"]')?[...s.querySelector('[data-sound="theme"]').options].map(o=>o.value):[]});
+    })()`,{missing:true});
+  log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===3&&sec.previews===3?'pass':'fail',
+    `sound settings: a Sound section carries the master toggle, volume, one control per cue class and a preview each (classes=${sec.classes} previews=${sec.previews})`);
+  log((sec.voices||[]).join(',')==='soft,crisp,deep,glass'?'pass':'fail',`sound settings: four voices (${(sec.voices||[]).join(', ')})`);
+
+  await clickSound('[data-section="sound"] [data-sound-toggle="enabled"]');
+  const s2=await sProbe();
+  log(!!s2&&s2.enabled&&!s2.hasCtx?'pass':'fail',`sound: the UI switch turns sound on without seizing an audio context until something actually plays (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx})`);
+
+  await soft('window.__type()');
+  await sleep(140);
+  const s3=await sProbe();
+  log(!!s3&&s3.counts.typing===1&&s3.hasCtx?'pass':'fail',`sound: the first typed character builds the context and fires one cue (typing=${s3&&s3.counts.typing} context=${s3&&s3.hasCtx})`);
+
+  const burst=await je(`(function(){const S=eval('SOUND');const a=S.counts.typing,t=S.throttled;
+    for(let i=0;i<40;i++)S.typing();
+    return JSON.stringify({added:S.counts.typing-a,throttled:S.throttled-t})})()`,{});
+  log(burst.added+burst.throttled===40&&burst.added<=1?'pass':'fail',
+    `sound: a 40-tick burst collapses into at most one cue (played ${burst.added}, throttled ${burst.throttled})`);
+
+  const vol=await je(`
+    (function(){const r=document.querySelector('[data-section="sound"] [data-sound="volume"]');
+      if(!r)throw new Error('no slider');
+      r.value=80;r.dispatchEvent(new Event('input',{bubbles:true}));
+      const S=eval('SOUND');
+      return JSON.stringify({volume:S.s.volume,gain:S.master?+S.master.gain.value.toFixed(4):null,
+        label:(document.querySelector('[data-sound-value]')||{}).textContent})})()`,{});
+  log(Math.abs(vol.volume-.8)<1e-9&&vol.gain!==null&&Math.abs(vol.gain-.8)<1e-9&&vol.label==='80%'?'pass':'fail',
+    `sound: the volume slider drives both the stored level and the master gain (volume=${vol.volume} gain=${vol.gain} label=${vol.label})`);
+
+  const th=await je(`
+    (function(){const sel=document.querySelector('[data-section="sound"] [data-sound="theme"]');
+      if(!sel)throw new Error('no voice select');
+      sel.value='glass';sel.dispatchEvent(new Event('change',{bubbles:true}));
+      const S=eval('SOUND');return JSON.stringify({theme:S.s.theme,voice:S.voice.label})})()`,{});
+  log(th.theme==='glass'&&th.voice==='Glass'?'pass':'fail',`sound: choosing a voice re-tunes the engine (${th.theme} → ${th.voice})`);
+
+  await closeSettings();
+  const before=await sProbe();
+  await soft(`eval('runCommand')('addTopic')`);
+  await sleep(160);
+  const afterCreate=await sProbe();
+  log(!!before&&!!afterCreate&&afterCreate.counts.creation===before.counts.creation+1?'pass':'fail',
+    `sound: creating a note plays the creation cue (${before&&before.counts.creation} → ${afterCreate&&afterCreate.counts.creation})`);
+
+  await soft(`(function(){const S=eval('state'),d=S.documents.find(x=>x.id===S.activeDocumentId);d.selectedId=d.tree[0].id;eval('renderAll')()})()`);
+  await soft(`eval('runCommand')('moveDown')`);
+  await sleep(160);
+  const afterMove=await sProbe();
+  log(!!afterCreate&&!!afterMove&&afterMove.counts.movement===afterCreate.counts.movement+1?'pass':'fail',
+    `sound: moving a note plays the movement cue (${afterCreate&&afterCreate.counts.movement} → ${afterMove&&afterMove.counts.movement})`);
+
+  await openSound();
+  await clickSound('[data-section="sound"] [data-sound-toggle="typing"]');
+  await closeSettings();
+  const b2=await sProbe();
+  await soft('window.__type()');
+  await soft(`eval('runCommand')('addTopic')`);
+  await sleep(180);
+  const a2=await sProbe();
+  log(!!b2&&!!a2&&a2.counts.typing===b2.counts.typing&&a2.counts.creation===b2.counts.creation+1?'pass':'fail',
+    `sound: switching one cue class off silences only that class (typing ${b2&&b2.counts.typing}→${a2&&a2.counts.typing}, creation ${b2&&b2.counts.creation}→${a2&&a2.counts.creation})`);
+
+  await openSound();
+  await clickSound('[data-section="sound"] [data-sound-toggle="enabled"]');
+  await closeSettings();
+  const b3=await sProbe();
+  await soft('window.__type()');
+  await soft(`eval('runCommand')('addTopic')`);
+  await soft(`eval('runCommand')('moveDown')`);
+  await sleep(200);
+  const a3=await sProbe();
+  log(!!b3&&!!a3&&!a3.enabled&&a3.counts.typing===b3.counts.typing&&a3.counts.creation===b3.counts.creation&&a3.counts.movement===b3.counts.movement?'pass':'fail',
+    `sound: the master switch silences every class at once (typing ${b3&&b3.counts.typing}→${a3&&a3.counts.typing}, creation ${b3&&b3.counts.creation}→${a3&&a3.counts.creation}, movement ${b3&&b3.counts.movement}→${a3&&a3.counts.movement})`);
+
+  await soft(`eval('saveState')()`);
+  await sleep(420);
+  const persisted=await je(`
+    (function(){const r=JSON.parse(localStorage.getItem(eval('STORAGE_KEY'))||'null');
+      return JSON.stringify(r&&r.sound?r.sound:null)})()`,null);
+  log(!!persisted&&persisted.theme==='glass'&&Math.abs(persisted.volume-.8)<1e-9&&persisted.enabled===false&&persisted.typing===false&&persisted.creation===true?'pass':'fail',
+    `sound: preferences are written to storage (${JSON.stringify(persisted)})`);
+
+  const legacy=await je(`
+    (function(){const r=JSON.parse(localStorage.getItem(eval('STORAGE_KEY')));
+      delete r.sound;const n=eval('normalizeState')(JSON.parse(JSON.stringify(r)));
+      return JSON.stringify(n?n.sound:null)})()`,null);
+  log(!!legacy&&legacy.enabled===false&&legacy.volume===.5&&legacy.theme==='soft'&&legacy.typing&&legacy.creation&&legacy.movement?'pass':'fail',
+    `sound: a save from before this feature normalises to silent defaults, it does not throw (${JSON.stringify(legacy)})`);
+
+  const noac=await je(`
+    (function(){const S=eval('SOUND'),st=eval('state');
+      const ctx=S.ctx,master=S.master,enabled=st.sound.enabled,AC=window.AudioContext,WAC=window.webkitAudioContext;
+      let threw=false,ret=null;
+      try{
+        Object.defineProperty(window,'AudioContext',{value:undefined,configurable:true});
+        Object.defineProperty(window,'webkitAudioContext',{value:undefined,configurable:true});
+        S.ctx=null;S.master=null;st.sound.enabled=true;ret=S.emit('creation',true);
+      }catch(e){threw=true}
+      S.ctx=ctx;S.master=master;st.sound.enabled=enabled;
+      try{Object.defineProperty(window,'AudioContext',{value:AC,configurable:true});Object.defineProperty(window,'webkitAudioContext',{value:WAC,configurable:true})}catch(e){}
+      return JSON.stringify({threw,ret})})()`,{});
+  log(noac.threw===false&&noac.ret===false?'pass':'fail',`sound: with no AudioContext at all the cue no-ops instead of throwing (threw=${noac.threw} returned=${noac.ret})`);
+
+  const susp=await je(`
+    (async function(){const S=eval('SOUND');
+      if(!S.ctx)return JSON.stringify({skip:true});
+      let threw=false,ret=null;const state0=S.ctx.state;
+      try{await S.ctx.suspend();ret=S.emit('creation',true)}catch(e){threw=true}
+      const state1=S.ctx.state;try{await S.ctx.resume()}catch(e){}
+      return JSON.stringify({skip:false,state0,state1,threw,ret})})()`,{skip:true});
+  log(!susp.skip&&susp.threw===false&&susp.ret===true?'pass':'fail',
+    `sound: a suspended context is resumed rather than throwing (state ${susp.state0}→${susp.state1}, cue played=${susp.ret})`);
+
+  await soft(`(function(){const d=eval('$')('#settingsDialog');if(d&&d.open)d.close();const S=eval('state');if(S.sound)S.sound.enabled=false;return 1})()`);
+  await sleep(150);
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';
