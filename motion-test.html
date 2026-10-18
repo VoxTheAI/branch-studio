@@ -592,6 +592,47 @@ async function run(){
   await w.eval(`eval('zenSet')(false)`);
   await sleep(850);
 
+  // ---------- zen from split: one surface, not the document twice ----------
+  // renderWorkspace() draws both panes in split mode; the tabs bar only exists on phone. So a
+  // desktop split would otherwise stack the branch stream and the reading render in the one
+  // scroller — the same document twice.
+  await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='split';eval('renderAll')()})()`);
+  await sleep(150);
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(750);
+  const sz=JSON.parse(await w.eval(`
+    (function(){
+      const vis=el=>el?getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0:false;
+      const ws=document.querySelector('#workspace');
+      return JSON.stringify({zen:document.documentElement.classList.contains('zen'),
+        read:vis(document.querySelector('.read-pane')),branch:vis(document.querySelector('#branchPane')),
+        wsOverflowY:getComputedStyle(ws).overflowY,cards:document.querySelectorAll('#columns .note[data-id]').length});
+    })()`));
+  log(sz.zen&&sz.wsOverflowY==='auto'?'pass':'fail',`zen from split: the workspace is the single scroller (overflow-y=${sz.wsOverflowY})`);
+  log(sz.branch&&!sz.read?'pass':'fail',`zen from split: one surface, not a duplicated document (branch visible=${sz.branch} read visible=${sz.read}, ${sz.cards} cards)`);
+  // phone split renders the tabs bar; it must not survive into zen either
+  const fEl=document.getElementById('frame'),oldW=fEl.style.width;
+  fEl.style.width='480px';w.dispatchEvent(new Event('resize'));
+  await sleep(500);
+  await w.eval(`(function(){eval('zenSet')(false);return 1})()`);
+  await sleep(600);
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(750);
+  const szp=JSON.parse(await w.eval(`
+    (function(){
+      const vis=el=>el?getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0:false;
+      const tb=document.querySelector('.split-tabs-bar');
+      return JSON.stringify({zen:document.documentElement.classList.contains('zen'),
+        exists:!!tb,tabs:vis(tb)});
+    })()`));
+  log(szp.zen&&szp.exists&&!szp.tabs?'pass':'fail',`zen from phone split: the tabs bar is hidden (exists=${szp.exists} visible=${szp.tabs})`);
+  await w.eval(`(function(){eval('zenSet')(false);return 1})()`);
+  await sleep(600);
+  fEl.style.width=oldW;w.dispatchEvent(new Event('resize'));
+  await sleep(500);
+  await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
+  await sleep(300);
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';

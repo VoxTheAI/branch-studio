@@ -4565,11 +4565,15 @@ html .read-pane .read-block:not(.depth-0) .read-editor,html .read-pane .read-nod
 <style id="custom-style"></style>
 <style id="zen-style">
 /* Zen: chrome out, one centred column, one surface. Entered by toggle, left with Esc. */
-html.zen .topbar,html.zen .contextbar,html.zen .statusbar,html.zen .phone-bar,html.zen #writeBar,html.zen .wb-dock,html.zen .restore-chip{display:none!important}
+html.zen .topbar,html.zen .contextbar,html.zen .statusbar,html.zen .phone-bar,html.zen .split-tabs-bar,html.zen #writeBar,html.zen .wb-dock,html.zen .restore-chip{display:none!important}
 html.zen .app{display:block!important;grid-template-rows:none!important;height:100%!important}
 /* zen has exactly ONE scroll container: the workspace. Everything inside it grows. */
 html.zen #workspace{height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
 html.zen .workspace{display:block!important}
+/* split zen keeps ONE surface. renderWorkspace() draws both panes in split mode; the tabs bar
+   only exists on phone, so without this a desktop split shows the whole document twice, stacked
+   in the one scroller. Zen is the writing surface, so the branch pane stays and reading goes. */
+html.zen .workspace.split:not(.split-tabs) .read-pane{display:none!important}
 html.zen .branch-pane{width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;flex:none!important;overflow:visible!important}
 html.zen .columns{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:9vh 24px 45vh!important;min-height:0!important}
 html.zen .column{display:block!important;width:auto!important;min-width:0!important;max-width:var(--zen-measure,74ch)!important;margin:0 auto!important}
