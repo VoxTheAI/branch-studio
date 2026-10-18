@@ -3690,6 +3690,10 @@ html:not(.anim-on) .toast{transition:none}
 .note-editor h1{font-size:1.3em}.note-editor h2{font-size:1.15em}.note-editor h3{font-size:1.05em}
 .read-editor blockquote,.note-editor blockquote{margin:.3em 0;padding:.15em 0 .15em .85em;border-left:3px solid color-mix(in srgb,var(--accent) 70%,transparent);color:var(--text)}
 .read-editor pre,.note-editor pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;line-height:1.5;background:color-mix(in srgb,var(--bg) 65%,black);border:1px solid var(--line);padding:.55em .8em;border-radius:6px;white-space:pre-wrap;margin:.35em 0;color:var(--text)}
+.read-editor table.note-table,.note-editor table.note-table{border-collapse:collapse;margin:.5em 0;width:100%;font-size:.95em}
+.read-editor table.note-table th,.read-editor table.note-table td,.note-editor table.note-table th,.note-editor table.note-table td{border:1px solid var(--line);padding:.35em .6em;text-align:left}
+.read-editor table.note-table th,.note-editor table.note-table th{background:color-mix(in srgb,var(--panel-3) 50%,transparent);font-weight:600}
+.read-editor table.note-table tr:hover td,.note-editor table.note-table tr:hover td{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .read-editor code,.note-editor code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:rgba(255,255,255,.09);padding:.05em .32em;border-radius:4px}
 .read-editor mark,.note-editor mark{background:rgba(255,206,84,.34);color:inherit;border-radius:2px;padding:0 .06em}
 .read-editor s,.note-editor s{text-decoration-thickness:1.5px}
@@ -4782,7 +4786,7 @@ const COMMANDS={
  newDocument:{label:'New document',icon:'file'},addTopic:{label:'New main topic',icon:'topic'},addSibling:{label:'Add sibling',icon:'plus'},addChild:{label:'Add child',icon:'child'},deleteNode:{label:'Delete note',icon:'trash'},moveUp:{label:'Move note up',icon:'arrowUp'},moveDown:{label:'Move note down',icon:'arrowDown'},indent:{label:'Indent under previous note',icon:'indent'},outdent:{label:'Outdent note',icon:'outdent'},image:{label:'Add image',icon:'photo'},math:{label:'Insert math',icon:'math'},
  navUp:{label:'Navigate up',icon:'arrowUp'},navDown:{label:'Navigate down',icon:'arrowDown'},navParent:{label:'Navigate to parent',icon:'outdent'},navChild:{label:'Navigate to child',icon:'indent'},branchView:{label:'Branch view',icon:'branch'},splitView:{label:'Split view',icon:'columns'},readView:{label:'Reading view',icon:'book'},undo:{label:'Undo',icon:'undo'},redo:{label:'Redo',icon:'redo'},settings:{label:'Settings',icon:'settings'},documents:{label:'Documents',icon:'files'},exportMd:{label:'Export Markdown',icon:'download'},shortcutsHelp:{label:'Show keyboard shortcuts',icon:'keyboard'},
  copyNote:{label:'Copy note',icon:'copyNote'},cutNote:{label:'Cut note',icon:'cutNote'},pasteNote:{label:'Paste note',icon:'pasteNote'},
- zen:{label:'Zen mode',icon:'zen'},palette:{label:'Command palette',icon:'cmd'}
+ zen:{label:'Zen mode',icon:'zen'},palette:{label:'Command palette',icon:'cmd'},table:{label:'Insert table',icon:'table'}
 };
 const UA=navigator.userAgent||'';
 // iPadOS Safari reports itself as a Mac ("Macintosh"/MacIntel) — tell them apart by touch points.
@@ -4938,6 +4942,48 @@ function readNodeHTML(node,depth=0){return `<div class="read-node depth-${Math.m
 function renderReading(){let pane=$('#readPane'),nested=!!state.behavior.nestedReading,body=nested?tree().map(node=>readNodeHTML(node,0)).join(''):flatten().map(({node,depth})=>`<div class="read-block depth-${Math.min(depth,2)} ${node.id===doc().selectedId?'selected':''}" data-read-id="${node.id}"><span class="read-marker"></span><div class="read-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-read-edit="${node.id}">${writingHTML(node.text)}</div>${readImagesHTML(node)}</div>`).join('');pane.innerHTML=`<div class="read-wrap"><div class="read-title-row"><div class="read-title" contenteditable="true" spellcheck="true" id="readTitle">${escapeHTML(doc().title)}</div></div><div id="readBlocks" class="read-tree ${nested?'nested':'flat'}">${body}</div></div>`;$('#readTitle').addEventListener('input',e=>{doc().title=e.currentTarget.innerText.replace(/\n/g,' ').trimStart();doc().updatedAt=Date.now();saveState();renderHeader();renderDocuments()});pane.querySelectorAll('[data-read-id]').forEach(b=>b.onclick=e=>{if(!e.target.closest('[contenteditable]'))selectNode(b.dataset.readId)});bindEditors(pane,true)}
 function readImagesHTML(n){return (n.images||[]).map(img=>`<img src="${escapeHTML(img.src)}" alt="${escapeHTML(img.name||'Image')}" style="display:block;max-width:100%;max-height:320px;margin:10px 0;border-radius:6px">`).join('')}
 function writingPlainHTML(text=''){return String(text).split(/(\$\$[\s\S]*?\$\$|\$[^$\n]*\$)/g).map(part=>{if(part.startsWith('$$')&&part.endsWith('$$')){let src=part.slice(2,-2);return `<span class="math-container" contenteditable="false"><math-field data-display="true">${escapeHTML(src)}</math-field></span>\u200B`}if(part.startsWith('$')&&part.endsWith('$')&&part.length>=2){let src=part.slice(1,-1);return `<span class="math-container" contenteditable="false"><math-field data-display="false">${escapeHTML(src)}</math-field></span>\u200B`}return escapeHTML(part).replace(/\n/g,'<br>')}).join('')}
+// render markdown tables (| a | b | / |---|---/ | c | d |) as HTML tables in reading and branch views
+function renderMarkdownTables(text){
+  let lines=String(text||'').split('\n');
+  let out=[];let i=0;
+  while(i<lines.length){
+    // detect a table: a line with pipes, followed by a separator line
+    if(/^\s*\|/.test(lines[i])&&i+1<lines.length&&/^\s*\|[\s\-:|]+\|?\s*$/.test(lines[i+1])){
+      let header=lines[i].split('|').map(c=>c.trim()).filter((c,j,a)=>!(j===0&&c===''&&a[a.length-1]===''));
+      // remove leading/trailing empty from pipe split
+      if(header[0]==='')header.shift();if(header[header.length-1]==='')header.pop();
+      let sep=lines[i+1];
+      let aligns=sep.split('|').map(c=>{c=c.trim();if(c.startsWith(':')&&c.endsWith(':'))return'center';if(c.endsWith(':'))return'right';return'left'}).filter((c,j,a)=>!(j===0&&c===''&&a[a.length-1]===''));
+      if(aligns[0]==='')aligns.shift();if(aligns[aligns.length-1]==='')aligns.pop();
+      let rows=[];i+=2;
+      while(i<lines.length&&/^\s*\|/.test(lines[i])){
+        let cells=lines[i].split('|').map(c=>c.trim());if(cells[0]==='')cells.shift();if(cells[cells.length-1]==='')cells.pop();
+        rows.push(cells);i++;
+      }
+      // build HTML table
+      let html='<table class="note-table"><thead><tr>';
+      header.forEach((h,j)=>{html+=`<th style="text-align:${aligns[j]||'left'}">${escapeHTML(h)}</th>`});
+      html+='</tr></thead><tbody>';
+      rows.forEach(r=>{html+='<tr>';r.forEach((c,j)=>{html+=`<td style="text-align:${aligns[j]||'left'}">${escapeHTML(c)}</td>`});html+='</tr>'});
+      html+='</tbody></table>';
+      out.push(html);
+    } else {
+      out.push(escapeHTML(lines[i]).replace(/\n/g,'<br>'));
+      i++;
+    }
+  }
+  return out.join('\n');
+}
+// patch writingPlainHTML to use table rendering
+const _origWritingPlainHTML=writingPlainHTML;
+writingPlainHTML=function(text){
+  // if the text contains a markdown table, render it
+  if(/\|/.test(text)&&/\n\s*\|[\s\-:|]+\|/.test(text)){
+    return renderMarkdownTables(text);
+  }
+  return _origWritingPlainHTML(text);
+};
+
 function writingHTML(text=''){return richToHTML(String(text??''))}
 function serializeEditor(ed){function walk(node){if(node.nodeType===3)return node.nodeValue||'';if(node.nodeName==='MATH-FIELD'){let delimiter=node.dataset.display==='true'?'$$':'$';let value=node.value??node.textContent??'';return delimiter+value+delimiter}if(node.nodeName==='BR')return '\n';let text=Array.from(node.childNodes||[]).map(walk).join('');if(node!==ed){let tok=richTokenFor(node);if(tok)return text||tok.keepEmpty?tok.open+text+RT.C:''}return node!==ed&&['DIV','P'].includes(node.nodeName)?'\n'+text:text}return walk(ed).replace(/\u200B/g,'').replace(/\u00a0/g,' ')}
 
@@ -5061,6 +5107,7 @@ document.addEventListener('keydown',e=>{
   if(document.documentElement.classList.contains('px-focus'))return;
   e.preventDefault();e.stopPropagation();zenSet(false);
 },true);
+function insertTable(){let ed=editorFrom(document.activeElement)||document.querySelector('.note-editor,.read-editor');if(!ed){toast('Put the cursor in a note first');return}let tpl='| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n| Cell 3   | Cell 4   |';snapshot();let r=getSelection();let range;if(r&&r.rangeCount&&ed.contains(r.anchorNode))range=r.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});range.deleteContents();let node=document.createTextNode(tpl);range.insertNode(node);range.setStartAfter(node);range.collapse(true);let sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);let id=ed.dataset.editId||ed.dataset.readEdit;if(id){let rec=locate(id);if(rec){rec.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}}toast('Table inserted — edit the cells in the text');renderAll()}
 function newDocument(){snapshot();let d=makeDocument('Untitled',true);state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
 function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
 function duplicateDocument(id){let source=state.documents.find(d=>d.id===id);if(!source)return;snapshot();let copy=deep(source),map=new Map();function newid(nodes){for(let n of nodes){let old=n.id;n.id=uid();map.set(old,n.id);newid(n.children)}}newid(copy.tree);copy.id=uid('d');copy.title=(source.title||'Untitled')+' copy';copy.createdAt=copy.updatedAt=Date.now();copy.selectedId=map.get(source.selectedId)||copy.tree[0]?.id;state.documents.push(copy);state.activeDocumentId=copy.id;saveState();renderAll();toast('Document duplicated')}
@@ -5119,7 +5166,7 @@ function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r
 function insertMath(){let id=doc().selectedId,sel=getSelection(),anchorEd=sel?.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement)?.closest?.('.note-editor,.read-editor'):null;let ed=(anchorEd&&(anchorEd.dataset.editId||anchorEd.dataset.readEdit)===id?anchorEd:null)||(doc().mode==='read'?document.querySelector(`[data-read-edit="${id}"]`):document.querySelector(`[data-edit-id="${id}"]`))||document.querySelector(`[data-read-edit="${id}"]`);if(!ed||!window.customElements?.get('math-field')){toast('Math editor unavailable');return}snapshot();let range;if(sel?.rangeCount&&ed.contains(sel.anchorNode)&&!sel.anchorNode.parentElement?.closest?.('.math-container'))range=sel.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});let wrap=document.createElement('span');wrap.className='math-container';wrap.contentEditable='false';let mf=document.createElement('math-field');mf.dataset.display='false';wrap.appendChild(mf);range.deleteContents();let spacer=document.createTextNode('\u200B');range.insertNode(spacer);range.insertNode(wrap);if(ed.innerHTML.startsWith('<br>'))ed.querySelector('br')?.remove();bindMath(ed);requestAnimationFrame(()=>{try{mf.focus()}catch{}});let r=locate(doc().selectedId);if(r){r.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}toast('Math field inserted')}
 function renderStatus(){$('#modeStatus').textContent=({branch:'Branch view',split:'Split view',read:'Reading view'})[doc().mode];$('#nodeStatus').textContent=countNodes()+' note'+(countNodes()===1?'':'s')}
 function runCommand(id){let wasEditing=!!document.activeElement?.closest?.('.note-editor,.read-editor,math-field');runCommandInner(id);if(wasEditing&&!['image','settings','documents','exportMd','math','newDocument','palette','shortcutsHelp','copyNote','cutNote','pasteNote'].includes(id))requestAnimationFrame(()=>{if(!document.activeElement?.closest?.('.note-editor,.read-editor,math-field')&&!$('#settingsDialog').open)focusNodeEditor(doc().selectedId,true)})}
-function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>restoreSnapshot(undoStack,redoStack),redo:()=>restoreSnapshot(redoStack,undoStack),settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu(),zen:()=>zenSet(),palette:openPalette};map[id]?.()}
+function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>restoreSnapshot(undoStack,redoStack),redo:()=>restoreSnapshot(redoStack,undoStack),settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu(),zen:()=>zenSet(),palette:openPalette};if(id==='table'){insertTable();return}map[id]?.()}
 const CODE_KEYS={Comma:',',Period:'.',Slash:'/',Semicolon:';',Quote:"'",BracketLeft:'[',BracketRight:']',Backslash:'\\',Minus:'-',Equal:'=',Backquote:'`',Backspace:'Backspace',Delete:'Delete',Enter:'Enter',NumpadEnter:'Enter',Tab:'Tab',ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',Space:'Space',Escape:'Escape',Home:'Home',End:'End',PageUp:'PageUp',PageDown:'PageDown'};
 function keyName(e){let k=e.key||'';if(/^[a-z]$/i.test(k))return k.toUpperCase();let c=e.code||'';if(CODE_KEYS[c])return CODE_KEYS[c];if(c.startsWith('Key'))return c.slice(3);if(c.startsWith('Digit'))return c.slice(5);if(/^Numpad\d$/.test(c))return c.slice(6);if(/^F\d+$/.test(c))return c;if(k===' ')return 'Space';if(k.length===1)return k.toUpperCase();return k}
 function shortcutFromEvent(e){if(!e||e.isComposing||e.keyCode===229)return null;let parts=[];let primary=e.ctrlKey,secondary=e.metaKey;if(primary)parts.push('Ctrl');if(e.altKey)parts.push('Alt');if(e.shiftKey)parts.push('Shift');if(secondary)parts.push('Meta');let key=keyName(e);if(!key||['Control','Alt','Shift','Meta','AltGraph','OS','Unidentified','Dead','Process'].includes(key))return null;parts.push(key);return parts.join('+')}
@@ -5254,7 +5301,7 @@ function phoneBarAction(k,b){if(k==='indent')return runCommand('indent');if(k===
  if(k==='move')return openMenu(b,[cmdItem('moveUp'),cmdItem('moveDown'),{sep:1},cmdItem('indent',{label:'Indent (make child of note above)'}),cmdItem('outdent')],{title:'Move — or long-press a note and drag',sheet:true});
  if(k==='more')return openMenu(b,[cmdItem('navParent',{label:'Go to parent note'}),cmdItem('navChild',{label:'Go to first child'}),{sep:1},...noteClipItems(),{sep:1},cmdItem('image'),cmdItem('math'),{sep:1},cmdItem('deleteNode')],{title:'This note',sheet:true})}
 function renderPhoneBar(){let bar=$('#phoneBar');if(!bar){bar=document.createElement('nav');bar.id='phoneBar';bar.className='phone-bar';bar.setAttribute('aria-label','Note actions');document.body.appendChild(bar)}if(bar.dataset.built)return positionBottomUI();bar.dataset.built='1';bar.innerHTML=[['add','plus','Add'],['indent','indent','Indent'],['outdent','outdent','Outdent'],['move','move','Move'],['more','more','More']].map(([k,ic,l])=>`<button type="button" data-bar="${k}" aria-label="${l}"${['add','move','more'].includes(k)?' aria-haspopup="menu"':''}>${icon(ic)}<span>${l}</span></button>`).join('');bar.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onmousedown=e=>e.preventDefault();b.onclick=()=>phoneBarAction(b.dataset.bar,b)});positionBottomUI()}
-function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
+function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('table'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
  if(!$('#helpChip')){document.body.insertAdjacentHTML('beforeend','<button class="help-chip" id="helpChip" title="Keyboard shortcuts" aria-label="Keyboard shortcuts"></button>');$('#helpChip').onclick=openShortcutSheet}setIcon($('#helpChip'),'question','Keyboard shortcuts');$('#helpChip').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'')}
 function renderModeChrome(){ensureChrome();renderPhoneBar();requestAnimationFrame(fitToolbar)}
 // --- shortcut sheet (read-only overview; "Change shortcuts…" opens Settings) ---
