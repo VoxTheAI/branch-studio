@@ -4831,14 +4831,22 @@ function zenSet(on){
   ZEN.on=on;
   const h=document.documentElement,chrome=zenChrome();
   if(on){
-    chrome.forEach(c=>exitEl(c,{dur:140,blur:5,y:-6,then:()=>{resetEl(c);h.classList.add('zen')}}));
-    if(!chrome.length)h.classList.add('zen');
+    // html.zen is what actually flips the layout, so it has to be asserted whenever the
+    // entry completes — never only from a chrome-exit callback. On an off→on wrap-around
+    // the leave's restore() re-enters the chrome, which bumps each element's exit
+    // generation and drops the re-entry's callback, leaving ZEN.on===true with no
+    // html.zen (chrome up, no scroller). The ZEN.on guard stops a late callback from
+    // re-adding the class after a leave.
+    const applyZen=()=>{if(ZEN.on)h.classList.add('zen')};
+    chrome.forEach(c=>exitEl(c,{dur:140,blur:5,y:-6,then:()=>{resetEl(c);applyZen()}}));
+    if(!chrome.length)applyZen();
     // The handle is kept so leaving zen inside the entry delay can cancel it: a stale
     // timer otherwise re-enters, re-renders and shows the Leave-zen chip while ZEN.on
     // is false — after which Escape does nothing and the chip is a dead click.
     clearTimeout(ZEN.entry);
     ZEN.entry=setTimeout(()=>{
       ZEN.entry=0;
+      applyZen();
       renderAll();
       const w=$('#workspace');if(w)enterEl(w,{dur:300,blur:11,y:12});
       $('#zenExit')?.classList.add('on');zenWake();
@@ -4866,19 +4874,25 @@ function caretRect(){
   let r=range.getBoundingClientRect();
   if(r.width||r.height||r.top||r.left)return r;
   const n=range.startContainer,off=range.startOffset;
-  let probe=document.createRange();
-  if(n&&n.nodeType===1&&n.childNodes.length){
+  // Measure a one-character range on the caret's own line, not the whole text node: the
+  // end-of-note caret is the ordinary typing position, and a whole-node range spans every
+  // wrapped line in the paragraph, so the typewriter chased the paragraph top instead of
+  // the caret. Still read-only — a range, never a marker node.
+  const lineRect=(t,charIndex)=>{
+    const len=t.nodeValue.length;if(!len)return null;
+    const a=Math.min(Math.max(charIndex,0),len-1);
+    const probe=document.createRange();
+    probe.setStart(t,a);probe.setEnd(t,Math.min(a+1,len));
+    const b=probe.getBoundingClientRect();
+    return (b.width||b.height||b.top||b.left)?b:null;
+  };
+  if(n&&n.nodeType===3&&n.nodeValue.length){
+    const b=lineRect(n,off>0?off-1:0);if(b)return b;
+  }else if(n&&n.nodeType===1&&n.childNodes.length){
     const kid=n.childNodes[Math.min(Math.max(off-1,0),n.childNodes.length-1)];
-    if(kid.nodeType===3){probe.setStart(kid,0);probe.setEnd(kid,kid.nodeValue.length)}
-    else probe.selectNodeContents(kid);
-  }else if(n&&n.nodeType===3&&n.nodeValue.length){
-    probe.setStart(n,0);probe.setEnd(n,n.nodeValue.length);
-  }else{
-    const el=n&&n.nodeType===3?n.parentElement:n;
-    return el&&el.getBoundingClientRect?el.getBoundingClientRect():null;
+    const t=kid.nodeType===3?kid:(kid.firstChild&&kid.firstChild.nodeType===3?kid.firstChild:null);
+    if(t){const b=lineRect(t,kid.nodeType===3?t.nodeValue.length-1:0);if(b)return b;}
   }
-  const b=probe.getBoundingClientRect();
-  if(b.width||b.height||b.top||b.left)return b;
   const el=n&&n.nodeType===3?n.parentElement:n;
   return el&&el.getBoundingClientRect?el.getBoundingClientRect():null;
 }

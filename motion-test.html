@@ -518,6 +518,80 @@ async function run(){
   await w.eval(`(function(){eval('state').behavior.showAddButtons=false;eval('zenSet')(false);eval('renderAll')()})()`);
   await sleep(800);
 
+  // ---------- zen: entry latch under a wrap-around, and a wrapped final note ----------
+  // Leaving and re-entering inside the entry/exit animation window must still land on the
+  // invariant ZEN.on ⇔ html.zen. The class is what flips the layout, so it must survive.
+  await w.eval(`(function(){eval('zenSet')(true);return 1})()`);
+  await sleep(100);
+  await w.eval(`(function(){eval('zenSet')(false);return 1})()`);
+  await sleep(60);
+  await w.eval(`(function(){eval('zenSet')(true);return 1})()`);
+  await sleep(950);
+  const reentry=JSON.parse(await w.eval(`JSON.stringify({
+      zen:document.documentElement.classList.contains('zen'),
+      on:eval('ZEN').on,
+      topbar:getComputedStyle(document.querySelector('.topbar')).display,
+      wsOverflowY:getComputedStyle(document.querySelector('#workspace')).overflowY
+    })`));
+  log(reentry.on&&reentry.zen?'pass':'fail',`zen: an off→on wrap-around inside the entry window lands back in zen — ZEN.on=${reentry.on} html.zen=${reentry.zen}`);
+  log(reentry.zen&&reentry.topbar==='none'?'pass':'fail',`zen: chrome is hidden after the wrap-around (topbar display=${reentry.topbar})`);
+  log(reentry.zen&&reentry.wsOverflowY==='auto'?'pass':'fail',`zen: the workspace is the scroller after the wrap-around (overflow-y=${reentry.wsOverflowY})`);
+  await w.eval(`eval('zenSet')(false)`);
+  await sleep(850);
+  const reoff=JSON.parse(await w.eval(`JSON.stringify({zen:document.documentElement.classList.contains('zen'),on:eval('ZEN').on})`));
+  log(!reoff.zen&&!reoff.on?'pass':'fail',`zen: leaving after the wrap-around clears both — html.zen=${reoff.zen} ZEN.on=${reoff.on}`);
+
+  // A long soft-wrapped FINAL note: the ordinary typing position is the caret at the end of
+  // the paragraph, where Chromium reports an empty rect. caretRect() must resolve that to the
+  // caret's own line, not the whole paragraph, or the typewriter misfollows the caret.
+  await w.eval(`(function(){
+      const nodes=eval('flatten')();const last=nodes[nodes.length-1].node;
+      last.text=Array.from({length:200},(_,i)=>'wrap'+i).join(' ');
+      eval('renderAll')();
+    })()`);
+  await sleep(250);
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(750);
+  const wrap=JSON.parse(await w.eval(`
+    (function(){
+      const ws=document.querySelector('#workspace');
+      const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+      const last=notes[notes.length-1];
+      const ed=last.querySelector('.note-editor');
+      if(!ed)return JSON.stringify({err:'no editor'});
+      ed.focus({preventScroll:true});
+      const rg=document.createRange();rg.selectNodeContents(ed);rg.collapse(false);
+      const s=getSelection();s.removeAllRanges();s.addRange(rg);
+      ws.scrollTop=0;
+      const cr=eval('caretRect')();
+      const er=ed.getBoundingClientRect();
+      return JSON.stringify({edH:Math.round(er.height),caretH:cr?Math.round(cr.height):null,
+        before:Math.round(ws.scrollTop),wsH:Math.round(ws.clientHeight)});
+    })()`));
+  if(wrap.err)log('fail','zen typewriter (wrapped): '+wrap.err);
+  else {
+    log(wrap.caretH!==null&&wrap.caretH<wrap.edH*0.5?'pass':'fail',`zen typewriter (wrapped): caretRect resolves to the caret line, not the paragraph (caret ${wrap.caretH}px vs paragraph ${wrap.edH}px)`);
+    await w.eval(`(function(){const notes=[...document.querySelectorAll('#columns .note[data-id]')];const ed=notes[notes.length-1].querySelector('.note-editor');eval('zenTypewriter')(ed)})()`);
+    await sleep(950);
+    // Measure the caret line independently of caretRect(), so a wrong caretRect cannot make
+    // these checks agree with it.
+    const wrap2=JSON.parse(await w.eval(`
+      (function(){
+        const ws=document.querySelector('#workspace');const wr=ws.getBoundingClientRect();
+        const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+        const ed=notes[notes.length-1].querySelector('.note-editor');
+        const t=ed.firstChild;const rr=document.createRange();
+        rr.setStart(t,t.nodeValue.length-1);rr.setEnd(t,t.nodeValue.length);
+        const cr=rr.getBoundingClientRect();
+        return JSON.stringify({top:Math.round(cr.top-wr.top),wsH:Math.round(ws.clientHeight),
+          inView:cr.top>wr.top-4&&cr.bottom<wr.bottom+4});
+      })()`));
+    log(wrap2.top!==null&&Math.abs(wrap2.top-wrap2.wsH*0.42)<wrap2.wsH*0.2?'pass':'fail',`zen typewriter (wrapped): the caret line comes to rest near the 42% line (${wrap2.top}px of ${wrap2.wsH}px, line at ${Math.round(wrap2.wsH*0.42)}px)`);
+    log(wrap2.inView?'pass':'fail',`zen typewriter (wrapped): the caret is left on screen (top=${wrap2.top} inView=${wrap2.inView})`);
+  }
+  await w.eval(`eval('zenSet')(false)`);
+  await sleep(850);
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';
