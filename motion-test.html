@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Branch Studio — motion test</title>
+<style>
+  body{margin:0;font:13px ui-monospace,Menlo,Consolas,monospace;background:#0c0e10;color:#cacccc}
+  #out{padding:14px;white-space:pre-wrap;line-height:1.55;font:inherit}
+  #summary{padding:0 14px 16px;color:#949494;margin:0;white-space:pre-wrap}
+  #frame{width:1440px;height:900px;border:0;position:absolute;left:-9999px;top:0}
+  h1{font-size:13px;padding:10px 14px 0;color:#a3a6a7}
+</style>
+</head>
+<body>
+<h1>Branch Studio motion harness — <span id="verdict">running…</span></h1>
+<div id="out"></div>
+<pre id="summary"></pre>
+<iframe id="frame" src="index.html?harness=1"></iframe>
+<script>
+const out=document.getElementById('out'),verdict=document.getElementById('verdict'),summary=document.getElementById('summary');
+const results=[];
+let n=0;
+function log(cls,msg){
+  if(cls!=='pass'&&cls!=='fail')cls='info';
+  n++;results.push(cls);
+  out.textContent+=(n>1?'\n':'')+String(n).padStart(2,'0')+' ['+cls.toUpperCase()+'] '+msg;
+  summary.textContent='checks='+results.length+'  fails='+results.filter(c=>c==='fail').length;
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// layout-shift only reports for the document that created the observer, so the
+// collector has to live inside the app frame, not here.
+async function arm(w){await w.eval(`
+  window.__shifts=[];
+  if(window.__po)window.__po.disconnect();
+  window.__po=new PerformanceObserver(l=>{for(const e of l.getEntries()){if(e.hadRecentInput)continue;
+    window.__shifts.push({v:+e.value.toFixed(6),src:(e.sources||[]).map(s=>((s.node&&(s.node.className||s.node.nodeName))||'?')+'@'+Math.round(s.previousRect.top)+'->'+Math.round(s.currentRect.top)).join(', ')})}});
+  window.__po.observe({type:'layout-shift'});
+  1`)}
+
+async function run(){
+  const f=document.getElementById('frame');
+  await new Promise(r=>f.addEventListener('load',r));
+  const w=f.contentWindow;
+  await sleep(700);
+
+  w.eval(`
+    (function(){
+      localStorage.clear();
+      const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+      const mk=(t,kids)=>({id:uid('n'),text:t,children:kids||[]});
+      const S=eval('state');
+      S.documents=[{id:uid('d'),title:'Harness',createdAt:Date.now(),updatedAt:Date.now(),mode:'branch',selectedId:null,
+        tree:[
+          mk('Alpha',[
+             mk('Alpha maths',[mk('Square: $x^2 + y^2 = z^2$')]),
+             mk('Alpha two',[mk('Deep A'),mk('Deep B')])
+           ]),
+          mk('Beta',[mk('Beta one'),mk('Beta two')]),
+          mk('Gamma')
+        ]}];
+      S.activeDocumentId=S.documents[0].id;
+      eval('adoptState')(S);
+      eval('doc')().selectedId=eval('tree')()[0].children[0].id;
+      eval('renderAll')();
+      return 'ok';
+    })();
+  `);
+  await sleep(800);
+
+  const info=JSON.parse(await w.eval(`JSON.stringify({
+    cards:document.querySelectorAll('#columns .note[data-id]').length,
+    maths:document.querySelectorAll('#columns math-field').length,
+    cols:document.querySelectorAll('#columns .column').length,
+    treeLen:eval('tree')().length
+  })`));
+  log(info.cards>=6?'pass':'fail',`fixture: ${info.cards} cards across ${info.cols} columns (root -> Alpha maths -> its child)`);
+  log(info.maths===1?'pass':'fail',`fixture: ${info.maths} math-field rendered`);
+  await w.eval("document.querySelectorAll('#columns math-field').forEach(m=>m.dataset.probe='math')");
+
+  // --- non-destructive first: prove MathLive is not re-initialised while the maths note stays on screen
+  const mathsId=JSON.parse(await w.eval(`
+    (function(){
+      const f=eval('flatten')().find(x=>/\\$x\\^2/.test(x.node.text||''));
+      if(!f)return JSON.stringify({err:'no maths note'});
+      eval('selectNode')(f.node.id);
+      return JSON.stringify({id:f.node.id});
+    })()`)).id;
+  await sleep(400);
+  await w.eval("(function(){const m=document.querySelector('#columns math-field');if(m)m.dataset.probe='math'})()");
+  for(const code of ["runCommand('addChild')","runCommand('moveDown')","runCommand('moveUp')"]){
+    w.eval(code);
+    await sleep(600);
+    await w.eval(`eval('selectNode')(${JSON.stringify(mathsId)})`);
+    await sleep(350);
+    const alive=await w.eval("(function(){const m=document.querySelector('#columns math-field');return !!m&&m.dataset.probe==='math'})()");
+    log(alive?'pass':'fail',`MathLive node survived: ${code}`);
+  }
+
+  const OPS=[
+    ['addSibling',"runCommand('addSibling')"],
+    ['addChild',  "runCommand('addChild')"],
+    ['addTopic',  "runCommand('addTopic')"],
+    ['indent',    "runCommand('indent')"],
+    ['outdent',   "runCommand('outdent')"],
+    ['moveUp',    "runCommand('moveUp')"],
+    ['moveDown',  "runCommand('moveDown')"],
+    ['deleteNode',"runCommand('deleteNode')"],
+  ];
+
+  for(const [name,code] of OPS){
+    // pin a ROOT card: root cards are on every path, so they can never legitimately leave the DOM
+    const pin=JSON.parse(await w.eval(`
+      (function(){
+        const keep=document.querySelector('#columns .column[data-depth="0"] .note[data-id]');
+        if(!keep)return JSON.stringify({err:'no root card'});
+        window.__pinned=keep;keep.dataset.pinned='1';
+        return JSON.stringify({id:keep.dataset.id,text:(keep.textContent||'').slice(0,16)});
+      })()`));
+    await sleep(150);
+    await arm(w);
+    w.eval(code);
+    await sleep(900);
+    // re-select the pinned note so it is on the rendered path again, then check identity
+    const state=JSON.parse(await w.eval(`
+      (function(){
+        const p=window.__pinned;
+        if(p&&p.dataset.id)eval('selectNode')(p.dataset.id);
+        return new Promise(r=>setTimeout(()=>{
+          const fresh=document.querySelector('#columns .note[data-id="'+p.dataset.id+'"]');
+          r(JSON.stringify({connected:!!(p&&p.isConnected),present:!!fresh,sameNode:fresh===p,pinAttr:fresh?(fresh.dataset.pinned==='1'):false}));
+        },250));
+      })()`));
+    const shifts=JSON.parse(await w.eval("JSON.stringify(window.__shifts)"));
+    const total=shifts.reduce((a,s)=>a+s.v,0);
+    const survived=state.connected&&state.present&&state.sameNode&&state.pinAttr;
+    log(survived?'pass':'fail',`${name}: root card ("${pin.text}") survived — connected=${state.connected} present=${state.present} sameNode=${state.sameNode} pin=${state.pinAttr}`);
+    log(total<0.02?'pass':'fail',`${name}: layout shift ${total.toFixed(5)} over ${shifts.length} entr${shifts.length===1?'y':'ies'}`);
+    if(shifts.length)log('info','        '+shifts.slice(0,3).map(s=>`${s.v} ${s.src}`).join(' ;; '));
+    await sleep(150);
+  }
+
+  await sleep(700);
+  const flying=await w.eval(`
+    document.getAnimations().filter(a=>{
+      try{
+        const t=a.effect&&a.effect.target;
+        if(!t||!t.classList||!t.classList.contains('note'))return false;
+        return a.effect.getKeyframes().some(f=>{const m=/translate\\((-?[\\d.]+)px/.exec(f.transform||'');return m&&Math.abs(parseFloat(m[1]))>4});
+      }catch(e){return false}
+    }).length
+  `);
+  log(flying===0?'pass':'fail',`cards left mid-translate after settle: ${flying}`);
+
+  await w.eval("(function(){const e=document.querySelector('#columns .note.active .note-editor')||document.querySelector('#columns .note-editor');window.__ed=e;e&&e.focus()})()");
+  await sleep(120);
+  await w.eval("(function(){const e=window.__ed;if(!e)return;e.textContent='typed here';e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText'}))})()");
+  await sleep(350);
+  const stillThere=await w.eval("!!(window.__ed && window.__ed.isConnected && document.activeElement===window.__ed)");
+  log(stillThere?'pass':'fail','typing keeps the same editor node focused (no rebuild under the caret)');
+
+  // ---------- trajectory: does a neighbour card glide or lurch? ----------
+  // Jumpy motion shows up as a direction reversal or a single huge frame delta in the samples.
+  async function trajectory(w,label,selectIdx,victimIdx,code){
+    const res=JSON.parse(await w.eval(`
+      (function(){
+        const roots=[...document.querySelectorAll('#columns .column[data-depth="0"] .note[data-id]')];
+        if(roots.length<${victimIdx}+1)return JSON.stringify({err:'need ${victimIdx+1} root cards, have '+roots.length});
+        eval('selectNode')(roots[${selectIdx}].dataset.id);
+        const id=roots[${victimIdx}].dataset.id;
+        window.__traj=[];
+        const t0=performance.now();
+        (function tick(){
+          const el=document.querySelector('#columns .note[data-id="'+id+'"]');
+          if(el)window.__traj.push([+(performance.now()-t0).toFixed(1),+el.getBoundingClientRect().top.toFixed(2)]);
+          if(performance.now()-t0<600)requestAnimationFrame(tick);
+        })();
+        eval(${JSON.stringify(code)});
+        return JSON.stringify({ok:true,id});
+      })();`));
+    if(res.err){log('fail',label+': '+res.err);return}
+    await sleep(900);
+    const traj=JSON.parse(await w.eval('JSON.stringify(window.__traj)'));
+    if(traj.length<8){log('fail',`${label}: too few samples (${traj.length})`);return}
+    const travel=Math.abs(traj[traj.length-1][1]-traj[0][1]);
+    log(travel>15?'pass':'fail',`${label}: victim card actually travelled ${travel.toFixed(1)}px (test is live)`);
+    let maxStep=0,reversals=0,dir=0,moving=0;
+    for(let i=1;i<traj.length;i++){
+      const d=traj[i][1]-traj[i-1][1];
+      maxStep=Math.max(maxStep,Math.abs(d));
+      if(Math.abs(d)>0.4){moving++;const nd=Math.sign(d);if(dir&&nd!==dir)reversals++;dir=nd}
+    }
+    // a jump teleports: one frame covers most of the distance and the card is instantly at rest.
+    // a glide spreads it out. judge the shape, not an absolute pixel count (easing sets the peak).
+    const peakShare=travel>0?maxStep/travel:0;
+    log(peakShare<0.55?'pass':'fail',`${label}: largest single frame = ${maxStep.toFixed(1)}px (${(peakShare*100).toFixed(0)}% of travel — a teleport would be ~100%)`);
+    log(moving>=4?'pass':'fail',`${label}: motion spread over ${moving} frames`);
+    log(reversals<=1?'pass':'fail',`${label}: direction reversals ${reversals} (${traj.length} samples over 600ms)`);
+    const settled=Math.abs(traj[traj.length-1][1]-traj[traj.length-3][1])<0.5;
+    log(settled?'pass':'fail',`${label}: came to rest`);
+  }
+  // select the first root, add a sibling after it -> the card below must glide down
+  await trajectory(w,'addSibling (card pushes its neighbour down)',0,1,"runCommand('addSibling')");
+  await sleep(500);
+  // select the second root and indent it into the first -> the third root glides up
+  await trajectory(w,'indent (card leaves the root column)',1,2,"runCommand('indent')");
+
+  const fails=results.filter(c=>c==='fail').length;
+  verdict.textContent=fails?`${fails} FAILED`:'all passed';
+  verdict.className=fails?'fail':'pass';
+  document.title=fails?`MOTION ${fails} FAILED`:'MOTION OK';
+}
+run().catch(e=>{log('fail','harness threw: '+e.message+' @ '+(e.stack||'').split('\n')[1]);verdict.textContent='ERROR';verdict.className='fail';document.title='MOTION ERROR'});
+</script>
+</body>
+</html>

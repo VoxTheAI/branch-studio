@@ -4711,7 +4711,43 @@ function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.tog
 function renderContext(){let bc=$('#breadcrumbs'),r=locate(doc().selectedId);bc.innerHTML=r?r.path.map((n,i)=>`<button class="crumb" data-select="${n.id}" title="${escapeHTML(readableText(n.text)||'Untitled note')}" aria-label="${escapeHTML(readableText(n.text)||'Untitled note')}"><span class="crumb-label">${crumbLabelHTML(n.text)}</span></button>${i<r.path.length-1?'<span class="chev">›</span>':''}`).join(''):'';bc.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectNode(b.dataset.select));renderToolbarButtons($('#contextActions'))}
 function noteHTML(n,depth,path){let related=isRelated(n,path),cls=['note',depth<2?'heading':'',n.id===doc().selectedId?'active':'',n.id===UI.revealedId?'tools-revealed':'',path.includes(n.id)?'path':'',related?'related':''].filter(Boolean).join(' ');return `<article class="${cls}" data-id="${n.id}"><div class="grip" draggable="true" data-grip="${n.id}" title="Drag note">${icon('grip')}</div><div class="note-body"><div class="note-editor" contenteditable="true" spellcheck="true" data-placeholder="${depth===0?'Type a main topic…':'Type here…'}" data-edit-id="${n.id}">${writingHTML(n.text)}</div><div class="note-tools"><button title="Add child" aria-label="Add child" data-mini="addChild">${icon('child')}</button><button title="Move up" aria-label="Move up" data-mini="moveUp">${icon('arrowUp')}</button><button title="Move down" aria-label="Move down" data-mini="moveDown">${icon('arrowDown')}</button><button title="More note actions" aria-label="More note actions" aria-haspopup="menu" data-note-more>${icon('more')}</button><span class="tool-gap"></span><button title="Delete" aria-label="Delete note" class="danger" data-mini="deleteNode">${icon('trash')}</button></div>${imageHTML(n)}</div><button class="swipe-delete" data-swipe-delete tabindex="-1" aria-label="Delete note">${icon('trash')}<span>Delete</span></button></article>`}
 function renderWorkspace(){let w=$('#workspace'),d=doc();let tabs=d.mode==='split'&&UI.size==='phone';w.className='workspace '+(d.mode==='split'?'split':'')+(tabs?' split-tabs tab-'+UI.splitTab:'');let branch=d.mode!=='read'?'<section class="branch-pane" id="branchPane"><div class="columns" id="columns"></div></section>':'';let read=d.mode!=='branch'?'<section class="read-pane" id="readPane"></section>':'';let bar=tabs?`<div class="split-tabs-bar" role="tablist" aria-label="Split view"><button type="button" role="tab" data-split-tab="branch" aria-selected="${UI.splitTab==='branch'}">${icon('branch')}<span>Branches</span></button><button type="button" role="tab" data-split-tab="read" aria-selected="${UI.splitTab==='read'}">${icon('book')}<span>Reading</span></button></div>`:'';w.innerHTML=bar+branch+read;w.querySelectorAll('[data-split-tab]').forEach(b=>b.onclick=()=>{UI.splitTab=b.dataset.splitTab;renderWorkspace()});if(d.mode!=='read')renderBranches();if(d.mode!=='branch')renderReading();renderStatus()}
-function renderBranches(){let c=$('#columns');if(!tree().length){c.innerHTML='<div class="empty-doc">No notes yet.</div>';return}let path=pathIds(),columns=collectColumns();c.innerHTML=columns.map((col,depth)=>`<section class="column ${depth?'child-column':''}" data-depth="${depth}" data-parent="${col.parentId||''}"><div class="group">${col.nodes.map(n=>noteHTML(n,depth,path)).join('')}${state.behavior.showAddButtons?`<button class="add-row" data-add-parent="${col.parentId||''}">${icon('plus')}<span class=\"label\">${depth?'Add child':'Add topic'}</span></button>`:''}</div></section>`).join('');bindEditors(c);bindNoteTools(c);bindDrag(c);c.querySelectorAll('[data-add-parent]').forEach(b=>b.onclick=()=>addNode(b.dataset.addParent||null));requestAnimationFrame(alignBranchColumns)}
+// ---------- keyed reconciliation ----------
+// renderWorkspace() rebuilds #workspace wholesale, so #columns is a brand-new element on every
+// render. The cache therefore lives out here, not on the element: cards are detached but never
+// destroyed, so MathLive fields, images and the caret survive a re-parent.
+let COLKEY={docId:null,mode:null,cols:[],cards:new Map(),sig:new Map()};
+function resetColumnKey(){COLKEY={docId:null,mode:null,cols:[],cards:new Map(),sig:new Map()}}
+function placeChildren(container,items){let cursor=container.firstElementChild;for(const el of items){if(!el)continue;if(el===cursor){cursor=cursor.nextElementSibling;continue}container.insertBefore(el,cursor)}let keep=new Set(items);for(const el of [...container.children])if(!keep.has(el))el.remove()}
+function cardContentSig(node,depth){return depth+'|'+writingHTML(node.text||'')+'|'+(node.images||[]).map(i=>i.src+'@'+i.w+'x'+i.h).join(',')}
+function syncCardClasses(card,node,depth,path){card.classList.toggle('heading',depth<2);card.classList.toggle('active',node.id===doc().selectedId);card.classList.toggle('path',path.includes(node.id));card.classList.toggle('related',isRelated(node,path));card.classList.toggle('tools-revealed',node.id===UI.revealedId)}
+function cardFor(node,depth,path){
+  let K=COLKEY,sig=cardContentSig(node,depth),card=K.cards.get(node.id);
+  if(card&&K.sig.get(node.id)!==sig){
+    let live=card.isConnected&&card.contains(document.activeElement);
+    if(!live){let t=document.createElement('div');t.innerHTML=noteHTML(node,depth,path);let fresh=t.firstElementChild;
+      if(fresh&&fresh.dataset.id===node.id){card=fresh;K.cards.set(node.id,fresh)}else card=null}
+  }
+  if(!card){let t=document.createElement('div');t.innerHTML=noteHTML(node,depth,path);card=t.firstElementChild;
+    if(card&&card.dataset.id===node.id)K.cards.set(node.id,card);else card=null}
+  if(card){K.sig.set(node.id,sig);syncCardClasses(card,node,depth,path)}
+  return card;
+}
+function reconcileColumns(c,columns,path){
+  let K=COLKEY,wanted=new Set();
+  for(let depth=0;depth<columns.length;depth++){
+    let col=columns[depth],sec=K.cols[depth];
+    if(!sec){sec=document.createElement('section');sec.innerHTML='<div class="group"></div>'}
+    sec.className='column '+(depth?'child-column':'');sec.dataset.depth=String(depth);sec.dataset.parent=col.parentId||'';
+    let group=sec.querySelector('.group'),items=[];
+    for(const n of col.nodes){wanted.add(n.id);let card=cardFor(n,depth,path);if(card)items.push(card)}
+    if(state.behavior.showAddButtons){let btn=group.querySelector('.add-row');if(!btn){btn=document.createElement('button');btn.className='add-row'}btn.dataset.addParent=col.parentId||'';btn.innerHTML=icon('plus')+`<span class="label">${depth?'Add child':'Add topic'}</span>`;items.push(btn)}
+    placeChildren(group,items);K.cols[depth]=sec;
+  }
+  for(const [id,el] of K.cards)if(!wanted.has(id)){K.cards.delete(id);K.sig.delete(id)}
+  K.cols.length=columns.length;
+  placeChildren(c,K.cols);
+}
+function renderBranches(){let c=$('#columns');if(!c)return;let d=doc();if(COLKEY.docId!==d.id||COLKEY.mode!==d.mode)resetColumnKey();COLKEY.docId=d.id;COLKEY.mode=d.mode;if(!tree().length){c.innerHTML='<div class="empty-doc">No notes yet.</div>';resetColumnKey();return}reconcileColumns(c,collectColumns(),pathIds());bindEditors(c);bindNoteTools(c);bindDrag(c);c.querySelectorAll('[data-add-parent]').forEach(b=>b.onclick=()=>addNode(b.dataset.addParent||null));alignBranchColumns()}
 function alignBranchColumns(){let cols=[...document.querySelectorAll('#columns .column')];if(!cols.length)return;cols.forEach(col=>col.style.marginTop='0px');let baseTop=cols[0].getBoundingClientRect().top;for(let i=1;i<cols.length;i++){let col=cols[i],parentId=col.dataset.parent,parentCard=document.querySelector(`#columns .note[data-id="${parentId}"]`);if(!parentCard)continue;let targetTop=parentCard.getBoundingClientRect().top;col.style.marginTop=`${Math.max(0,targetTop-baseTop)}px`}revealActiveColumn()}
 function revealActiveColumn(){let pane=$('#branchPane'),card=document.querySelector(`#columns .note[data-id="${doc().selectedId}"]`);if(!pane||!card)return;let col=card.closest('.column');if(!col)return;let pr=pane.getBoundingClientRect(),cr=col.getBoundingClientRect();if(window.innerWidth<=600){let target=pane.scrollLeft+(cr.left-pr.left)-14;if(Math.abs(target-pane.scrollLeft)>2)pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}else if(cr.right>pr.right||cr.left<pr.left){let target=cr.right>pr.right?pane.scrollLeft+(cr.right-pr.right)+24:pane.scrollLeft+(cr.left-pr.left)-24;pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}}
 function readNodeHTML(node,depth=0){return `<div class="read-node depth-${Math.min(depth,3)} ${node.id===doc().selectedId?'selected':''} ${node.children?.length?'has-children':''}" data-read-id="${node.id}"><div class="read-head"><div class="read-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-read-edit="${node.id}">${writingHTML(node.text)}</div>${readImagesHTML(node)}</div>${node.children?.length?`<div class="read-children">${node.children.map(child=>readNodeHTML(child,depth+1)).join('')}</div>`:''}</div>`}
@@ -4730,7 +4766,9 @@ function clearDrop(){$$('.drop-before,.drop-after').forEach(x=>x.classList.remov
 function bindDrag(root){root.querySelectorAll('[data-grip]').forEach(g=>{g.ondragstart=e=>{draggedId=g.dataset.grip;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggedId);setTimeout(()=>g.closest('.note')?.classList.add('dragging'),0)};g.ondragend=()=>{$$('.dragging').forEach(x=>x.classList.remove('dragging'));draggedId=null;clearDrop()}});root.querySelectorAll('.note').forEach(card=>{card.ondragover=e=>{if(!draggedId||card.dataset.id===draggedId)return;e.preventDefault();let before=e.clientY<card.getBoundingClientRect().top+card.offsetHeight/2;clearDrop();card.classList.add(before?'drop-before':'drop-after');dropTarget={targetId:card.dataset.id,before}};card.ondrop=e=>{e.preventDefault();if(!draggedId||!dropTarget)return;moveByDrop(draggedId,dropTarget.targetId,dropTarget.before)}})}
 function moveByDrop(fromId,targetId,before){let from=locate(fromId),to=locate(targetId);if(!from||!to||fromId===targetId)return;if(isDescendant(from.node,targetId)){toast('Cannot move a note into its own branch');clearDrop();return}snapshot();from.list.splice(from.index,1);to=locate(targetId);let idx=to.index+(before?0:1);to.list.splice(idx,0,from.node);doc().selectedId=fromId;doc().updatedAt=Date.now();saveState();clearDrop();renderAll();toast('Note moved')}
 function isDescendant(node,id){return node.children.some(c=>c.id===id||isDescendant(c,id))}
-function imageHTML(n){return (n.images||[]).map((img,i)=>`<figure class="image-editor" style="margin:10px 0 0"><img src="${escapeHTML(img.src)}" alt="${escapeHTML(img.name||'Image')}" style="max-width:100%;max-height:260px;border-radius:6px"><button class="icon-btn danger" data-remove-image="${i}" title="Remove image">${icon('trash')}</button></figure>`).join('')}
+function imageHTML(n){return (n.images||[]).map((img,i)=>{let dim=(img.w&&img.h)?` width="${img.w|0}" height="${img.h|0}"`:'';return `<figure class="image-editor" style="margin:10px 0 0"><img src="${escapeHTML(img.src)}" alt="${escapeHTML(img.name||'Image')}"${dim} style="max-width:100%;max-height:260px;border-radius:6px"><button class="icon-btn danger" data-remove-image="${i}" title="Remove image">${icon('trash')}</button></figure>`}).join('')}
+// resolve intrinsic size once so the card reserves its space before the data URL decodes (no post-paint reflow)
+function measureImg(src){return new Promise(res=>{let im=new Image();im.onload=()=>res({w:im.naturalWidth,h:im.naturalHeight});im.onerror=()=>res(null);im.src=src})}
 function addNode(parentId=null){let p=parentId?locate(parentId):null;if(parentId&&!p)return;snapshot();let n={id:uid(),text:'',children:[]};if(p)p.node.children.push(n);else tree().push(n);doc().selectedId=n.id;doc().updatedAt=Date.now();saveState();renderAll();if(state.behavior.focusNewNote)focusNodeEditor(n.id);toast(parentId?'Child added':'Topic added')}
 function addSibling(){let r=locate(doc().selectedId);if(!r){addNode(null);return}snapshot();let n={id:uid(),text:'',children:[]};r.list.splice(r.index+1,0,n);doc().selectedId=n.id;doc().updatedAt=Date.now();saveState();renderAll();if(state.behavior.focusNewNote)focusNodeEditor(n.id);toast('Sibling added')}
 function addChild(){let r=locate(doc().selectedId);if(!r)return;snapshot();let n={id:uid(),text:'',children:[]};r.node.children.push(n);doc().selectedId=n.id;doc().updatedAt=Date.now();saveState();renderAll();if(state.behavior.focusNewNote)focusNodeEditor(n.id);toast('Child added')}
@@ -4756,7 +4794,7 @@ function exportMarkdown(){let d=doc(),content=`# ${d.title||'Untitled'}\n\n${mar
 function exportBackup(){flushSave();let stamp=new Date().toISOString().slice(0,10);downloadFile(`branch-studio-backup-${stamp}.json`,JSON.stringify({app:'branch-studio',format:1,exportedAt:new Date().toISOString(),state},null,1),'application/json');Store.backupNeeded=false;forceToast('Backup exported',1500)}
 function importBackup(){let input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;let reader=new FileReader();reader.onload=()=>{let data;try{data=JSON.parse(reader.result)}catch(e){forceToast('That file is not a Branch Studio backup',2500);return}let incoming=normalizeState(deep(data&&data.state?data.state:data));if(!incoming){forceToast('That file is not a Branch Studio backup',2500);return}snapshot();let added=0;for(let d of incoming.documents){let existing=state.documents.find(x=>x.id===d.id);if(existing&&JSON.stringify(existing.tree)===JSON.stringify(d.tree)&&existing.title===d.title)continue;if(existing){d.id=uid('d');d.title=(d.title||'Untitled')+' (restored)'}state.documents.push(d);added++}if(added)state.activeDocumentId=state.documents[state.documents.length-1].id;saveState();renderAll();forceToast(added?`Restored ${added} document${added===1?'':'s'}`:'Backup already up to date',2000)};reader.readAsText(f)};input.click()}
 function chooseImage(){let id=doc().selectedId;let input=document.createElement('input');input.type='file';input.accept='image/*';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;downscaleImage(f).then(src=>addImageToNode(id,{name:f.name,src}))};input.click()}
-function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r||!img||!/^data:image\//.test(img.src||''))return false;snapshot();(r.node.images??=[]).push({name:img.name||'Image',src:img.src});doc().selectedId=r.node.id;doc().updatedAt=Date.now();saveState();renderAll();toast('Image added');return true}
+function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r||!img||!/^data:image\//.test(img.src||''))return false;snapshot();let rec={name:img.name||'Image',src:img.src};(r.node.images??=[]).push(rec);doc().selectedId=r.node.id;doc().updatedAt=Date.now();saveState();renderAll();toast('Image added');if(!rec.w){measureImg(rec.src).then(d=>{if(!d)return;let idx=r.node.images.indexOf(rec);if(idx<0)return;rec.w=d.w;rec.h=d.h;saveState();let imgs=document.querySelectorAll(`#columns .note[data-id="${r.node.id}"] .image-editor img`);if(imgs[idx]){imgs[idx].width=d.w;imgs[idx].height=d.h}})}return true}
 function insertMath(){let id=doc().selectedId,sel=getSelection(),anchorEd=sel?.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement)?.closest?.('.note-editor,.read-editor'):null;let ed=(anchorEd&&(anchorEd.dataset.editId||anchorEd.dataset.readEdit)===id?anchorEd:null)||(doc().mode==='read'?document.querySelector(`[data-read-edit="${id}"]`):document.querySelector(`[data-edit-id="${id}"]`))||document.querySelector(`[data-read-edit="${id}"]`);if(!ed||!window.customElements?.get('math-field')){toast('Math editor unavailable');return}snapshot();let range;if(sel?.rangeCount&&ed.contains(sel.anchorNode)&&!sel.anchorNode.parentElement?.closest?.('.math-container'))range=sel.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});let wrap=document.createElement('span');wrap.className='math-container';wrap.contentEditable='false';let mf=document.createElement('math-field');mf.dataset.display='false';wrap.appendChild(mf);range.deleteContents();let spacer=document.createTextNode('\u200B');range.insertNode(spacer);range.insertNode(wrap);if(ed.innerHTML.startsWith('<br>'))ed.querySelector('br')?.remove();bindMath(ed);requestAnimationFrame(()=>{try{mf.focus()}catch{}});let r=locate(doc().selectedId);if(r){r.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}toast('Math field inserted')}
 function renderStatus(){$('#modeStatus').textContent=({branch:'Branch view',split:'Split view',read:'Reading view'})[doc().mode];$('#nodeStatus').textContent=countNodes()+' note'+(countNodes()===1?'':'s')}
 function runCommand(id){let wasEditing=!!document.activeElement?.closest?.('.note-editor,.read-editor,math-field');runCommandInner(id);if(wasEditing&&!['image','settings','documents','exportMd','math','newDocument','shortcutsHelp','copyNote','cutNote','pasteNote'].includes(id))requestAnimationFrame(()=>{if(!document.activeElement?.closest?.('.note-editor,.read-editor,math-field')&&!$('#settingsDialog').open)focusNodeEditor(doc().selectedId,true)})}
@@ -5435,7 +5473,7 @@ renderKeyboardSettings=function(){
 };
 
 // ---------- animations (transform + opacity only, WAAPI, never blocking input) ----------
-const ANIM={ready:false,known:null,docId:null,mode:null,activeId:null,typingAt:0,running:new Set(),layer:null,EASE:'cubic-bezier(.2,.7,.2,1)'};
+const ANIM={ready:false,known:null,docId:null,mode:null,activeId:null,typingAt:0,firstX:0,firstY:0,running:new Set(),layer:null,EASE:'cubic-bezier(.2,.7,.2,1)'};
 function animOn(){return state.appearance.animations!==false}
 function motionReduced(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 function applyAnimClasses(){let h=document.documentElement;h.classList.toggle('anim-on',animOn());h.classList.toggle('motion-reduce',motionReduced())}
@@ -5475,19 +5513,26 @@ renderBranches=function(){
   let created=[...ids].filter(id=>!prevKnown.has(id));
   if(created.length>40)return;                       // a restore/import, not an edit: no motion
   let removed=[...first.keys()].filter(id=>!ids.has(id));
-  requestAnimationFrame(()=>branchAnims(first,new Set(created),removed,prevActive,active));
+  stageFlip(first,new Set(created),removed,prevActive,active);
 };
 function branchAnims(first,created,removed,prevActive,active){
   let c=$('#columns');if(!c)return;
   let reduced=motionReduced();
+  // revealActiveColumn() scrolls the pane during the same frame it aligns columns. That scroll is a
+  // camera move, not a card move — strip it out or every card flies sideways to "catch up" with it.
+  let pane=$('#branchPane');
+  let dScrollX=pane?(pane.scrollLeft-(ANIM.firstX||0)):0;
+  let dScrollY=pane?(pane.scrollTop-(ANIM.firstY||0)):0;
   let last=rectMap(c,'.note[data-id]');
   let jobs=[];
   for(const [id,{rect,el}] of last){
     let f=first.get(id);
     if(f){
-      let dx=f.rect.left-rect.left,dy=f.rect.top-rect.top;
+      let dx=f.rect.left-rect.left-dScrollX,dy=f.rect.top-rect.top-dScrollY;
       if((Math.abs(dx)>1||Math.abs(dy)>1)&&(inView(rect)||inView(f.rect)))jobs.push(()=>reduced?fadeIn(el,150):play(el,[{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:220}));
     }else if(created.has(id)){
+      // mark so the focusin pulse does not stack a second transform on a card that is already animating in
+      el.dataset.animNew='1';setTimeout(()=>{try{delete el.dataset.animNew}catch(e){}},320);
       jobs.push(()=>reduced?fadeIn(el,160):play(el,[{opacity:0,transform:'scale(.94)'},{opacity:1,transform:'none'}],{duration:200}));
     }else if(inView(rect)){
       jobs.push(()=>reduced?fadeIn(el,150):play(el,[{opacity:0,transform:'translateX(14px)'},{opacity:1,transform:'none'}],{duration:200}));
@@ -5500,20 +5545,68 @@ function branchAnims(first,created,removed,prevActive,active){
                  :play(g,[{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96,.5)'}],{duration:200,fill:'forwards'});
     if(a)a.finished.then(()=>g.remove(),()=>g.remove());else g.remove();
   }
-  if(active&&active!==prevActive){let el=c.querySelector(`.note[data-id="${active}"]`);if(el)jobs.push(()=>selectionPulse(el))}
+  if(active&&active!==prevActive&&!created.has(active)){let el=c.querySelector(`.note[data-id="${active}"]`);if(el)jobs.push(()=>selectionPulse(el))}
   jobs.forEach(j=>j());
+}
+// Two-phase FLIP. Phase 1 runs synchronously inside the render (before the browser can paint a
+// frame in the wrong place) and writes the inverse transform as an inline style. Phase 2 hands
+// that exact starting state to WAAPI on the next frame and clears the inline style, so the element
+// is never painted un-transformed. Doing both in a rAF produced a visible one-frame lurch.
+function stageFlip(first,created,removed,prevActive,active){
+  let c=$('#columns');if(!c)return;
+  let reduced=motionReduced();
+  let pane=$('#branchPane');
+  let dScrollX=pane?(pane.scrollLeft-(ANIM.firstX||0)):0;
+  let dScrollY=pane?(pane.scrollTop-(ANIM.firstY||0)):0;
+  let staged=[],pulses=[],ghosts=[];
+  for(const [id,{rect,el}] of rectMap(c,'.note[data-id]')){
+    let f=first.get(id);
+    if(f){
+      let dx=f.rect.left-rect.left-dScrollX,dy=f.rect.top-rect.top-dScrollY;
+      if((Math.abs(dx)>1||Math.abs(dy)>1)&&(inView(rect)||inView(f.rect))){
+        let t=`translate(${dx}px, ${dy}px)`;
+        el.style.transform=t;el.style.willChange='transform';
+        staged.push({el,from:{transform:t},dur:220});
+      }
+    }else if(created.has(id)){
+      el.dataset.animNew='1';setTimeout(()=>{try{delete el.dataset.animNew}catch(e){}},360);
+      el.style.opacity='0';el.style.transform='scale(.94)';el.style.willChange='transform,opacity';
+      staged.push({el,from:{opacity:0,transform:'scale(.94)'},dur:200,clearOpacity:true});
+    }else if(inView(rect)&&!reduced){
+      el.style.opacity='0';el.style.transform='translateX(14px)';el.style.willChange='transform,opacity';
+      staged.push({el,from:{opacity:0,transform:'translateX(14px)'},dur:200,clearOpacity:true});
+    }
+  }
+  for(const id of removed){
+    let f=first.get(id);if(!f||!inView(f.rect))continue;
+    let g=ghostOf(f.el,f.rect);ghosts.push(g);
+    let a=reduced?play(g,[{opacity:1},{opacity:0}],{duration:150,easing:'ease-out',fill:'forwards'})
+                 :play(g,[{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96,.5)'}],{duration:200,fill:'forwards'});
+    if(a)a.finished.then(()=>g.remove(),()=>g.remove());else g.remove();
+  }
+  if(active&&active!==prevActive&&!created.has(active)){let el=c.querySelector(`.note[data-id="${active}"]`);if(el)pulses.push(el)}
+  requestAnimationFrame(()=>{
+    for(const s of staged){
+      if(!s.el.isConnected)continue;
+      play(s.el,[s.from,reduced?{opacity:1}:{transform:'none',opacity:1}],{duration:s.dur});
+      s.el.style.transform='';s.el.style.opacity='';s.el.style.willChange='';
+    }
+    pulses.forEach(el=>selectionPulse(el));
+  });
 }
 function selectionPulse(card){
   card.classList.remove('sel-in');void card.offsetWidth;card.classList.add('sel-in');
   setTimeout(()=>card.classList.remove('sel-in'),260);
 }
-document.addEventListener('focusin',e=>{if(!canAnimate())return;let ed=e.target.closest?.('#columns .note-editor');if(ed){let card=ed.closest('.note');if(card&&!card.classList.contains('sel-in'))selectionPulse(card)}});
+document.addEventListener('focusin',e=>{if(!canAnimate())return;let ed=e.target.closest?.('#columns .note-editor');if(ed){let card=ed.closest('.note');if(card&&!card.classList.contains('sel-in')&&!card.dataset.animNew)selectionPulse(card)}});
 document.addEventListener('keydown',e=>{if(ANIM.running.size&&!['Shift','Control','Alt','Meta'].includes(e.key))finishAnims()},true);
 document.addEventListener('input',e=>{if(e.target?.closest?.('.note-editor,.read-editor,math-field'))ANIM.typingAt=Date.now()},true);
 const _renderWorkspace=renderWorkspace;
 renderWorkspace=function(){
   let mode=doc().mode,changed=ANIM.mode!==null&&ANIM.mode!==mode&&ANIM.docId===doc().id;
   finishAnims();
+  let paneB=$('#branchPane');
+  ANIM.firstX=paneB?paneB.scrollLeft:0;ANIM.firstY=paneB?paneB.scrollTop:0;
   ANIM.first=(canAnimate()&&!changed&&!UI.drag)?rectMap($('#columns'),'.note[data-id]'):null;
   _renderWorkspace.apply(this,arguments);
   ANIM.first=null;
