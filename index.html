@@ -4567,19 +4567,23 @@ html .read-pane .read-block:not(.depth-0) .read-editor,html .read-pane .read-nod
 /* Zen: chrome out, one centred column, one surface. Entered by toggle, left with Esc. */
 html.zen .topbar,html.zen .contextbar,html.zen .statusbar,html.zen .phone-bar,html.zen #writeBar,html.zen .wb-dock,html.zen .restore-chip{display:none!important}
 html.zen .app{display:block!important;grid-template-rows:none!important;height:100%!important}
-html.zen #workspace{height:100%!important}
-html.zen .workspace{display:block!important;overflow:visible!important}
+/* zen has exactly ONE scroll container: the workspace. Everything inside it grows. */
+html.zen #workspace{height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
+html.zen .workspace{display:block!important}
 html.zen .branch-pane{width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;flex:none!important;overflow:visible!important}
 html.zen .columns{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:9vh 24px 45vh!important;min-height:0!important}
 html.zen .column{display:block!important;width:auto!important;min-width:0!important;max-width:var(--zen-measure,74ch)!important;margin:0 auto!important}
 html.zen .column:not(:first-child){margin-top:0!important}
 html.zen .group{display:block!important;width:auto!important}
-html.zen .child-column{display:none!important}
 html.zen .grip{display:none!important}
 /* hiding the grip would otherwise let the body auto-place into its 20px grid column */
 html.zen .note{grid-template-columns:1fr!important}
 html.zen .add-row{display:none!important}
-html.zen .note{opacity:1!important}
+/* Full opacity, but deliberately NOT !important: an author !important declaration
+   out-ranks the animation origin, which killed every enter/exit animation on a card
+   in zen. This rule already beats .note{opacity:var(--inactive-opacity)} on
+   specificity, so the cascade still lands on 1 — WAAPI just gets to animate to it. */
+html.zen .note{opacity:1}
 html.zen .note.active .note-body{border-left-width:2px!important}
 html.zen .read-wrap{max-width:var(--zen-measure,74ch)!important;margin:0 auto!important;padding:9vh 24px 45vh!important}
 html.zen .read-pane{padding:0!important}
@@ -4738,7 +4742,7 @@ function focusNodeEditor(id,atEnd=false){let d=doc(),sel=d.mode==='read'?`[data-
 function selectNode(id,{focus=false}={}){if(!locate(id))return;doc().selectedId=id;doc().updatedAt=Date.now();saveState();renderWorkspace();renderContext();if(focus)requestAnimationFrame(()=>focusNodeEditor(id))}
 function pathIds(){let r=locate(doc().selectedId);return r?r.path.map(n=>n.id):[]}
 function isRelated(n,path){return n.children?.some(c=>path.includes(c.id))}
-function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
+function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];if(ZEN.on){let flat=flatten();return [{parentId:null,nodes:flat.map(f=>f.node),depthOf:new Map(flat.map(f=>[f.node.id,f.depth]))}]}let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
 function applyChrome(){let b=state.behavior;document.querySelector('.topbar').style.display=b.showTopbar?'flex':'none';document.querySelector('.contextbar').style.display=b.showContextbar?'flex':'none';document.querySelector('.statusbar').style.display=b.showStatusbar?'flex':'none';let chip=$('#restoreChrome');let hidden=!b.showTopbar||!b.showContextbar||!b.showStatusbar;chip.classList.toggle('show',hidden);chip.innerHTML=icon('reset')+'Restore interface'}
 function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
 function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
@@ -4777,7 +4781,7 @@ function reconcileColumns(c,columns,path){
     if(!sec){sec=document.createElement('section');sec.innerHTML='<div class="group"></div>'}
     sec.className='column '+(depth?'child-column':'');sec.dataset.depth=String(depth);sec.dataset.parent=col.parentId||'';
     let group=sec.querySelector('.group'),items=[];
-    for(const n of col.nodes){wanted.add(n.id);let card=cardFor(n,depth,path);if(card)items.push(card)}
+    for(const n of col.nodes){let nd=col.depthOf?col.depthOf.get(n.id):depth;wanted.add(n.id);let card=cardFor(n,nd,path);if(card)items.push(card)}
     if(state.behavior.showAddButtons){let btn=group.querySelector('.add-row');if(!btn){btn=document.createElement('button');btn.className='add-row'}btn.dataset.addParent=col.parentId||'';btn.innerHTML=icon('plus')+`<span class="label">${depth?'Add child':'Add topic'}</span>`;items.push(btn)}
     placeChildren(group,items);K.cols[depth]=sec;
   }
@@ -4786,8 +4790,8 @@ function reconcileColumns(c,columns,path){
   placeChildren(c,K.cols);
 }
 function renderBranches(){let c=$('#columns');if(!c)return;let d=doc();if(COLKEY.docId!==d.id||COLKEY.mode!==d.mode)resetColumnKey();COLKEY.docId=d.id;COLKEY.mode=d.mode;if(!tree().length){c.innerHTML='<div class="empty-doc">No notes yet.</div>';resetColumnKey();return}reconcileColumns(c,collectColumns(),pathIds());bindEditors(c);bindNoteTools(c);bindDrag(c);c.querySelectorAll('[data-add-parent]').forEach(b=>b.onclick=()=>addNode(b.dataset.addParent||null));alignBranchColumns()}
-function alignBranchColumns(){let cols=[...document.querySelectorAll('#columns .column')];if(!cols.length)return;cols.forEach(col=>col.style.marginTop='0px');let baseTop=cols[0].getBoundingClientRect().top;for(let i=1;i<cols.length;i++){let col=cols[i],parentId=col.dataset.parent,parentCard=document.querySelector(`#columns .note[data-id="${parentId}"]`);if(!parentCard)continue;let targetTop=parentCard.getBoundingClientRect().top;col.style.marginTop=`${Math.max(0,targetTop-baseTop)}px`}revealActiveColumn()}
-function revealActiveColumn(){let pane=$('#branchPane'),card=document.querySelector(`#columns .note[data-id="${doc().selectedId}"]`);if(!pane||!card)return;let col=card.closest('.column');if(!col)return;let pr=pane.getBoundingClientRect(),cr=col.getBoundingClientRect();if(window.innerWidth<=600){let target=pane.scrollLeft+(cr.left-pr.left)-14;if(Math.abs(target-pane.scrollLeft)>2)pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}else if(cr.right>pr.right||cr.left<pr.left){let target=cr.right>pr.right?pane.scrollLeft+(cr.right-pr.right)+24:pane.scrollLeft+(cr.left-pr.left)-24;pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}}
+function alignBranchColumns(){if(ZEN.on)return;let cols=[...document.querySelectorAll('#columns .column')];if(!cols.length)return;cols.forEach(col=>col.style.marginTop='0px');let baseTop=cols[0].getBoundingClientRect().top;for(let i=1;i<cols.length;i++){let col=cols[i],parentId=col.dataset.parent,parentCard=document.querySelector(`#columns .note[data-id="${parentId}"]`);if(!parentCard)continue;let targetTop=parentCard.getBoundingClientRect().top;col.style.marginTop=`${Math.max(0,targetTop-baseTop)}px`}revealActiveColumn()}
+function revealActiveColumn(){if(ZEN.on)return;let pane=$('#branchPane'),card=document.querySelector(`#columns .note[data-id="${doc().selectedId}"]`);if(!pane||!card)return;let col=card.closest('.column');if(!col)return;let pr=pane.getBoundingClientRect(),cr=col.getBoundingClientRect();if(window.innerWidth<=600){let target=pane.scrollLeft+(cr.left-pr.left)-14;if(Math.abs(target-pane.scrollLeft)>2)pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}else if(cr.right>pr.right||cr.left<pr.left){let target=cr.right>pr.right?pane.scrollLeft+(cr.right-pr.right)+24:pane.scrollLeft+(cr.left-pr.left)-24;pane.scrollTo({left:Math.max(0,target),behavior:'auto'})}}
 function readNodeHTML(node,depth=0){return `<div class="read-node depth-${Math.min(depth,3)} ${node.id===doc().selectedId?'selected':''} ${node.children?.length?'has-children':''}" data-read-id="${node.id}"><div class="read-head"><div class="read-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-read-edit="${node.id}">${writingHTML(node.text)}</div>${readImagesHTML(node)}</div>${node.children?.length?`<div class="read-children">${node.children.map(child=>readNodeHTML(child,depth+1)).join('')}</div>`:''}</div>`}
 function renderReading(){let pane=$('#readPane'),nested=!!state.behavior.nestedReading,body=nested?tree().map(node=>readNodeHTML(node,0)).join(''):flatten().map(({node,depth})=>`<div class="read-block depth-${Math.min(depth,2)} ${node.id===doc().selectedId?'selected':''}" data-read-id="${node.id}"><span class="read-marker"></span><div class="read-editor" contenteditable="true" spellcheck="true" data-placeholder="Type here…" data-read-edit="${node.id}">${writingHTML(node.text)}</div>${readImagesHTML(node)}</div>`).join('');pane.innerHTML=`<div class="read-wrap"><div class="read-title-row"><div class="read-title" contenteditable="true" spellcheck="true" id="readTitle">${escapeHTML(doc().title)}</div></div><div id="readBlocks" class="read-tree ${nested?'nested':'flat'}">${body}</div></div>`;$('#readTitle').addEventListener('input',e=>{doc().title=e.currentTarget.innerText.replace(/\n/g,' ').trimStart();doc().updatedAt=Date.now();saveState();renderHeader();renderDocuments()});pane.querySelectorAll('[data-read-id]').forEach(b=>b.onclick=e=>{if(!e.target.closest('[contenteditable]'))selectNode(b.dataset.readId)});bindEditors(pane,true)}
 function readImagesHTML(n){return (n.images||[]).map(img=>`<img src="${escapeHTML(img.src)}" alt="${escapeHTML(img.name||'Image')}" style="display:block;max-width:100%;max-height:320px;margin:10px 0;border-radius:6px">`).join('')}
@@ -4819,7 +4823,7 @@ function setMode(mode){doc().mode=mode;saveState();renderAll();toast(({branch:'B
 // ---------- zen mode ----------
 // One surface, no chrome, one column, caret held near the optical centre.
 // A toggle rather than a fourth view: it composes with whichever mode you were in.
-const ZEN={on:false,timer:0};
+const ZEN={on:false,timer:0,entry:0};
 function zenChrome(){return [...document.querySelectorAll('.topbar,.contextbar,.statusbar,.phone-bar')]}
 function zenSet(on){
   on=on??!ZEN.on;
@@ -4829,39 +4833,78 @@ function zenSet(on){
   if(on){
     chrome.forEach(c=>exitEl(c,{dur:140,blur:5,y:-6,then:()=>{resetEl(c);h.classList.add('zen')}}));
     if(!chrome.length)h.classList.add('zen');
-    setTimeout(()=>{
+    // The handle is kept so leaving zen inside the entry delay can cancel it: a stale
+    // timer otherwise re-enters, re-renders and shows the Leave-zen chip while ZEN.on
+    // is false — after which Escape does nothing and the chip is a dead click.
+    clearTimeout(ZEN.entry);
+    ZEN.entry=setTimeout(()=>{
+      ZEN.entry=0;
       renderAll();
       const w=$('#workspace');if(w)enterEl(w,{dur:300,blur:11,y:12});
       $('#zenExit')?.classList.add('on');zenWake();
     },motionOn()?150:0);
   }else{
+    clearTimeout(ZEN.entry);ZEN.entry=0;
+    clearTimeout(ZEN.timer);
     const w=$('#workspace');
     const restore=()=>{h.classList.remove('zen');renderAll();
       chrome.forEach(c=>enterEl(c,{dur:200,blur:6,y:-6}));
       if(w)enterEl(w,{dur:220,blur:9,y:10});   // the workspace was exited too: it has to come back as well
       positionBottomUI();
-      $('#zenExit')?.classList.remove('on')};
+      $('#zenExit')?.classList.remove('on','show')};
     if(w&&motionOn())exitEl(w,{dur:150,blur:9,y:-10,then:restore});else restore();
   }
 }
 function zenWake(){clearTimeout(ZEN.timer);$('#zenExit')?.classList.add('show');ZEN.timer=setTimeout(()=>$('#zenExit')?.classList.remove('show'),2200)}
-// keep the caret at a comfortable reading height instead of letting it drift to the bottom
+// Where the caret actually is. Chromium reports an empty rect for a collapsed caret
+// sitting on a block boundary — which is exactly where it sits when you are typing at
+// the end of a note — so fall back to measuring the neighbouring inline content. Purely
+// read-only: the caret is never disturbed (no marker node, no split text node).
+function caretRect(){
+  const sel=getSelection();if(!sel||!sel.rangeCount)return null;
+  const range=sel.getRangeAt(0);
+  let r=range.getBoundingClientRect();
+  if(r.width||r.height||r.top||r.left)return r;
+  const n=range.startContainer,off=range.startOffset;
+  let probe=document.createRange();
+  if(n&&n.nodeType===1&&n.childNodes.length){
+    const kid=n.childNodes[Math.min(Math.max(off-1,0),n.childNodes.length-1)];
+    if(kid.nodeType===3){probe.setStart(kid,0);probe.setEnd(kid,kid.nodeValue.length)}
+    else probe.selectNodeContents(kid);
+  }else if(n&&n.nodeType===3&&n.nodeValue.length){
+    probe.setStart(n,0);probe.setEnd(n,n.nodeValue.length);
+  }else{
+    const el=n&&n.nodeType===3?n.parentElement:n;
+    return el&&el.getBoundingClientRect?el.getBoundingClientRect():null;
+  }
+  const b=probe.getBoundingClientRect();
+  if(b.width||b.height||b.top||b.left)return b;
+  const el=n&&n.nodeType===3?n.parentElement:n;
+  return el&&el.getBoundingClientRect?el.getBoundingClientRect():null;
+}
+// Keep the caret at a comfortable reading height instead of letting it drift to the
+// bottom. Zen has exactly one scroller (#workspace) — #branchPane/#readPane are
+// height:auto in zen, so measuring them always read scrollHeight===clientHeight and
+// the function returned on every keystroke.
 function zenTypewriter(ed){
   if(!ZEN.on)return;
-  const sel=getSelection();if(!sel||!sel.rangeCount)return;
-  const pane=$('#branchPane')||$('#readPane')||$('#readPane .read-scroll');
-  const host=pane||$('#workspace');if(!host)return;
-  const r=sel.getRangeAt(0).getBoundingClientRect();if(!r.height)return;
-  const hr=host.getBoundingClientRect();
-  const scroller=host.scrollHeight>host.clientHeight+4?host:null;
-  if(!scroller)return;
+  const scroller=$('#workspace');if(!scroller)return;
+  if(scroller.scrollHeight<=scroller.clientHeight+4)return;   // stream fits: nothing to follow
+  const r=caretRect();if(!r)return;
   const want=scroller.getBoundingClientRect().top+scroller.clientHeight*0.42;
   const delta=r.top-want;
-  if(Math.abs(delta)<scroller.clientHeight*0.18)return;
+  if(Math.abs(delta)<scroller.clientHeight*0.18)return;       // already near the optical line
   scroller.scrollTo({top:scroller.scrollTop+delta,behavior:'smooth'});
 }
 document.addEventListener('pointermove',()=>{if(ZEN.on)zenWake()},{passive:true});
-document.addEventListener('keydown',e=>{if(ZEN.on&&(e.key==='Escape')&&!e.defaultPrevented){e.preventDefault();e.stopPropagation();zenSet(false)}},true);
+// Escape always leaves zen — from anywhere, including inside a note editor. The only
+// thing that gets Escape first is an open layer, so ✕/Esc keep agreeing there.
+document.addEventListener('keydown',e=>{
+  if(!ZEN.on||e.key!=='Escape')return;
+  if(document.querySelector('dialog[open],.overlay.open,.menu-pop,#aaSheet'))return;
+  if(document.documentElement.classList.contains('px-focus'))return;
+  e.preventDefault();e.stopPropagation();zenSet(false);
+},true);
 function newDocument(){snapshot();let d=makeDocument('Untitled',true);state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
 function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
 function duplicateDocument(id){let source=state.documents.find(d=>d.id===id);if(!source)return;snapshot();let copy=deep(source),map=new Map();function newid(nodes){for(let n of nodes){let old=n.id;n.id=uid();map.set(old,n.id);newid(n.children)}}newid(copy.tree);copy.id=uid('d');copy.title=(source.title||'Untitled')+' copy';copy.createdAt=copy.updatedAt=Date.now();copy.selectedId=map.get(source.selectedId)||copy.tree[0]?.id;state.documents.push(copy);state.activeDocumentId=copy.id;saveState();renderAll();toast('Document duplicated')}

@@ -341,6 +341,183 @@ async function run(){
     log(typing.hittable&&typing.focused?'pass':'fail',`zen ${i+1}/${CYCLES}: the editing surface is hittable and takes focus — hittable=${typing.hittable} hitEl=${typing.hitEl} focused=${typing.focused}`);
   }
 
+  // ---------- zen: flat stream, one scroller, typewriter, entry latch ----------
+  // A document long enough that the zen stream cannot fit the viewport, with notes
+  // deliberately OFF the selected path — the path-only renderer dropped every one.
+  const zf=JSON.parse(await w.eval(`
+    (function(){
+      const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+      const mk=(t,kids)=>({id:uid('n'),text:t,children:kids||[]});
+      const S=eval('state');
+      const long=[];for(let i=1;i<=14;i++)long.push(mk('Long note '+i));
+      const deep3=mk('Deep three');
+      const chain=mk('Deep root',[mk('Deep one',[mk('Deep two',[deep3])])]);
+      S.documents=[{id:uid('d'),title:'Zen harness',createdAt:Date.now(),updatedAt:Date.now(),mode:'branch',selectedId:null,
+        tree:[mk('Top A',[mk('Top A child')]),mk('Top B',long),chain]}];
+      S.activeDocumentId=S.documents[0].id;
+      eval('doc')().selectedId=deep3.id;
+      eval('renderAll')();
+      return JSON.stringify({total:eval('flatten')().length,deep3:deep3.id,offPath:long[6].id});
+    })()`));
+  await sleep(900);
+  log(zf.total>=18?'pass':'fail',`zen fixture: ${zf.total} notes, caret on a depth-3 note so the path is 4 columns long`);
+
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(800);
+  const zen=JSON.parse(await w.eval(`
+    (function(){
+      const ws=document.querySelector('#workspace');
+      const cols=[...document.querySelectorAll('#columns .column')];
+      const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+      const domIds=notes.map(n=>n.dataset.id);
+      const flatIds=eval('flatten')().map(f=>f.node.id);
+      const cs=getComputedStyle(ws);
+      const off=notes.find(n=>n.dataset.id===${JSON.stringify(zf.offPath)})||null;
+      const r=off?off.getBoundingClientRect():null;
+      return JSON.stringify({
+        zen:document.documentElement.classList.contains('zen'),
+        columns:cols.length,
+        childColumns:cols.filter(c=>c.classList.contains('child-column')).length,
+        domCards:notes.length,
+        docNotes:flatIds.length,
+        orderMatch:domIds.length>0&&domIds.length===flatIds.length&&domIds.every((id,i)=>id===flatIds[i]),
+        offPathInDom:!!off,
+        offPathH:r?Math.round(r.height):0,
+        overflowY:cs.overflowY,
+        range:ws.scrollHeight-ws.clientHeight
+      });
+    })()`));
+  log(zen.zen?'pass':'fail','zen: html.zen is set on entry');
+  log(zen.columns===1?'pass':'fail',`zen: the stream is one column (columns=${zen.columns}, child-columns=${zen.childColumns})`);
+  log(zen.domCards===zen.docNotes?'pass':'fail',`zen: every note is rendered — ${zen.domCards} cards for ${zen.docNotes} notes`);
+  log(zen.offPathInDom&&zen.offPathH>0?'pass':'fail',`zen: an off-path note is present and laid out (height=${zen.offPathH}px)`);
+  log(zen.orderMatch?'pass':'fail',`zen: stream order equals document order`);
+  log(zen.overflowY!=='visible'&&zen.range>40?'pass':'fail',`zen: #workspace is the one scroll container — overflow-y=${zen.overflowY} range=${zen.range}px`);
+
+  const reach=JSON.parse(await w.eval(`
+    (function(){
+      const ws=document.querySelector('#workspace');
+      ws.scrollTop=ws.scrollHeight;
+      return new Promise(r=>setTimeout(()=>{
+        const wr=ws.getBoundingClientRect();
+        const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+        const last=notes[notes.length-1];
+        const lr=last?last.getBoundingClientRect():null;
+        r(JSON.stringify({scrollTop:Math.round(ws.scrollTop),max:Math.round(ws.scrollHeight-ws.clientHeight),
+          wsH:Math.round(ws.clientHeight),lastTop:lr?Math.round(lr.top-wr.top):-1,
+          lastVisible:!!lr&&lr.top>wr.top-4&&lr.top<wr.bottom}));
+      },150));
+    })()`));
+  log(reach.lastVisible?'pass':'fail',`zen: the last note is reachable (scrollTop ${reach.scrollTop}/${reach.max}; last note at ${reach.lastTop}px of ${reach.wsH}px)`);
+  await w.eval(`(function(){document.querySelector('#workspace').scrollTop=0})()`);
+  await sleep(150);
+
+  const opa=JSON.parse(await w.eval(`
+    (function(){
+      eval('finishAnims')();
+      const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+      const target=notes.find(n=>!n.classList.contains('active'))||notes[0];
+      if(!target)return JSON.stringify({err:'no notes'});
+      const rest=+getComputedStyle(target).opacity;
+      const a=target.animate([{opacity:'0.5'},{opacity:'0.5'}],{duration:1000,fill:'both'});
+      const probe=+getComputedStyle(target).opacity;
+      a.cancel();
+      return JSON.stringify({rest:rest,probe:probe,count:notes.length});
+    })()`));
+  log(opa.count>1&&Math.abs(opa.rest-1)<0.02?'pass':'fail',`zen: notes read at full opacity — ${opa.rest} across ${opa.count} notes`);
+  log(Math.abs(opa.probe-0.5)<0.02?'pass':'fail',`zen: WAAPI can still write note opacity (probe=${opa.probe}; an author !important would force 1)`);
+
+  const caret=JSON.parse(await w.eval(`
+    (function(){
+      const ws=document.querySelector('#workspace');
+      const notes=[...document.querySelectorAll('#columns .note[data-id]')];
+      const last=notes[notes.length-1];
+      if(!last)return JSON.stringify({err:'no cards'});
+      const ed=last.querySelector('.note-editor');
+      if(!ed)return JSON.stringify({err:'no editor'});
+      ed.focus({preventScroll:true});
+      const rg=document.createRange();rg.selectNodeContents(ed);rg.collapse(false);
+      const s=getSelection();s.removeAllRanges();s.addRange(rg);
+      const wr=ws.getBoundingClientRect(),er=ed.getBoundingClientRect(),cr=rg.getBoundingClientRect();
+      return JSON.stringify({before:Math.round(ws.scrollTop),
+        caretInView:Math.round((cr.height?cr:er).top-wr.top),
+        edInView:Math.round(er.top-wr.top),
+        wsH:Math.round(ws.clientHeight),active:document.activeElement===ed});
+    })()`));
+  if(caret.err)log('fail','zen typewriter: '+caret.err);
+  else {
+    log(caret.active&&caret.edInView>caret.wsH*0.6?'pass':'fail',`zen typewriter: the caret's note starts ${caret.edInView}px down a ${caret.wsH}px viewport (off-screen, past the 42% line)`);
+    await w.eval(`(function(){const notes=[...document.querySelectorAll('#columns .note[data-id]')];const ed=notes[notes.length-1].querySelector('.note-editor');eval('zenTypewriter')(ed)})()`);
+    await sleep(950);
+    const tw1=JSON.parse(await w.eval(`JSON.stringify({t:Math.round(document.querySelector('#workspace').scrollTop)})`));
+    log(tw1.t>caret.before+2?'pass':'fail',`zen typewriter: scrolled to the caret (${caret.before} -> ${tw1.t})`);
+    const band=JSON.parse(await w.eval(`
+      (function(){
+        const ws=document.querySelector('#workspace');
+        const r=eval('caretRect')();
+        return JSON.stringify({top:r?Math.round(r.top-ws.getBoundingClientRect().top):null,wsH:Math.round(ws.clientHeight)});
+      })()`));
+    log(band.top!==null&&Math.abs(band.top-band.wsH*0.42)<band.wsH*0.2?'pass':'fail',`zen typewriter: the caret came to rest near the 42% line (${band.top}px of ${band.wsH}px, line at ${Math.round(band.wsH*0.42)}px)`);
+    await w.eval(`(function(){const notes=[...document.querySelectorAll('#columns .note[data-id]')];const ed=notes[notes.length-1].querySelector('.note-editor');eval('zenTypewriter')(ed)})()`);
+    await sleep(650);
+    const tw2=JSON.parse(await w.eval(`JSON.stringify({t:Math.round(document.querySelector('#workspace').scrollTop)})`));
+    log(Math.abs(tw2.t-tw1.t)<3?'pass':'fail',`zen typewriter: a caret already at the optical line is not re-scrolled (${tw1.t} -> ${tw2.t})`);
+  }
+
+  await w.eval(`eval('zenSet')(false)`);
+  await sleep(850);
+  const offZen=JSON.parse(await w.eval(`
+    (function(){
+      const ws=document.querySelector('#workspace');
+      const ed=document.querySelector('#columns .note-editor');
+      const before=ws.scrollTop;
+      if(ed)eval('zenTypewriter')(ed);
+      return JSON.stringify({zen:document.documentElement.classList.contains('zen'),delta:Math.round(ws.scrollTop-before)});
+    })()`));
+  log(!offZen.zen&&offZen.delta===0?'pass':'fail',`zen typewriter: a no-op outside zen (zen=${offZen.zen} drift=${offZen.delta}px)`);
+
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(750);
+  await w.eval(`
+    (function(){
+      const ed=document.querySelector('#columns .note.active .note-editor')||document.querySelector('#columns .note-editor');
+      const t=ed||document.body;if(ed)ed.focus();
+      t.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+    })()`);
+  await sleep(650);
+  const escZen=JSON.parse(await w.eval(`JSON.stringify({zen:document.documentElement.classList.contains('zen'),on:eval('ZEN').on})`));
+  log(!escZen.zen&&!escZen.on?'pass':'fail',`zen: Escape exits from inside a note editor — zen=${escZen.zen} ZEN.on=${escZen.on}`);
+
+  await w.eval(`(function(){eval('zenSet')(true);eval('zenSet')(false);return 1})()`);
+  await sleep(950);
+  const latch=JSON.parse(await w.eval(`JSON.stringify({
+      zen:document.documentElement.classList.contains('zen'),
+      on:eval('ZEN').on,
+      chip:document.querySelector('#zenExit').classList.contains('on'),
+      pe:getComputedStyle(document.querySelector('#workspace')).pointerEvents
+    })`));
+  log(!latch.zen&&!latch.on&&!latch.chip?'pass':'fail',`zen: a quick in/out inside the 150ms entry delay leaves nothing behind — zen=${latch.zen} ZEN.on=${latch.on} chip=${latch.chip}`);
+  log(latch.pe!=='none'?'pass':'fail',`zen: the workspace is not left with pointer-events:none after a cancelled entry (${latch.pe})`);
+  await w.eval(`eval('renderAll')()`);
+  await sleep(300);
+
+  await w.eval(`eval('zenSet')(true)`);
+  await sleep(750);
+  await w.eval(`(function(){eval('state').behavior.showAddButtons=true;eval('renderAll')()})()`);
+  await sleep(450);
+  const aff=JSON.parse(await w.eval(`
+    (function(){
+      const vis=el=>el?getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0:false;
+      const add=document.querySelector('#columns .add-row');
+      return JSON.stringify({grip:vis(document.querySelector('#columns .grip')),add:add?vis(add):null,
+        addExists:!!add,chip:document.querySelector('#zenExit').classList.contains('on')});
+    })()`));
+  log(!aff.grip?'pass':'fail','zen: the drag grip is hidden (sole focus on writing)');
+  log(aff.addExists&&!aff.add?'pass':'fail',`zen: the add-row is hidden even with add buttons on (exists=${aff.addExists})`);
+  log(aff.chip?'pass':'fail','zen: the Leave-zen chip is offered on entry');
+  await w.eval(`(function(){eval('state').behavior.showAddButtons=false;eval('zenSet')(false);eval('renderAll')()})()`);
+  await sleep(800);
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';
