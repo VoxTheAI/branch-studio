@@ -4563,6 +4563,37 @@ html[data-input="touch"] .write-bar .wb-style{min-height:48px!important}
 html .read-pane .read-block:not(.depth-0) .read-editor,html .read-pane .read-node:not(.depth-0)>.read-head .read-editor,html .vf-read .read-node:not(.depth-0)>.read-head .read-editor{font-weight:400!important}
 </style>
 <style id="custom-style"></style>
+<style id="zen-style">
+/* Zen: chrome out, one centred column, one surface. Entered by toggle, left with Esc. */
+html.zen .topbar,html.zen .contextbar,html.zen .statusbar,html.zen .phone-bar,html.zen #writeBar,html.zen .wb-dock,html.zen .restore-chip{display:none!important}
+html.zen .app{display:block!important;grid-template-rows:none!important;height:100%!important}
+html.zen #workspace{height:100%!important}
+html.zen .workspace{display:block!important;overflow:visible!important}
+html.zen .branch-pane{width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;flex:none!important;overflow:visible!important}
+html.zen .columns{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:9vh 24px 45vh!important;min-height:0!important}
+html.zen .column{display:block!important;width:auto!important;min-width:0!important;max-width:var(--zen-measure,74ch)!important;margin:0 auto!important}
+html.zen .column:not(:first-child){margin-top:0!important}
+html.zen .group{display:block!important;width:auto!important}
+html.zen .child-column{display:none!important}
+html.zen .grip{display:none!important}
+/* hiding the grip would otherwise let the body auto-place into its 20px grid column */
+html.zen .note{grid-template-columns:1fr!important}
+html.zen .add-row{display:none!important}
+html.zen .note{opacity:1!important}
+html.zen .note.active .note-body{border-left-width:2px!important}
+html.zen .read-wrap{max-width:var(--zen-measure,74ch)!important;margin:0 auto!important;padding:9vh 24px 45vh!important}
+html.zen .read-pane{padding:0!important}
+html.zen .split .branch-pane{width:auto!important}
+#zenExit{position:fixed;right:18px;bottom:18px;z-index:60;display:none;align-items:center;gap:7px;
+  padding:8px 13px;border:1px solid var(--glass-line,rgba(163,166,167,.2));border-radius:8px;
+  background:var(--glass-bar,rgba(12,14,16,.72));backdrop-filter:blur(10px);color:var(--sol-text,#cacccc);
+  font:500 12px/1 var(--font-chrome,'JetBrains Mono',monospace);cursor:pointer;
+  opacity:0;transform:translateY(6px);transition:opacity .22s ease-out,transform .22s ease-out}
+#zenExit.on{display:inline-flex}
+#zenExit.show{opacity:1;transform:translateY(0)}
+#zenExit:hover{background:var(--glass-tip,rgba(16,19,21,.8))}
+@media (prefers-reduced-motion:reduce){#zenExit{transition:none}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -4611,12 +4642,14 @@ html .read-pane .read-block:not(.depth-0) .read-editor,html .read-pane .read-nod
   </div>
 </dialog>
 <div class="toast" id="toast"></div>
+<button id="zenExit" type="button" title="Leave zen mode (Esc)" aria-label="Leave zen mode">Leave zen <span aria-hidden="true">Esc</span></button>
 <input type="file" id="cssFileInput" accept=".css,text/css" hidden>
 <script>
 
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const STORAGE_KEY='branch-studio-v1';
 const BOOTSTRAP_ICONS={
+ zen:'aspect-ratio',
   folder:'folder2-open',file:'file-earmark-plus',branch:'diagram-3',columns:'layout-split',book:'journal-text',
   undo:'arrow-counterclockwise',redo:'arrow-clockwise',download:'download',keyboard:'keyboard',settings:'gear',
   plus:'plus-lg',trash:'trash',grip:'grid-3x2-gap',arrowUp:'arrow-up',arrowDown:'arrow-down',
@@ -4633,7 +4666,8 @@ const DEFAULT_BEHAVIOR={showAddButtons:false,showFeedback:true,shortcutsEnabled:
 const COMMANDS={
  newDocument:{label:'New document',icon:'file'},addTopic:{label:'New main topic',icon:'topic'},addSibling:{label:'Add sibling',icon:'plus'},addChild:{label:'Add child',icon:'child'},deleteNode:{label:'Delete note',icon:'trash'},moveUp:{label:'Move note up',icon:'arrowUp'},moveDown:{label:'Move note down',icon:'arrowDown'},indent:{label:'Indent under previous note',icon:'indent'},outdent:{label:'Outdent note',icon:'outdent'},image:{label:'Add image',icon:'photo'},math:{label:'Insert math',icon:'math'},
  navUp:{label:'Navigate up',icon:'arrowUp'},navDown:{label:'Navigate down',icon:'arrowDown'},navParent:{label:'Navigate to parent',icon:'outdent'},navChild:{label:'Navigate to child',icon:'indent'},branchView:{label:'Branch view',icon:'branch'},splitView:{label:'Split view',icon:'columns'},readView:{label:'Reading view',icon:'book'},undo:{label:'Undo',icon:'undo'},redo:{label:'Redo',icon:'redo'},settings:{label:'Settings',icon:'settings'},documents:{label:'Documents',icon:'files'},exportMd:{label:'Export Markdown',icon:'download'},shortcutsHelp:{label:'Show keyboard shortcuts',icon:'keyboard'},
- copyNote:{label:'Copy note',icon:'copyNote'},cutNote:{label:'Cut note',icon:'cutNote'},pasteNote:{label:'Paste note',icon:'pasteNote'}
+ copyNote:{label:'Copy note',icon:'copyNote'},cutNote:{label:'Cut note',icon:'cutNote'},pasteNote:{label:'Paste note',icon:'pasteNote'},
+ zen:{label:'Zen mode',icon:'zen'}
 };
 const UA=navigator.userAgent||'';
 // iPadOS Safari reports itself as a Mac ("Macintosh"/MacIntel) — tell them apart by touch points.
@@ -4643,12 +4677,12 @@ const IS_MAC=IS_IPAD||/Mac|iPhone|iPad|iPod/i.test((navigator.userAgentData&&nav
 // "Meta" = secondary modifier (⌃ Control on Apple; the Windows key elsewhere, so PC defaults never use it).
 // Apple defaults use only ⌘ and ⌃ (Option composes characters such as ø/Î on iPad/Mac keyboards) and avoid
 // Safari/iPadOS reserved keys, ⌘+arrows (text navigation) and ⌃+A/E/K/F/B/N/P/D/H/O/T (emacs text keys).
-const APPLE_SHORTCUTS={newDocument:'Ctrl+Meta+N',addTopic:'Ctrl+Meta+Enter',addSibling:'Ctrl+Enter',addChild:'Ctrl+Shift+Enter',deleteNode:'Ctrl+Shift+Backspace',moveUp:'Shift+Meta+ArrowUp',moveDown:'Shift+Meta+ArrowDown',indent:'Shift+Meta+ArrowRight',outdent:'Shift+Meta+ArrowLeft',image:'Ctrl+Meta+I',math:'Ctrl+Meta+M',navUp:'Meta+ArrowUp',navDown:'Meta+ArrowDown',navParent:'Meta+ArrowLeft',navChild:'Meta+ArrowRight',branchView:'Meta+1',splitView:'Meta+2',readView:'Meta+3',undo:'Ctrl+Z',redo:'Ctrl+Shift+Z',settings:'Ctrl+Meta+,',documents:'Ctrl+Meta+O',exportMd:'Ctrl+Meta+E',shortcutsHelp:'Ctrl+/'};
+const APPLE_SHORTCUTS={newDocument:'Ctrl+Meta+N',addTopic:'Ctrl+Meta+Enter',addSibling:'Ctrl+Enter',addChild:'Ctrl+Shift+Enter',deleteNode:'Ctrl+Shift+Backspace',moveUp:'Shift+Meta+ArrowUp',moveDown:'Shift+Meta+ArrowDown',indent:'Shift+Meta+ArrowRight',outdent:'Shift+Meta+ArrowLeft',image:'Ctrl+Meta+I',math:'Ctrl+Meta+M',navUp:'Meta+ArrowUp',navDown:'Meta+ArrowDown',navParent:'Meta+ArrowLeft',navChild:'Meta+ArrowRight',branchView:'Meta+1',splitView:'Meta+2',readView:'Meta+3',zen:'Ctrl+Meta+Z',undo:'Ctrl+Z',redo:'Ctrl+Shift+Z',settings:'Ctrl+Meta+,',documents:'Ctrl+Meta+O',exportMd:'Ctrl+Meta+E',shortcutsHelp:'Ctrl+/'};
 // macOS (not iPad): ⌃+arrows switch Spaces / Mission Control, and ⌘/ toggles Safari's status bar.
 const MAC_DESKTOP_OVERRIDES={navUp:'Ctrl+Meta+ArrowUp',navDown:'Ctrl+Meta+ArrowDown',navParent:'Ctrl+Meta+ArrowLeft',navChild:'Ctrl+Meta+ArrowRight',shortcutsHelp:'Meta+/'};
 // Windows/Linux: Ctrl+Shift+letter and Ctrl+digit are mostly taken by browsers, Ctrl+Alt+letter is AltGr,
 // Ctrl+arrows are word navigation — so letter actions use Alt+Shift, navigation Alt+arrows.
-const PC_SHORTCUTS={newDocument:'Alt+Shift+N',addTopic:'Alt+Shift+Enter',addSibling:'Ctrl+Enter',addChild:'Ctrl+Shift+Enter',deleteNode:'Ctrl+Shift+Backspace',moveUp:'Alt+Shift+ArrowUp',moveDown:'Alt+Shift+ArrowDown',indent:'Tab',outdent:'Shift+Tab',image:'Alt+Shift+I',math:'Alt+Shift+M',navUp:'Alt+ArrowUp',navDown:'Alt+ArrowDown',navParent:'Alt+ArrowLeft',navChild:'Alt+ArrowRight',branchView:'Alt+1',splitView:'Alt+2',readView:'Alt+3',undo:'Ctrl+Z',redo:'Ctrl+Shift+Z',settings:'Alt+,',documents:'Alt+Shift+D',exportMd:'Alt+Shift+E',shortcutsHelp:'Ctrl+/'};
+const PC_SHORTCUTS={newDocument:'Alt+Shift+N',addTopic:'Alt+Shift+Enter',addSibling:'Ctrl+Enter',addChild:'Ctrl+Shift+Enter',deleteNode:'Ctrl+Shift+Backspace',moveUp:'Alt+Shift+ArrowUp',moveDown:'Alt+Shift+ArrowDown',indent:'Tab',outdent:'Shift+Tab',image:'Alt+Shift+I',math:'Alt+Shift+M',navUp:'Alt+ArrowUp',navDown:'Alt+ArrowDown',navParent:'Alt+ArrowLeft',navChild:'Alt+ArrowRight',branchView:'Alt+1',splitView:'Alt+2',readView:'Alt+3',zen:'Alt+Shift+Z',undo:'Ctrl+Z',redo:'Ctrl+Shift+Z',settings:'Alt+,',documents:'Alt+Shift+D',exportMd:'Alt+Shift+E',shortcutsHelp:'Ctrl+/'};
 const DEFAULT_SHORTCUTS=IS_MAC?(IS_IPAD?{...APPLE_SHORTCUTS}:{...APPLE_SHORTCUTS,...MAC_DESKTOP_OVERRIDES}):{...PC_SHORTCUTS};
 // Extra fixed bindings (not remappable) that also trigger a command, unless the user gave that key to another command.
 const SHORTCUT_ALIASES=IS_MAC?{indent:['Tab'],outdent:['Shift+Tab']}:{redo:['Ctrl+Y'],addTopic:['Ctrl+Alt+Enter']};
@@ -4764,7 +4798,7 @@ function serializeEditor(ed){function walk(node){if(node.nodeType===3)return nod
 function placeCaretAround(node,after){let ed=node.closest('.note-editor,.read-editor');if(!ed)return;ed.focus({preventScroll:true});try{let r=document.createRange();if(after){let nx=node.nextSibling;if(nx&&nx.nodeType===3){r.setStart(nx,Math.min(nx.nodeValue.length,nx.nodeValue.startsWith('\u200B')?1:0))}else r.setStartAfter(node)}else r.setStartBefore(node);r.collapse(true);let s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}}
 function bindMath(root=document){root.querySelectorAll('math-field').forEach(mf=>{if(mf.dataset.bound)return;mf.dataset.bound='1';mf.removeAttribute('contenteditable');try{mf.mathVirtualKeyboardPolicy=mathKbPolicy();mf.smartFence=true}catch{};let editor=mf.closest('.note-editor,.read-editor');mf.addEventListener('move-out',e=>{e.preventDefault();let wrap=mf.closest('.math-container')||mf;let dir=e.detail?.direction;placeCaretAround(wrap,dir!=='backward'&&dir!=='upward')});mf.addEventListener('input',e=>{e.stopPropagation();if(!editor)return;let id=editor.dataset.editId||editor.dataset.readEdit,r=locate(id);if(!r)return;let next=serializeEditor(editor);if(next===r.node.text)return;textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();if(doc().mode==='split'){let other=document.querySelector(editor.dataset.editId?`[data-read-edit="${id}"]`:`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}});mf.addEventListener('focus',()=>{let id=editor?.dataset.editId||editor?.dataset.readEdit;if(id){doc().selectedId=id;renderContext();renderStatus()}});mf.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();mf.blur();editor?.focus()}})})}
 function textSnapshot(id){let now=Date.now();if(lastTextSnap.id!==id||now-lastTextSnap.time>1500)snapshot();lastTextSnap={id,time:now}}
-function bindEditors(root,reading=false){root.querySelectorAll(reading?'[data-read-edit]':'[data-edit-id]').forEach(ed=>{let id=reading?ed.dataset.readEdit:ed.dataset.editId;ed.onfocus=()=>{doc().selectedId=id;renderContext();renderStatus();const mark=()=>{root.querySelectorAll('.note,.read-node,.read-block').forEach(n=>n.classList.toggle('active',n.dataset.id===id));if(reading)root.querySelectorAll('.read-node,.read-block').forEach(n=>n.classList.toggle('selected',n.dataset.readId===id))};if(UI.input&&UI.input!=='pointer')setTimeout(mark,30);else mark()};ed.oninput=e=>{if(e&&e.target&&e.target!==ed&&e.target.nodeName==='MATH-FIELD')return;let r=locate(id);if(!r)return;let next=serializeEditor(ed);if(ed.innerHTML==='<br>'){ed.innerHTML='';next=''}if(next===r.node.text)return;textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();renderHeader();renderContext();if(doc().mode==='split'){if(reading){let other=document.querySelector(`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}else{let other=document.querySelector(`[data-read-edit="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}}};ed.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();document.querySelector('.branch-pane,.read-pane')?.focus?.()}}});bindMath(root)}
+function bindEditors(root,reading=false){root.querySelectorAll(reading?'[data-read-edit]':'[data-edit-id]').forEach(ed=>{let id=reading?ed.dataset.readEdit:ed.dataset.editId;ed.onfocus=()=>{doc().selectedId=id;renderContext();renderStatus();const mark=()=>{root.querySelectorAll('.note,.read-node,.read-block').forEach(n=>n.classList.toggle('active',n.dataset.id===id));if(reading)root.querySelectorAll('.read-node,.read-block').forEach(n=>n.classList.toggle('selected',n.dataset.readId===id))};if(UI.input&&UI.input!=='pointer')setTimeout(mark,30);else mark()};ed.oninput=e=>{if(e&&e.target&&e.target!==ed&&e.target.nodeName==='MATH-FIELD')return;let r=locate(id);if(!r)return;let next=serializeEditor(ed);if(ed.innerHTML==='<br>'){ed.innerHTML='';next=''}if(next===r.node.text)return;textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();renderHeader();renderContext();if(doc().mode==='split'){if(reading){let other=document.querySelector(`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}else{let other=document.querySelector(`[data-read-edit="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}}zenTypewriter(ed)};ed.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();document.querySelector('.branch-pane,.read-pane')?.focus?.()}}});bindMath(root)}
 function bindNoteTools(root){root.querySelectorAll('.note').forEach(card=>{card.onclick=e=>{if(card.contains(document.activeElement)&&document.activeElement.closest('.note-editor'))return;if(!e.target.closest('button,[contenteditable],.grip,.image-editor'))selectNode(card.dataset.id)};card.querySelectorAll('[data-mini]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;runCommand(b.dataset.mini)}});card.querySelectorAll('[data-note-more]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;openNoteMenu(b)}});card.querySelectorAll('[data-swipe-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();card.classList.remove('swiped');doc().selectedId=card.dataset.id;runCommand('deleteNode')});card.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{e.stopPropagation();let r=locate(card.dataset.id);if(!r)return;snapshot();r.node.images.splice(Number(b.dataset.removeImage),1);doc().updatedAt=Date.now();saveState();renderAll();toast('Image removed')})})}
 function clearDrop(){$$('.drop-before,.drop-after').forEach(x=>x.classList.remove('drop-before','drop-after'));dropTarget=null}
 function bindDrag(root){root.querySelectorAll('[data-grip]').forEach(g=>{g.ondragstart=e=>{draggedId=g.dataset.grip;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggedId);setTimeout(()=>g.closest('.note')?.classList.add('dragging'),0)};g.ondragend=()=>{$$('.dragging').forEach(x=>x.classList.remove('dragging'));draggedId=null;clearDrop()}});root.querySelectorAll('.note').forEach(card=>{card.ondragover=e=>{if(!draggedId||card.dataset.id===draggedId)return;e.preventDefault();let before=e.clientY<card.getBoundingClientRect().top+card.offsetHeight/2;clearDrop();card.classList.add(before?'drop-before':'drop-after');dropTarget={targetId:card.dataset.id,before}};card.ondrop=e=>{e.preventDefault();if(!draggedId||!dropTarget)return;moveByDrop(draggedId,dropTarget.targetId,dropTarget.before)}})}
@@ -4782,6 +4816,49 @@ function indentNode(){let r=locate(doc().selectedId);if(!r||r.index===0)return;l
 function outdentNode(){let r=locate(doc().selectedId);if(!r||r.path.length<2)return;let parent=r.path.at(-2),pr=locate(parent.id);if(!pr)return;snapshot();r.list.splice(r.index,1);pr.list.splice(pr.index+1,0,r.node);doc().updatedAt=Date.now();saveState();renderAll();toast('Outdented')}
 function navigate(direction){let r=locate(doc().selectedId);if(!r)return;if(direction==='ArrowUp'&&r.index>0)return selectNode(r.list[r.index-1].id,{focus:false});if(direction==='ArrowDown'&&r.index<r.list.length-1)return selectNode(r.list[r.index+1].id,{focus:false});if(direction==='ArrowRight'&&r.node.children.length)return selectNode(r.node.children[0].id,{focus:false});if(direction==='ArrowLeft'&&r.path.length>1)return selectNode(r.path.at(-2).id,{focus:false})}
 function setMode(mode){doc().mode=mode;saveState();renderAll();toast(({branch:'Branch view',split:'Split view',read:'Reading view'})[mode])}
+// ---------- zen mode ----------
+// One surface, no chrome, one column, caret held near the optical centre.
+// A toggle rather than a fourth view: it composes with whichever mode you were in.
+const ZEN={on:false,timer:0};
+function zenChrome(){return [...document.querySelectorAll('.topbar,.contextbar,.statusbar,.phone-bar')]}
+function zenSet(on){
+  on=on??!ZEN.on;
+  if(on===ZEN.on)return;
+  ZEN.on=on;
+  const h=document.documentElement,chrome=zenChrome();
+  if(on){
+    chrome.forEach(c=>exitEl(c,{dur:140,blur:5,y:-6}));
+    setTimeout(()=>{
+      h.classList.add('zen');renderAll();
+      const w=$('#workspace');if(w)enterEl(w,{dur:300,blur:11,y:12});
+      $('#zenExit')?.classList.add('on');zenWake();
+    },motionOn()?150:0);
+  }else{
+    const w=$('#workspace');
+    const restore=()=>{h.classList.remove('zen');renderAll();
+      chrome.forEach(c=>{c.style.opacity='';c.style.transform='';c.style.filter='';enterEl(c,{dur:200,blur:6,y:-6})});
+      $('#zenExit')?.classList.remove('on')};
+    if(w&&motionOn())exitEl(w,{dur:150,blur:9,y:-10,then:restore});else restore();
+  }
+}
+function zenWake(){clearTimeout(ZEN.timer);$('#zenExit')?.classList.add('show');ZEN.timer=setTimeout(()=>$('#zenExit')?.classList.remove('show'),2200)}
+// keep the caret at a comfortable reading height instead of letting it drift to the bottom
+function zenTypewriter(ed){
+  if(!ZEN.on)return;
+  const sel=getSelection();if(!sel||!sel.rangeCount)return;
+  const pane=$('#branchPane')||$('#readPane')||$('#readPane .read-scroll');
+  const host=pane||$('#workspace');if(!host)return;
+  const r=sel.getRangeAt(0).getBoundingClientRect();if(!r.height)return;
+  const hr=host.getBoundingClientRect();
+  const scroller=host.scrollHeight>host.clientHeight+4?host:null;
+  if(!scroller)return;
+  const want=scroller.getBoundingClientRect().top+scroller.clientHeight*0.42;
+  const delta=r.top-want;
+  if(Math.abs(delta)<scroller.clientHeight*0.18)return;
+  scroller.scrollTo({top:scroller.scrollTop+delta,behavior:'smooth'});
+}
+document.addEventListener('pointermove',()=>{if(ZEN.on)zenWake()},{passive:true});
+document.addEventListener('keydown',e=>{if(ZEN.on&&(e.key==='Escape')&&!e.defaultPrevented){e.preventDefault();e.stopPropagation();zenSet(false)}},true);
 function newDocument(){snapshot();let d=makeDocument('Untitled',true);state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
 function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
 function duplicateDocument(id){let source=state.documents.find(d=>d.id===id);if(!source)return;snapshot();let copy=deep(source),map=new Map();function newid(nodes){for(let n of nodes){let old=n.id;n.id=uid();map.set(old,n.id);newid(n.children)}}newid(copy.tree);copy.id=uid('d');copy.title=(source.title||'Untitled')+' copy';copy.createdAt=copy.updatedAt=Date.now();copy.selectedId=map.get(source.selectedId)||copy.tree[0]?.id;state.documents.push(copy);state.activeDocumentId=copy.id;saveState();renderAll();toast('Document duplicated')}
@@ -4802,7 +4879,7 @@ function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r
 function insertMath(){let id=doc().selectedId,sel=getSelection(),anchorEd=sel?.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement)?.closest?.('.note-editor,.read-editor'):null;let ed=(anchorEd&&(anchorEd.dataset.editId||anchorEd.dataset.readEdit)===id?anchorEd:null)||(doc().mode==='read'?document.querySelector(`[data-read-edit="${id}"]`):document.querySelector(`[data-edit-id="${id}"]`))||document.querySelector(`[data-read-edit="${id}"]`);if(!ed||!window.customElements?.get('math-field')){toast('Math editor unavailable');return}snapshot();let range;if(sel?.rangeCount&&ed.contains(sel.anchorNode)&&!sel.anchorNode.parentElement?.closest?.('.math-container'))range=sel.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});let wrap=document.createElement('span');wrap.className='math-container';wrap.contentEditable='false';let mf=document.createElement('math-field');mf.dataset.display='false';wrap.appendChild(mf);range.deleteContents();let spacer=document.createTextNode('\u200B');range.insertNode(spacer);range.insertNode(wrap);if(ed.innerHTML.startsWith('<br>'))ed.querySelector('br')?.remove();bindMath(ed);requestAnimationFrame(()=>{try{mf.focus()}catch{}});let r=locate(doc().selectedId);if(r){r.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}toast('Math field inserted')}
 function renderStatus(){$('#modeStatus').textContent=({branch:'Branch view',split:'Split view',read:'Reading view'})[doc().mode];$('#nodeStatus').textContent=countNodes()+' note'+(countNodes()===1?'':'s')}
 function runCommand(id){let wasEditing=!!document.activeElement?.closest?.('.note-editor,.read-editor,math-field');runCommandInner(id);if(wasEditing&&!['image','settings','documents','exportMd','math','newDocument','shortcutsHelp','copyNote','cutNote','pasteNote'].includes(id))requestAnimationFrame(()=>{if(!document.activeElement?.closest?.('.note-editor,.read-editor,math-field')&&!$('#settingsDialog').open)focusNodeEditor(doc().selectedId,true)})}
-function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>restoreSnapshot(undoStack,redoStack),redo:()=>restoreSnapshot(redoStack,undoStack),settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu()};map[id]?.()}
+function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>restoreSnapshot(undoStack,redoStack),redo:()=>restoreSnapshot(redoStack,undoStack),settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu(),zen:()=>zenSet()};map[id]?.()}
 const CODE_KEYS={Comma:',',Period:'.',Slash:'/',Semicolon:';',Quote:"'",BracketLeft:'[',BracketRight:']',Backslash:'\\',Minus:'-',Equal:'=',Backquote:'`',Backspace:'Backspace',Delete:'Delete',Enter:'Enter',NumpadEnter:'Enter',Tab:'Tab',ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',Space:'Space',Escape:'Escape',Home:'Home',End:'End',PageUp:'PageUp',PageDown:'PageDown'};
 function keyName(e){let k=e.key||'';if(/^[a-z]$/i.test(k))return k.toUpperCase();let c=e.code||'';if(CODE_KEYS[c])return CODE_KEYS[c];if(c.startsWith('Key'))return c.slice(3);if(c.startsWith('Digit'))return c.slice(5);if(/^Numpad\d$/.test(c))return c.slice(6);if(/^F\d+$/.test(c))return c;if(k===' ')return 'Space';if(k.length===1)return k.toUpperCase();return k}
 function shortcutFromEvent(e){if(!e||e.isComposing||e.keyCode===229)return null;let parts=[];let primary=IS_MAC?e.metaKey:e.ctrlKey,secondary=IS_MAC?e.ctrlKey:e.metaKey;if(primary)parts.push('Ctrl');if(e.altKey)parts.push('Alt');if(e.shiftKey)parts.push('Shift');if(secondary)parts.push('Meta');let key=keyName(e);if(!key||['Control','Alt','Shift','Meta','AltGraph','OS','Unidentified','Dead','Process'].includes(key))return null;parts.push(key);return parts.join('+')}
@@ -4955,7 +5032,7 @@ function initTouchGestures(){let ws=$('#workspace');ws.addEventListener('pointer
 function initInputModes(){UI.auto=detectInitialMode();applyMode(UI.auto,{force:true})}
 initInputModes();
 
-function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');$$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>{let d=$('#'+b.dataset.close);if(!d)return;if(motionOn())exitEl(d,{dur:MOTION.exit,blur:6,y:8,then:()=>d.close()});else d.close()}});initTouchGestures();renderAll();UI.ready=true;bootStorage();markAnimReady()}
+function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');$$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>{let d=$('#'+b.dataset.close);if(!d)return;if(motionOn())exitEl(d,{dur:MOTION.exit,blur:6,y:8,then:()=>d.close()});else d.close()}});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();renderAll();UI.ready=true;bootStorage();markAnimReady()}
 // ===================== Branch Studio extras: rich text, paste, note clipboard, tooltips, shortcut manager, animations =====================
 // ---------- rich text: invisible private-use markers (old notes contain none, so they read exactly as before) ----------
 const RT={O:'\uE000',C:'\uE001',U:'\uE002'};
@@ -6796,7 +6873,8 @@ document.addEventListener('pointerdown',e=>{let b=e.target.closest&&e.target.clo
 // ---- top "More" (all sizes) and note menu additions ----
 function pxTopMenu(anchor){
   let items=[...PX.topItems.map(f=>typeof f==='function'?f():f).flat().filter(Boolean),{sep:1},
-    cmdItem('documents'),cmdItem('importDoc'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),
+    cmdItem('documents'),cmdItem('importDoc'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},
+    {icon:'zen',label:'Zen mode',hint:prettyShortcut(state.shortcuts.zen||''),run:()=>zenSet()},{sep:1},cmdItem('settings',{label:'Settings'}),
     ...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])];
   openMenu(anchor,items,{title:'More'});
 }
