@@ -4852,9 +4852,10 @@ document.addEventListener('contextmenu',e=>{
     items.unshift({sep:true});
     items.unshift({label:'Add child',run:()=>{doc().selectedId=card.dataset.id;runCommand('addChild')}},{label:'Delete',run:()=>{doc().selectedId=card.dataset.id;runCommand('deleteNode')}});
   }
-  // word context: dictionary
-  let sel=window.getSelection();let word=sel&&sel.toString().trim();
-  if(word&&word.split(/\s+/).length===1){
+  // word context: dictionary. A one-word selection wins; otherwise use the word under the
+  // pointer, because right-clicking a word is the gesture people actually make.
+  let word=wordUnder(e);
+  if(word){
     let def=dictLookup(word);
     if(def)items.unshift({label:'Definition: '+def,run:()=>{}});
   }
@@ -4863,6 +4864,31 @@ document.addEventListener('contextmenu',e=>{
   let x=e.clientX,y=e.clientY;menu.style.left=x+'px';menu.style.top=y+'px';menu.classList.add('open');
   setTimeout(function(){const close=function(ev){if(!menu.contains(ev.target)){menu.classList.remove('open');document.removeEventListener('mousedown',close,true)}};document.addEventListener('mousedown',close,true)},0);
 },true);
+// the single word the gesture is about: an explicit one-word selection, else the word at the
+// pointer, else the word beside the caret. Returns '' when there is no word there.
+function wordUnder(e){
+  let sel=window.getSelection&&window.getSelection(),t=sel&&String(sel).trim();
+  if(t&&t.split(/\s+/).length===1)return t.replace(/[^A-Za-z'-]/g,'');
+  let range=null;
+  try{range=document.caretRangeFromPoint?document.caretRangeFromPoint(e.clientX,e.clientY):null}catch(x){}
+  if(!range&&document.caretPositionFromPoint){
+    try{let cp=document.caretPositionFromPoint(e.clientX,e.clientY);if(cp&&cp.offsetNode)range=document.createRange();if(range){range.setStart(cp.offsetNode,cp.offset);range.setEnd(cp.offsetNode,cp.offset)}}catch(x){}
+  }
+  if(!range){
+    let a=document.activeElement;
+    if(a&&a.closest&&a.closest('.note-editor,.read-editor')){range=document.createRange();let ok=false;
+      try{let s2=getSelection();if(s2&&s2.rangeCount){range=s2.getRangeAt(0).cloneRange();ok=true}}catch(x){}
+      if(!ok){try{range.selectNodeContents(a);range.collapse(false)}catch(x){return ''}}}
+  }
+  if(!range)return '';
+  let node=range.startContainer;
+  if(node&&node.nodeType!==3)node=node.parentNode;
+  if(!node||node.nodeType!==3)return '';
+  let txt=node.nodeValue||'',at=Math.min(range.startOffset||0,txt.length),word='';
+  if(txt[at]&&!/\s/.test(txt[at])){let a=at;while(a>0&&!/\s/.test(txt[a-1]))a--;let b=at;while(b<txt.length&&!/\s/.test(txt[b]))b++;word=txt.slice(a,b)}
+  else{let a=at;while(a>0&&/\s/.test(txt[a-1]))a--;let b=a;while(b<txt.length&&!/\s/.test(txt[b]))b++;word=txt.slice(a,b)}
+  return word.replace(/[^A-Za-z'-]/g,'');
+}
 const COMMANDS={
  newDocument:{label:'New document',icon:'file'},addTopic:{label:'New main topic',icon:'topic'},addSibling:{label:'Add sibling',icon:'plus'},addChild:{label:'Add child',icon:'child'},deleteNode:{label:'Delete note',icon:'trash'},moveUp:{label:'Move note up',icon:'arrowUp'},moveDown:{label:'Move note down',icon:'arrowDown'},indent:{label:'Indent under previous note',icon:'indent'},outdent:{label:'Outdent note',icon:'outdent'},image:{label:'Add image',icon:'photo'},math:{label:'Insert math',icon:'math'},
  navUp:{label:'Navigate up',icon:'arrowUp'},navDown:{label:'Navigate down',icon:'arrowDown'},navParent:{label:'Navigate to parent',icon:'outdent'},navChild:{label:'Navigate to child',icon:'indent'},branchView:{label:'Branch view',icon:'branch'},splitView:{label:'Split view',icon:'columns'},readView:{label:'Reading view',icon:'book'},undo:{label:'Undo',icon:'undo'},redo:{label:'Redo',icon:'redo'},settings:{label:'Settings',icon:'settings'},documents:{label:'Documents',icon:'files'},exportMd:{label:'Export Markdown',icon:'download'},shortcutsHelp:{label:'Show keyboard shortcuts',icon:'keyboard'},
