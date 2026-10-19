@@ -4588,17 +4588,22 @@ html .read-pane .read-block:not(.depth-0) .read-editor,html .read-pane .read-nod
 html.zen .topbar,html.zen .contextbar,html.zen .statusbar,html.zen .phone-bar,html.zen .split-tabs-bar,html.zen #writeBar,html.zen .wb-dock,html.zen .restore-chip{display:none!important}
 html.zen .app{display:block!important;grid-template-rows:none!important;height:100%!important}
 /* zen has exactly ONE scroll container: the workspace. Everything inside it grows. */
-html.zen #workspace{height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
+html.zen #workspace{height:100%!important;overflow-y:auto!important;overflow-x:auto!important;overscroll-behavior:contain}
 html.zen .workspace{display:block!important}
 /* split zen keeps ONE surface. renderWorkspace() draws both panes in split mode; the tabs bar
    only exists on phone, so without this a desktop split shows the whole document twice, stacked
    in the one scroller. Zen is the writing surface, so the branch pane stays and reading goes. */
 html.zen .workspace.split:not(.split-tabs) .read-pane{display:none!important}
+/* Zen is a full-screen writing surface, not a document reader. The outliner already lays a
+   branch's children out to the RIGHT (.columns is a horizontal row, .column and .group are
+   vertical stacks), which is exactly the writing shape wanted here. An earlier version
+   flattened .columns/.column/.group to block, which stacked every branch vertically and made
+   children impossible to place to the right. So zen only widens the measure and drops the
+   chrome - it deliberately does not touch the layout primitives. */
 html.zen .branch-pane{width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;flex:none!important;overflow:visible!important}
-html.zen .columns{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:9vh 24px 45vh!important;min-height:0!important}
-html.zen .column{display:block!important;width:auto!important;min-width:0!important;max-width:var(--zen-measure,74ch)!important;margin:0 auto!important}
-html.zen .column:not(:first-child){margin-top:0!important}
-html.zen .group{display:block!important;width:auto!important}
+html.zen .columns{width:max-content!important;min-width:100%!important;max-width:none!important;
+  padding:9vh 4vw 45vh!important;min-height:0!important}
+html.zen .column{width:var(--zen-col,34ch)!important;min-width:var(--zen-col,34ch)!important;max-width:var(--zen-col,34ch)!important}
 html.zen .grip{display:none!important}
 /* hiding the grip would otherwise let the body auto-place into its 20px grid column */
 html.zen .note{grid-template-columns:1fr!important}
@@ -4699,32 +4704,53 @@ const DEFAULT_BEHAVIOR={showAddButtons:false,showFeedback:true,shortcutsEnabled:
 // an optional bandpass filter sweep, light saturation for analogue warmth, and per-key jitter
 // so a run of keystrokes never sounds like a machine gun.
 const SOUND_THEMES={
+ // The two voices the operator actually asked for, first in the list so they are the ones
+ // picked by default. "Typing" is the literal thing — a mechanical keyboard under the fingers:
+ // a hard bright transient (the switch closing) plus a short low resonance (the board's thock).
+ // Without the transient it is a beep; without the resonance it is a tick. Both are jittered
+ // per keystroke and eased down across a burst, which is what real typing sounds like.
+ // "Sci-fi" is the film-UI voice: a soft sine blip sweeping upward, a glassy partial, and a
+ // short feedback delay for space. Calm and synthetic rather than mechanical.
+ typing:{label:'Typing',tick:{wave:'triangle',f0:1500,f1:900,decay:.045,gain:.30,attack:.0008,noise:.85,noiseFreq:3400,noiseDecay:.016,exp:3.2,body:{wave:'sine',freq:190,gain:.30,decay:.075},sat:.22},
+  del:{wave:'sine',f0:420,f1:230,decay:.075,gain:.26,attack:.003,noise:.30,noiseFreq:900,noiseDecay:.045,body:{wave:'sine',freq:120,gain:.14,decay:.09}},
+  pop:{wave:'triangle',f0:520,f1:900,decay:.20,gain:.46,attack:.002,noise:.30,noiseFreq:2000,noiseDecay:.05,body:{wave:'sine',freq:200,gain:.22,decay:.28},sat:.15},
+  move:{wave:'sine',f0:620,f1:300,decay:.17,gain:.36,attack:.003,noise:.55,noiseFreq:1100,noiseDecay:.13,body:{wave:'sine',freq:180,gain:.14,decay:.20},sat:.12}},
+ scifi:{label:'Sci-fi',tick:{wave:'sine',f0:1250,f1:2100,decay:.075,gain:.24,attack:.001,noise:.10,noiseFreq:2600,noiseDecay:.035,body:{wave:'sine',freq:625,gain:.05,decay:.10},sat:.10,drift:.04,reverb:.14},
+  del:{wave:'sine',f0:900,f1:420,decay:.12,gain:.20,attack:.003,noise:.10,body:{wave:'sine',freq:300,gain:.06,decay:.14},sat:.08,reverb:.10},
+  pop:{wave:'sine',f0:440,f1:880,decay:.32,gain:.38,attack:.002,noise:.08,body:{wave:'sine',freq:220,gain:.10,decay:.42},sat:.06,reverb:.18},
+  move:{wave:'sine',f0:660,f1:330,decay:.26,gain:.28,attack:.003,noise:.25,noiseFreq:1320,noiseDecay:.19,filter:{type:'bandpass',freq:1320,Q:2.6,sweep:640},body:{wave:'sine',freq:330,gain:.08,decay:.32},sat:.06,reverb:.12}},
  soft:{label:'Soft',tick:{wave:'sine',f0:1760,f1:1056,decay:.04,gain:.22,attack:.002,noise:.22,noiseFreq:3520,noiseDecay:.022,body:{wave:'sine',freq:440,gain:.07,decay:.06},sat:.08},
+  del:{wave:'sine',f0:700,f1:420,decay:.07,gain:.16,attack:.003,body:{wave:'sine',freq:200,gain:.05,decay:.08}},
   pop:{wave:'triangle',f0:620,f1:930,decay:.24,gain:.46,attack:.003,noise:.12,body:{wave:'sine',freq:330,gain:.14,decay:.30},sat:.06},
   move:{wave:'sine',f0:560,f1:300,decay:.18,gain:.36,attack:.004,noise:.30,noiseFreq:1120,noiseDecay:.12,body:{wave:'sine',freq:280,gain:.10,decay:.22},sat:.06}},
  crisp:{label:'Crisp',tick:{wave:'square',f0:2240,f1:1344,decay:.018,gain:.14,attack:.001,noise:.45,noiseFreq:4480,noiseDecay:.010,filter:{type:'highpass',freq:1800,Q:1.2},sat:.12},
+  del:{wave:'sine',f0:520,f1:260,decay:.045,gain:.18,attack:.002,noise:.35,noiseFreq:1400,noiseDecay:.02},
   pop:{wave:'square',f0:760,f1:1140,decay:.15,gain:.34,attack:.002,noise:.25,body:{wave:'square',freq:380,gain:.10,decay:.18},sat:.10},
   move:{wave:'triangle',f0:700,f1:360,decay:.11,gain:.34,attack:.002,noise:.45,noiseFreq:1400,noiseDecay:.08,filter:{type:'bandpass',freq:1400,Q:2,sweep:700},sat:.10}},
  deep:{label:'Deep',tick:{wave:'sine',f0:900,f1:540,decay:.055,gain:.26,attack:.003,noise:.12,body:{wave:'sine',freq:220,gain:.16,decay:.09},sat:.25},
+  del:{wave:'sine',f0:300,f1:160,decay:.10,gain:.24,attack:.004,body:{wave:'sine',freq:90,gain:.14,decay:.12},sat:.20},
   pop:{wave:'sine',f0:330,f1:500,decay:.36,gain:.50,attack:.004,noise:.10,body:{wave:'sine',freq:165,gain:.22,decay:.45},sat:.20},
   move:{wave:'sine',f0:320,f1:170,decay:.26,gain:.50,attack:.005,noise:.18,body:{wave:'sine',freq:160,gain:.20,decay:.30},sat:.18}},
  glass:{label:'Glass',tick:{wave:'triangle',f0:2600,f1:1560,decay:.06,gain:.16,attack:.002,noise:.18,body:{wave:'sine',freq:660,gain:.05,decay:.08},sat:.05},
+  del:{wave:'triangle',f0:1100,f1:600,decay:.08,gain:.15,attack:.003,body:{wave:'sine',freq:330,gain:.05,decay:.10}},
   pop:{wave:'triangle',f0:880,f1:1320,decay:.42,gain:.28,attack:.003,noise:.12,body:{wave:'triangle',freq:440,gain:.09,decay:.50},sat:.04},
   move:{wave:'triangle',f0:940,f1:540,decay:.22,gain:.26,attack:.003,noise:.22,noiseFreq:1880,noiseDecay:.15,body:{wave:'sine',freq:470,gain:.07,decay:.25},sat:.04}},
- jarvis:{label:'Jarvis',tick:{wave:'sine',f0:1500,f1:2250,decay:.07,gain:.18,attack:.001,noise:.12,noiseFreq:3000,noiseDecay:.04,body:{wave:'sine',freq:750,gain:.04,decay:.10},sat:.12,drift:.03,reverb:.12},
-  pop:{wave:'sine',f0:440,f1:880,decay:.30,gain:.36,attack:.002,noise:.08,body:{wave:'sine',freq:220,gain:.10,decay:.40},sat:.08,reverb:.15},
-  move:{wave:'sine',f0:660,f1:330,decay:.25,gain:.26,attack:.003,noise:.22,noiseFreq:1320,noiseDecay:.18,filter:{type:'bandpass',freq:1320,Q:2.5,sweep:660},body:{wave:'sine',freq:330,gain:.08,decay:.30},sat:.08,reverb:.10}},
  mechanical:{label:'Mechanical',tick:{wave:'square',f0:1200,f1:720,decay:.03,gain:.18,attack:.0005,noise:.55,noiseFreq:2400,noiseDecay:.012,body:{wave:'sine',freq:180,gain:.22,decay:.06},sat:.35},
+  del:{wave:'sine',f0:340,f1:170,decay:.085,gain:.22,attack:.003,noise:.45,noiseFreq:900,noiseDecay:.04,body:{wave:'sine',freq:110,gain:.16,decay:.10},sat:.25},
   pop:{wave:'square',f0:480,f1:720,decay:.18,gain:.40,attack:.001,noise:.30,body:{wave:'sine',freq:240,gain:.18,decay:.25},sat:.25},
   move:{wave:'triangle',f0:400,f1:200,decay:.14,gain:.36,attack:.002,noise:.50,noiseFreq:800,noiseDecay:.10,body:{wave:'sine',freq:200,gain:.16,decay:.18},sat:.30}},
  typewriter:{label:'Typewriter',tick:{wave:'square',f0:3000,f1:1800,decay:.015,gain:.24,attack:.0003,noise:.65,noiseFreq:6000,noiseDecay:.008,body:{wave:'sine',freq:300,gain:.06,decay:.04},sat:.15},
+  del:{wave:'sine',f0:600,f1:300,decay:.05,gain:.20,attack:.002,noise:.40,noiseFreq:1800,noiseDecay:.025},
   pop:{wave:'triangle',f0:520,f1:780,decay:.25,gain:.46,attack:.002,noise:.18,body:{wave:'sine',freq:260,gain:.14,decay:.30},sat:.10},
   move:{wave:'sawtooth',f0:200,f1:100,decay:.12,gain:.32,attack:.003,noise:.38,noiseFreq:400,noiseDecay:.08,body:{wave:'sine',freq:100,gain:.18,decay:.15},sat:.18}}
 };
-const DEFAULT_SOUND={enabled:false,volume:.5,theme:'mechanical',typing:true,creation:true,movement:true};
+// A dedicated deletion cue: a backspace should not sound like a keystroke. Short, dull,
+// lower than the typing tick, so the ear can tell them apart without looking.
+const DEFAULT_SOUND={enabled:true,volume:.5,theme:'typing',typing:true,deletion:true,creation:true,movement:true};
 const SOUND_TYPING_GAP=26; // ms — faster than this and ticks merge into one
+const SOUND_DEL_GAP=40;   // ms — a backspace can be held, but not into a buzz
 const SOUND={
- ctx:null,master:null,lastTick:0,counts:{typing:0,creation:0,movement:0},throttled:0,satCache:{},
+ ctx:null,master:null,lastTick:0,lastDel:0,counts:{typing:0,deletion:0,creation:0,movement:0},throttled:0,satCache:{},burst:0,
  get s(){return state.sound},
  get voice(){return SOUND_THEMES[this.s.theme]||SOUND_THEMES.mechanical},
  ensure(){ // called only from a sound request, i.e. after a user gesture
@@ -4767,25 +4793,40 @@ const SOUND={
  emit(kind,skipThrottle){ // the master switch and the class switch gate every cue, previews included
   if(!this.s.enabled||!this.s[kind])return false;
   if(kind==='typing'&&!skipThrottle){let now=performance.now();if(now-this.lastTick<SOUND_TYPING_GAP){this.throttled++;return false}this.lastTick=now}
+  else if(kind==='deletion'&&!skipThrottle){let now=performance.now();if(now-this.lastDel<SOUND_DEL_GAP){this.throttled++;return false}this.lastDel=now}
   let ctx=this.ensure();if(!ctx)return false;
   if(ctx.state==='suspended')ctx.resume().catch(()=>{});
   this.counts[kind]=(this.counts[kind]||0)+1;
   try{
    const v=this.voice;
-   if(kind==='typing'){let t=v.tick,j=t.jitter||.07,f=t.f0*(1+Math.random()*j-j/2);this.tone({...t,f0:f,f1:f*(t.f1/t.f0)});if(t.noise)this.noise({freq:t.noiseFreq||f*2,f1:t.noiseFreq?t.noiseFreq*.7:f*1.3,decay:t.noiseDecay||t.decay*.7,gain:t.gain*(t.noise||.3),filterType:t.noiseFilter||'bandpass',Q:t.noiseQ||1.2,reverb:t.reverb})}
+   if(kind==='typing'){
+    // ease each keystroke down through a burst, and let the burst reset after a pause — this is
+    // what stops fast typing sounding like a machine gun without thinning the sound out
+    let now=performance.now();
+    if(skipThrottle||now-this.lastTick>340)this.burst=0;
+    let ease=1-.16*Math.min(4,this.burst);this.burst++;
+    let t=v.tick,j=t.jitter||.09,f=t.f0*(1+Math.random()*j-j/2);
+    this.tone({...t,f0:f,f1:f*(t.f1/t.f0),gain:t.gain*ease});
+    if(t.noise)this.noise({freq:t.noiseFreq||f*2,f1:t.noiseFreq?t.noiseFreq*.7:f*1.3,decay:t.noiseDecay||t.decay*.7,gain:t.gain*(t.noise||.3)*ease,exp:t.exp,reverb:t.reverb})}
+   else if(kind==='deletion'){
+    // a backspace is a dull, low, short thud — deliberately nothing like the typing tick
+    let d=v.del||{wave:'sine',f0:420,f1:230,decay:.075,gain:.26,attack:.003,noise:.3,body:{wave:'sine',freq:120,gain:.14,decay:.09}};
+    this.tone(d);
+    if(d.noise)this.noise({freq:d.noiseFreq||900,f1:(d.noiseFreq||900)*.6,decay:d.noiseDecay||.045,gain:d.gain*(d.noise||.3),reverb:d.reverb})}
    else if(kind==='creation'){let p=v.pop;this.tone({...p});this.tone({...p,f0:p.f1,f1:p.f1*1.5,gain:p.gain*.45,decay:p.decay*.6,body:p.body?{...p.body,gain:(p.body.gain||.15)*.6,decay:(p.body.decay||p.decay)*.6}:undefined,reverb:p.reverb})}
    else{let m=v.move;if(m.noise)this.noise({freq:m.noiseFreq||m.f0,f1:m.noiseFreq?m.noiseFreq*.5:m.f1,decay:m.noiseDecay||m.decay,gain:m.gain*(m.noise||.4),filterType:m.filterType||'bandpass',Q:m.filterQ||1.5,reverb:m.reverb});this.tone({...m,f0:m.f0*1.6,f1:m.f1,gain:m.gain*.4,reverb:m.reverb})}
   }catch(e){}
   return true;
  },
  typing(){return this.emit('typing')},
+ deletion(){return this.emit('deletion')},
  creation(){return this.emit('creation')},
  movement(){return this.emit('movement')},
  preview(kind){return this.emit(kind,true)},
  setVolume(v){let n=Number(v);this.s.volume=Number.isFinite(n)?Math.max(0,Math.min(1,n)):DEFAULT_SOUND.volume;if(this.master)this.master.gain.value=this.s.volume;return this.s.volume},
  setTheme(id){if(SOUND_THEMES[id])this.s.theme=id;return this.s.theme}
 };
-function soundProbe(){return {enabled:!!SOUND.s.enabled,volume:SOUND.s.volume,theme:SOUND.s.theme,typing:!!SOUND.s.typing,creation:!!SOUND.s.creation,movement:!!SOUND.s.movement,hasCtx:!!SOUND.ctx,ctxState:SOUND.ctx?SOUND.ctx.state:null,counts:{...SOUND.counts},throttled:SOUND.throttled}}
+function soundProbe(){return {enabled:!!SOUND.s.enabled,volume:SOUND.s.volume,theme:SOUND.s.theme,typing:!!SOUND.s.typing,deletion:!!SOUND.s.deletion,creation:!!SOUND.s.creation,movement:!!SOUND.s.movement,hasCtx:!!SOUND.ctx,ctxState:SOUND.ctx?SOUND.ctx.state:null,counts:{...SOUND.counts},throttled:SOUND.throttled}}
 
 // ---- offline dictionary: compact subset, lazily inflated ----
 // A small bundled word list (word -> short definition). Lazily inflated on first lookup.
@@ -4891,7 +4932,7 @@ const IDB_NAME='branch-studio',IDB_STORE='kv';
 const Store={ls:false,idb:null,idbTried:false,status:'pending',lastError:'',dirtySinceLoad:false,lastSavedJSON:'',backupNeeded:false};
 Store.ls=(()=>{try{let k='__branch_studio_probe__';localStorage.setItem(k,'1');let ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}})();
 let state=loadState();let undoStack=[],redoStack=[],draggedId=null,dropTarget=null,settingsSection='appearance',capturingCommand=null,toolbarDrag=null,saveTimer=null,lastTextSnap={id:null,time:0};
-function normalizeSound(raw){let d=deep(DEFAULT_SOUND);if(!raw||typeof raw!=='object')return d;d.enabled=!!raw.enabled;for(let k of ['typing','creation','movement'])if(raw[k]!==undefined)d[k]=!!raw[k];let v=Number(raw.volume);if(Number.isFinite(v))d.volume=Math.max(0,Math.min(1,v));if(SOUND_THEMES[raw.theme])d.theme=raw.theme;return d}
+function normalizeSound(raw){let d=deep(DEFAULT_SOUND);if(!raw||typeof raw!=='object')return d;d.enabled=!!raw.enabled;for(let k of ['typing','deletion','creation','movement'])if(raw[k]!==undefined)d[k]=!!raw[k];let v=Number(raw.volume);if(Number.isFinite(v))d.volume=Math.max(0,Math.min(1,v));if(SOUND_THEMES[raw.theme])d.theme=raw.theme;return d}
 // v6 turned "Ctrl" into the literal Control key on Apple. A chord someone chose by hand keeps the
 // *physical* key it was on, so its tokens swap rather than its meaning silently moving.
 function flipShortcutMods(s){let n=normalizeShortcut(s);if(!n)return s;let parts=n.split('+'),key=parts.pop();return normalizeShortcut(parts.map(p=>p==='Ctrl'?'Meta':p==='Meta'?'Ctrl':p).concat(key).join('+'))}
@@ -4928,7 +4969,7 @@ function focusNodeEditor(id,atEnd=false){let d=doc(),sel=d.mode==='read'?`[data-
 function selectNode(id,{focus=false}={}){if(!locate(id))return;doc().selectedId=id;doc().updatedAt=Date.now();saveState();renderWorkspace();renderContext();if(focus)requestAnimationFrame(()=>focusNodeEditor(id))}
 function pathIds(){let r=locate(doc().selectedId);return r?r.path.map(n=>n.id):[]}
 function isRelated(n,path){return n.children?.some(c=>path.includes(c.id))}
-function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];if(ZEN.on){let flat=flatten();return [{parentId:null,nodes:flat.map(f=>f.node),depthOf:new Map(flat.map(f=>[f.node.id,f.depth]))}]}let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
+function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
 function applyChrome(){let b=state.behavior;document.querySelector('.topbar').style.display=b.showTopbar?'flex':'none';document.querySelector('.contextbar').style.display=b.showContextbar?'flex':'none';document.querySelector('.statusbar').style.display=b.showStatusbar?'flex':'none';let chip=$('#restoreChrome');let hidden=!b.showTopbar||!b.showContextbar||!b.showStatusbar;chip.classList.toggle('show',hidden);chip.innerHTML=icon('reset')+'Restore interface'}
 function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
 function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
@@ -5028,9 +5069,9 @@ function writingHTML(text=''){return richToHTML(String(text??''))}
 function serializeEditor(ed){function walk(node){if(node.nodeType===3)return node.nodeValue||'';if(node.nodeName==='MATH-FIELD'){let delimiter=node.dataset.display==='true'?'$$':'$';let value=node.value??node.textContent??'';return delimiter+value+delimiter}if(node.nodeName==='BR')return '\n';let text=Array.from(node.childNodes||[]).map(walk).join('');if(node!==ed){let tok=richTokenFor(node);if(tok)return text||tok.keepEmpty?tok.open+text+RT.C:''}return node!==ed&&['DIV','P'].includes(node.nodeName)?'\n'+text:text}return walk(ed).replace(/\u200B/g,'').replace(/\u00a0/g,' ')}
 
 function placeCaretAround(node,after){let ed=node.closest('.note-editor,.read-editor');if(!ed)return;ed.focus({preventScroll:true});try{let r=document.createRange();if(after){let nx=node.nextSibling;if(nx&&nx.nodeType===3){r.setStart(nx,Math.min(nx.nodeValue.length,nx.nodeValue.startsWith('\u200B')?1:0))}else r.setStartAfter(node)}else r.setStartBefore(node);r.collapse(true);let s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}}
-function bindMath(root=document){root.querySelectorAll('math-field').forEach(mf=>{if(mf.dataset.bound)return;mf.dataset.bound='1';mf.removeAttribute('contenteditable');try{mf.mathVirtualKeyboardPolicy=mathKbPolicy();mf.smartFence=true}catch{};let editor=mf.closest('.note-editor,.read-editor');mf.addEventListener('move-out',e=>{e.preventDefault();let wrap=mf.closest('.math-container')||mf;let dir=e.detail?.direction;placeCaretAround(wrap,dir!=='backward'&&dir!=='upward')});mf.addEventListener('input',e=>{e.stopPropagation();if(!editor)return;let id=editor.dataset.editId||editor.dataset.readEdit,r=locate(id);if(!r)return;let next=serializeEditor(editor);if(next===r.node.text)return;if(typedChar(e))SOUND.typing();textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();if(doc().mode==='split'){let other=document.querySelector(editor.dataset.editId?`[data-read-edit="${id}"]`:`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}});mf.addEventListener('focus',()=>{let id=editor?.dataset.editId||editor?.dataset.readEdit;if(id){doc().selectedId=id;renderContext();renderStatus()}});mf.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();mf.blur();editor?.focus()}})})}
+function bindMath(root=document){root.querySelectorAll('math-field').forEach(mf=>{if(mf.dataset.bound)return;mf.dataset.bound='1';mf.removeAttribute('contenteditable');try{mf.mathVirtualKeyboardPolicy=mathKbPolicy();mf.smartFence=true}catch{};let editor=mf.closest('.note-editor,.read-editor');mf.addEventListener('move-out',e=>{e.preventDefault();let wrap=mf.closest('.math-container')||mf;let dir=e.detail?.direction;placeCaretAround(wrap,dir!=='backward'&&dir!=='upward')});mf.addEventListener('input',e=>{e.stopPropagation();if(!editor)return;let id=editor.dataset.editId||editor.dataset.readEdit,r=locate(id);if(!r)return;let next=serializeEditor(editor);if(next===r.node.text)return;if(SOUND.s.enabled){let ek=editKind(e);if(ek==='delete')SOUND.deletion();else if(typedChar(e))SOUND.typing();}textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();if(doc().mode==='split'){let other=document.querySelector(editor.dataset.editId?`[data-read-edit="${id}"]`:`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}});mf.addEventListener('focus',()=>{let id=editor?.dataset.editId||editor?.dataset.readEdit;if(id){doc().selectedId=id;renderContext();renderStatus()}});mf.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();mf.blur();editor?.focus()}})})}
 function textSnapshot(id){let now=Date.now();if(lastTextSnap.id!==id||now-lastTextSnap.time>1500)snapshot();lastTextSnap={id,time:now}}
-function bindEditors(root,reading=false){root.querySelectorAll(reading?'[data-read-edit]':'[data-edit-id]').forEach(ed=>{let id=reading?ed.dataset.readEdit:ed.dataset.editId;ed.onfocus=()=>{doc().selectedId=id;renderContext();renderStatus();const mark=()=>{root.querySelectorAll('.note,.read-node,.read-block').forEach(n=>n.classList.toggle('active',n.dataset.id===id));if(reading)root.querySelectorAll('.read-node,.read-block').forEach(n=>n.classList.toggle('selected',n.dataset.readId===id))};if(UI.input&&UI.input!=='pointer')setTimeout(mark,30);else mark()};ed.oninput=e=>{if(e&&e.target&&e.target!==ed&&e.target.nodeName==='MATH-FIELD')return;let r=locate(id);if(!r)return;let next=serializeEditor(ed);if(ed.innerHTML==='<br>'){ed.innerHTML='';next=''}if(next===r.node.text)return;if(typedChar(e))SOUND.typing();textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();renderHeader();renderContext();if(doc().mode==='split'){if(reading){let other=document.querySelector(`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}else{let other=document.querySelector(`[data-read-edit="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}}zenTypewriter(ed)};ed.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();document.querySelector('.branch-pane,.read-pane')?.focus?.()}}});bindMath(root)}
+function bindEditors(root,reading=false){root.querySelectorAll(reading?'[data-read-edit]':'[data-edit-id]').forEach(ed=>{let id=reading?ed.dataset.readEdit:ed.dataset.editId;ed.onfocus=()=>{doc().selectedId=id;renderContext();renderStatus();const mark=()=>{root.querySelectorAll('.note,.read-node,.read-block').forEach(n=>n.classList.toggle('active',n.dataset.id===id));if(reading)root.querySelectorAll('.read-node,.read-block').forEach(n=>n.classList.toggle('selected',n.dataset.readId===id))};if(UI.input&&UI.input!=='pointer')setTimeout(mark,30);else mark()};ed.oninput=e=>{if(e&&e.target&&e.target!==ed&&e.target.nodeName==='MATH-FIELD')return;let r=locate(id);if(!r)return;let next=serializeEditor(ed);if(ed.innerHTML==='<br>'){ed.innerHTML='';next=''}if(next===r.node.text)return;if(SOUND.s.enabled){let ek=editKind(e);if(ek==='delete')SOUND.deletion();else if(typedChar(e))SOUND.typing();}textSnapshot(id);r.node.text=next;doc().updatedAt=Date.now();saveState();renderHeader();renderContext();if(doc().mode==='split'){if(reading){let other=document.querySelector(`[data-edit-id="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}else{let other=document.querySelector(`[data-read-edit="${id}"]`);if(other&&document.activeElement!==other)other.innerHTML=writingHTML(r.node.text)}}zenTypewriter(ed)};ed.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();ed.blur();document.querySelector('.branch-pane,.read-pane')?.focus?.()}}});bindMath(root)}
 function bindNoteTools(root){root.querySelectorAll('.note').forEach(card=>{card.onclick=e=>{if(card.contains(document.activeElement)&&document.activeElement.closest('.note-editor'))return;if(!e.target.closest('button,[contenteditable],.grip,.image-editor'))selectNode(card.dataset.id)};card.querySelectorAll('[data-mini]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;runCommand(b.dataset.mini)}});card.querySelectorAll('[data-note-more]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;openNoteMenu(b)}});card.querySelectorAll('[data-swipe-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();card.classList.remove('swiped');doc().selectedId=card.dataset.id;runCommand('deleteNode')});card.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{e.stopPropagation();let r=locate(card.dataset.id);if(!r)return;snapshot();r.node.images.splice(Number(b.dataset.removeImage),1);doc().updatedAt=Date.now();saveState();renderAll();toast('Image removed')})})}
 function clearDrop(){$$('.drop-before,.drop-after').forEach(x=>x.classList.remove('drop-before','drop-after'));dropTarget=null}
 function bindDrag(root){root.querySelectorAll('[data-grip]').forEach(g=>{g.ondragstart=e=>{draggedId=g.dataset.grip;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggedId);setTimeout(()=>g.closest('.note')?.classList.add('dragging'),0)};g.ondragend=()=>{$$('.dragging').forEach(x=>x.classList.remove('dragging'));draggedId=null;clearDrop()}});root.querySelectorAll('.note').forEach(card=>{card.ondragover=e=>{if(!draggedId||card.dataset.id===draggedId)return;e.preventDefault();let before=e.clientY<card.getBoundingClientRect().top+card.offsetHeight/2;clearDrop();card.classList.add(before?'drop-before':'drop-after');dropTarget={targetId:card.dataset.id,before}};card.ondrop=e=>{e.preventDefault();if(!draggedId||!dropTarget)return;moveByDrop(draggedId,dropTarget.targetId,dropTarget.before)}})}
@@ -5072,6 +5113,10 @@ function zenSet(on){
     // timer otherwise re-enters, re-renders and shows the Leave-zen chip while ZEN.on
     // is false — after which Escape does nothing and the chip is a dead click.
     clearTimeout(ZEN.entry);
+    // Real fullscreen: CSS alone cannot hide the browser's own chrome, which is exactly what
+    // "full screen" means here. It must be requested from the user gesture (the key press or
+    // the click), so it goes out before the entry animation starts, and is best-effort.
+    try{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.({navigationUI:'hide'}).catch(()=>{})}catch(e){}
     ZEN.entry=setTimeout(()=>{
       ZEN.entry=0;
       applyZen();
@@ -5082,6 +5127,7 @@ function zenSet(on){
   }else{
     clearTimeout(ZEN.entry);ZEN.entry=0;
     clearTimeout(ZEN.timer);
+    try{if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})}catch(e){}
     const w=$('#workspace');
     const restore=()=>{h.classList.remove('zen');renderAll();
       chrome.forEach(c=>enterEl(c,{dur:200,blur:6,y:-6}));
@@ -5261,15 +5307,17 @@ function toggleButton(key){return `<button class="toggle ${state.behavior[key]?'
 function renderBehaviorSettings(){let s=$('[data-section="behavior"]');if(!s)return;s.innerHTML=`<h3>Behavior</h3><p>Control editing and feedback without changing content.</p><div class="setting-group">${row('Input mode',`Auto picks a layout from how you use the app: Touch, Keyboard (minimal mode for a tablet with a hardware keyboard) or Mouse. Now: ${inputModeLabel(UI.input)}${overrideMode()?'':' (auto)'}.`,`<select class="text-input" data-input-mode aria-label="Input mode">${[['auto','Auto'],['touch','Touch'],['touch-kb','Keyboard'],['pointer','Mouse']].map(([v,l])=>`<option value="${v}" ${(state.behavior.inputMode||'auto')===v?'selected':''}>${l}</option>`).join('')}</select>`)}${row('Keyboard shortcuts','Enable the command shortcuts configured in Keyboard.',toggleButton('shortcutsEnabled'))}${row('Column add buttons','Show permanent “add” controls at the bottom of branch columns.',toggleButton('showAddButtons'))}${row('Action feedback','Show compact confirmation messages after structural actions.',toggleButton('showFeedback'))}${row('Confirm deletions','Ask before deleting a note that has child notes. Any delete can be undone from the toast.',toggleButton('confirmDelete'))}${row('Focus new notes','Immediately place the cursor in a newly created note.',toggleButton('focusNewNote'))}${row('Nested reading layout','Indent child notes in Reading and Split view instead of keeping everything on one straight alignment.',toggleButton('nestedReading'))}</div><div class="setting-group">${row('Top bar','Show document, view and utility controls.',toggleButton('showTopbar'))}${row('Context bar','Show breadcrumbs and note actions.',toggleButton('showContextbar'))}${row('Status bar','Show mode, note count and save state.',toggleButton('showStatusbar'))}</div>`;s.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{let k=b.dataset.toggle;state.behavior[k]=!state.behavior[k];saveState();renderAll();renderSettings()});let sel=s.querySelector('[data-input-mode]');if(sel)sel.onchange=()=>{state.behavior.inputMode=sel.value;saveState();applyMode(UI.auto||detectInitialMode(),{force:true});renderAll();renderSettings()}}
 function storageDescription(){let where=Store.status==='error'?'<strong style="color:#f0a0a0">This browser is blocking storage for this file, so changes are only kept until you close the page.</strong> Export a backup to keep your notes.':'Notes are saved automatically in this browser on this device only. Clearing browser data, private browsing, or opening the file from a different folder or browser can hide them.';return where+' A backup file contains every document and setting, and can be imported on any device.'}
 function typedChar(e){return !(e&&typeof e.inputType==='string'&&e.inputType.indexOf('delete')===0)}
+// 'insert', 'delete' or '' — the editor calls this so a backspace gets its own cue
+function editKind(e){const t=e&&typeof e.inputType==='string'?e.inputType:'';if(t.indexOf('delete')===0)return 'delete';if(t.indexOf('insert')===0||t==='insertFromPaste')return 'insert';return ''}
 function soundToggle(key,label){return `<button class="toggle ${state.sound[key]?'on':''}" data-sound-toggle="${key}" role="switch" aria-checked="${state.sound[key]}" aria-label="${label||key}"><span></span></button>`}
 function soundPreviewBtn(kind,label){return `<button class="icon-btn sound-preview" data-sound-preview="${kind}" ${state.sound.enabled?'':'disabled'} title="${state.sound.enabled?'Preview':'Turn sound on to audition'} ${label} sound" aria-label="Preview ${label} sound">${icon('play')}</button>`}
 function renderSoundSettings(){let s=$('[data-section="sound"]');if(!s)return;let so=state.sound;
- s.innerHTML=`<h3>Sound</h3><p>Short synthesised cues for typing, creating and moving notes. Off until you turn it on — nothing is downloaded, every cue is generated in the app.</p><div class="setting-group">${row('Sound','Play cues while you work. Silent by default.',soundToggle('enabled','Sound cues'))}${row('Volume','Overall loudness of every cue.',`<div style="display:flex;align-items:center;gap:8px"><input type="range" data-sound="volume" value="${Math.round(so.volume*100)}" min="0" max="100" step="5" aria-label="Sound volume"><span style="width:48px;text-align:right;color:var(--muted)" data-sound-value>${Math.round(so.volume*100)}%</span></div>`)}${row('Voice','Timbre shared by every cue.',`<select class="text-input" data-sound="theme" aria-label="Sound voice">${Object.entries(SOUND_THEMES).map(([id,t])=>`<option value="${id}" ${so.theme===id?'selected':''}>${t.label}</option>`).join('')}</select>`)}</div><div class="setting-group">${row('Typing sounds','A soft tick each time a character is added.',`<div class="sound-controls">${soundPreviewBtn('typing','typing')}${soundToggle('typing','Typing sounds')}</div>`)}${row('Creation sounds','A brighter cue when a note is created.',`<div class="sound-controls">${soundPreviewBtn('creation','creation')}${soundToggle('creation','Creation sounds')}</div>`)}${row('Movement sounds','A short sweep when a note moves, indents or outdents.',`<div class="sound-controls">${soundPreviewBtn('movement','movement')}${soundToggle('movement','Movement sounds')}</div>`)}</div><div class="button-row"><button class="secondary" id="soundPreviewAll" ${so.enabled?'':'disabled'}>Preview all cues</button></div>`;
+ s.innerHTML=`<h3>Sound</h3><p>Short synthesised cues for typing, deleting, creating and moving notes. On by default, and nothing is ever downloaded — every cue is generated in the app.</p><div class="setting-group">${row('Sound','Play cues while you work.',soundToggle('enabled','Sound cues'))}${row('Volume','Overall loudness of every cue.',`<div style="display:flex;align-items:center;gap:8px"><input type="range" data-sound="volume" value="${Math.round(so.volume*100)}" min="0" max="100" step="5" aria-label="Sound volume"><span style="width:48px;text-align:right;color:var(--muted)" data-sound-value>${Math.round(so.volume*100)}%</span></div>`)}${row('Voice','Timbre shared by every cue.',`<select class="text-input" data-sound="theme" aria-label="Sound voice">${Object.entries(SOUND_THEMES).map(([id,t])=>`<option value="${id}" ${so.theme===id?'selected':''}>${t.label}</option>`).join('')}</select>`)}</div><div class="setting-group">${row('Typing sounds','A mechanical keystroke each time a character is added.',`<div class="sound-controls">${soundPreviewBtn('typing','typing')}${soundToggle('typing','Typing sounds')}</div>`)}${row('Deletion sounds','A dull, low thud when you backspace or delete — deliberately unlike a keystroke.',`<div class="sound-controls">${soundPreviewBtn('deletion','deletion')}${soundToggle('deletion','Deletion sounds')}</div>`)}${row('Creation sounds','A brighter cue when a note is created.',`<div class="sound-controls">${soundPreviewBtn('creation','creation')}${soundToggle('creation','Creation sounds')}</div>`)}${row('Movement sounds','A short sweep when a note moves, indents or outdents.',`<div class="sound-controls">${soundPreviewBtn('movement','movement')}${soundToggle('movement','Movement sounds')}</div>`)}</div><div class="button-row"><button class="secondary" id="soundPreviewAll" ${so.enabled?'':'disabled'}>Preview all cues</button></div>`;
  s.querySelectorAll('[data-sound-toggle]').forEach(b=>b.onclick=()=>{let k=b.dataset.soundToggle;state.sound[k]=!state.sound[k];saveState();renderSettings()});
  let vol=s.querySelector('[data-sound="volume"]');if(vol)vol.oninput=()=>{let pct=Number(vol.value);SOUND.setVolume(pct/100);let out=s.querySelector('[data-sound-value]');if(out)out.textContent=pct+'%';saveState()};
  let th=s.querySelector('[data-sound="theme"]');if(th)th.onchange=()=>{SOUND.setTheme(th.value);saveState()};
  s.querySelectorAll('[data-sound-preview]').forEach(b=>b.onclick=()=>SOUND.preview(b.dataset.soundPreview));
- $('#soundPreviewAll').onclick=()=>['typing','creation','movement'].forEach((k,i)=>setTimeout(()=>SOUND.preview(k),i*260));
+ $('#soundPreviewAll').onclick=()=>['typing','deletion','creation','movement'].forEach((k,i)=>setTimeout(()=>SOUND.preview(k),i*240));
 }
 function renderDocumentSettings(){let s=$('[data-section="documents"]');if(!s)return;s.innerHTML=`<h3>Documents</h3><p>Documents stay inside the app until you export one as Markdown for Obsidian.</p><div class="setting-group">${row('Current document',doc().title||'Untitled',`<button class="secondary" id="renameCurrent">Rename</button>`)}${row('Documents stored',`${state.documents.length} internal document${state.documents.length===1?'':'s'}.`,`<button class="secondary" id="openDocumentDrawer">Manage</button>`)}</div><div class="button-row"><button class="primary" id="settingsNewDocument">New document</button><button class="secondary" id="settingsDuplicateDocument">Duplicate current</button><button class="secondary" id="settingsExportDocument">Export current .md</button></div><h3 style="margin-top:22px">Backup</h3><p>${storageDescription()}</p><div class="button-row"><button class="primary" id="settingsExportBackup">Export backup (.json)</button><button class="secondary" id="settingsImportBackup">Import backup</button></div>`;$('#settingsExportBackup').onclick=exportBackup;$('#settingsImportBackup').onclick=importBackup;$('#renameCurrent').onclick=()=>renameDocument(doc().id);$('#openDocumentDrawer').onclick=()=>{$('#settingsDialog').close();openDocuments()};$('#settingsNewDocument').onclick=newDocument;$('#settingsDuplicateDocument').onclick=()=>duplicateDocument(doc().id);$('#settingsExportDocument').onclick=exportMarkdown}
 function renderCSSSettings(){let s=$('[data-section="css"]');if(!s)return;s.innerHTML=`<h3>Custom CSS</h3><p>Write or load CSS that overrides the entire prototype. This is kept separate from document content.</p><textarea class="css-editor" id="customCSSText" spellcheck="false" placeholder="/* Example */\n.note-body { border-width: 2px; }">${escapeHTML(state.customCSS||'')}</textarea><div class="button-row"><button class="primary" id="applyCSS">Apply CSS</button><button class="secondary" id="loadCSS">Load .css file</button><button class="secondary" id="downloadCSS">Download CSS</button><button class="secondary" id="clearCSS">Clear</button></div>`;$('#applyCSS').onclick=()=>{state.customCSS=$('#customCSSText').value;applyAppearance();saveState();toast('CSS applied')};$('#loadCSS').onclick=()=>$('#cssFileInput').click();$('#downloadCSS').onclick=()=>downloadFile('branch-studio-custom.css',state.customCSS||'','text/css');$('#clearCSS').onclick=()=>{state.customCSS='';applyAppearance();saveState();renderSettings()}}

@@ -351,13 +351,14 @@ async function run(){
       const S=eval('state');
       const long=[];for(let i=1;i<=14;i++)long.push(mk('Long note '+i));
       const deep3=mk('Deep three');
-      const chain=mk('Deep root',[mk('Deep one',[mk('Deep two',[deep3])])]);
+      const deep2=mk('Deep two',[deep3]);
+      const chain=mk('Deep root',[mk('Deep one',[deep2])]);
       S.documents=[{id:uid('d'),title:'Zen harness',createdAt:Date.now(),updatedAt:Date.now(),mode:'branch',selectedId:null,
         tree:[mk('Top A',[mk('Top A child')]),mk('Top B',long),chain]}];
       S.activeDocumentId=S.documents[0].id;
       eval('doc')().selectedId=deep3.id;
       eval('renderAll')();
-      return JSON.stringify({total:eval('flatten')().length,deep3:deep3.id,offPath:long[6].id});
+      return JSON.stringify({total:eval('flatten')().length,deep3:deep3.id,offPath:long[6].id,onPath:deep2.id,tail:long[long.length-1].id});
     })()`));
   await sleep(900);
   log(zf.total>=18?'pass':'fail',`zen fixture: ${zf.total} notes, caret on a depth-3 note so the path is 4 columns long`);
@@ -373,6 +374,10 @@ async function run(){
       const flatIds=eval('flatten')().map(f=>f.node.id);
       const cs=getComputedStyle(ws);
       const off=notes.find(n=>n.dataset.id===${JSON.stringify(zf.offPath)})||null;
+      // a real parent/child pair: the first child column, and the note its column names as parent
+      const childCol=cols.find(c=>c.classList.contains('child-column'))||null;
+      const pr=(childCol?notes.find(n=>n.dataset.id===childCol.dataset.parent):null)||notes[0]||null;
+      const cr=childCol?childCol.querySelector('.note[data-id]'):null;
       const r=off?off.getBoundingClientRect():null;
       return JSON.stringify({
         zen:document.documentElement.classList.contains('zen'),
@@ -384,15 +389,20 @@ async function run(){
         offPathInDom:!!off,
         offPathH:r?Math.round(r.height):0,
         overflowY:cs.overflowY,
-        range:ws.scrollHeight-ws.clientHeight
+        scrollable:(ws.scrollWidth>ws.clientWidth+4?'both axes':(ws.scrollHeight>ws.clientHeight+4?'vertical only':'no range')),
+        parentX:pr?Math.round(pr.getBoundingClientRect().x):null,
+        childX:cr?Math.round(cr.getBoundingClientRect().x):null,
+        sameRow:!!(pr&&cr&&Math.abs(pr.getBoundingClientRect().y-cr.getBoundingClientRect().y)<40),
+        childRightOfParent:!!(pr&&cr&&cr.getBoundingClientRect().x>pr.getBoundingClientRect().x)
       });
     })()`));
   log(zen.zen?'pass':'fail','zen: html.zen is set on entry');
-  log(zen.columns===1?'pass':'fail',`zen: the stream is one column (columns=${zen.columns}, child-columns=${zen.childColumns})`);
-  log(zen.domCards===zen.docNotes?'pass':'fail',`zen: every note is rendered — ${zen.domCards} cards for ${zen.docNotes} notes`);
-  log(zen.offPathInDom&&zen.offPathH>0?'pass':'fail',`zen: an off-path note is present and laid out (height=${zen.offPathH}px)`);
-  log(zen.orderMatch?'pass':'fail',`zen: stream order equals document order`);
-  log(zen.overflowY!=='visible'&&zen.range>40?'pass':'fail',`zen: #workspace is the one scroll container — overflow-y=${zen.overflowY} range=${zen.range}px`);
+  // Zen used to flatten the whole document into a single column, which made it impossible to
+  // put a child to the right of its parent - the exact complaint it was meant to avoid. It is a
+  // full-screen writing surface now, so it keeps the outliner's shape and is measured on that.
+  log(zen.columns>=2&&zen.childColumns>=1?'pass':'fail',`zen: the outliner keeps its columns, so a child can sit beside its parent (columns=${zen.columns}, child-columns=${zen.childColumns})`);
+  log(zen.childRightOfParent?'pass':'fail',`zen: a child note is laid out to the RIGHT of its parent (parent x=${zen.parentX}, child x=${zen.childX}, same row=${zen.sameRow})`);
+  log(zen.overflowY!=='visible'&&zen.scrollable?'pass':'fail',`zen: #workspace is the one scroll container — overflow-y=${zen.overflowY}, scrollable=${zen.scrollable?'both axes':'vertical only'}`);
 
   const reach=JSON.parse(await w.eval(`
     (function(){
@@ -427,6 +437,11 @@ async function run(){
   log(opa.count>1&&Math.abs(opa.rest-1)<0.02?'pass':'fail',`zen: notes read at full opacity — ${opa.rest} across ${opa.count} notes`);
   log(Math.abs(opa.probe-0.5)<0.02?'pass':'fail',`zen: WAAPI can still write note opacity (probe=${opa.probe}; an author !important would force 1)`);
 
+  // Select the last note of the long run so the caret has a genuinely tall column to follow.
+  // In the old flattened stream every note was in one scrolling list; now only the selected
+  // path's columns exist, so the typewriter is exercised on a column that overflows.
+  await w.eval(`(function(){eval('doc')().selectedId=${JSON.stringify(zf.tail)};eval('renderAll')();return 1})()`);
+  await sleep(600);
   const caret=JSON.parse(await w.eval(`
     (function(){
       const ws=document.querySelector('#workspace');
@@ -545,7 +560,9 @@ async function run(){
   // the paragraph, where Chromium reports an empty rect. caretRect() must resolve that to the
   // caret's own line, not the whole paragraph, or the typewriter misfollows the caret.
   await w.eval(`(function(){
-      const nodes=eval('flatten')();const last=nodes[nodes.length-1].node;
+      // the note being edited, which is the last rendered card - in the outliner layout only
+      // the selected path's columns exist, so the last flattened node may not be on screen at all
+      const last=eval('locate')(eval('doc')().selectedId).node;
       last.text=Array.from({length:200},(_,i)=>'wrap'+i).join(' ');
       eval('renderAll')();
     })()`);
@@ -633,7 +650,14 @@ async function run(){
   await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
   await sleep(300);
 
-  // ---------- sound: synthesised cues, silent by default ----------
+  // ---------- sound: synthesised cues, on by default ----------
+  // Sound is on by default now, so everything above this point has already played cues and
+  // built a context. Reset the engine first so these checks test the guarantees from a known
+  // state rather than inheriting whatever the earlier sections did.
+  await w.eval(`(function(){const S=eval('SOUND');S.ctx=null;S.master=null;S.delay=null;S.fb=null;
+    S.counts={typing:0,deletion:0,creation:0,movement:0};S.throttled=0;S.burst=0;
+    S.s.enabled=false;S.s.volume=.5;S.s.theme='typing';return 1})()`);
+  await w.eval(`(function(){eval('saveState')();return 1})()`);
   await w.eval(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')()})()`);
   await sleep(250);
   await w.eval(`window.__type=function(){const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');if(!e)return false;
@@ -653,12 +677,12 @@ async function run(){
     e.focus();e.textContent=(e.textContent||'')+'x';e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText'}));return true}`);
 
   const s0=await sProbe();
-  log(!!s0&&!s0.enabled&&!s0.hasCtx?'pass':'fail',`sound: silent by default, no AudioContext is built at boot (enabled=${s0&&s0.enabled} context=${s0&&s0.hasCtx})`);
+  log(!!s0&&!s0.enabled&&!s0.hasCtx&&s0.theme==='typing'?'pass':'fail',`sound: the section starts from a known state — off, no context, default voice Typing (enabled=${s0&&s0.enabled} context=${s0&&s0.hasCtx} voice=${s0&&s0.theme})`);
 
   await soft('window.__type()');
   await sleep(90);
   const s1=await sProbe();
-  log(!!s1&&s1.counts.typing===0&&!s1.hasCtx?'pass':'fail',`sound: typing while sound is off plays nothing and still builds no context (typing=${s1&&s1.counts.typing} context=${s1&&s1.hasCtx})`);
+  log(!!s1&&s1.counts.typing===0&&!s1.hasCtx?'pass':'fail',`sound: with sound off, typing plays nothing and still builds no context (typing=${s1&&s1.counts.typing} context=${s1&&s1.hasCtx})`);
 
   await openSound();
   const sec=await je(`
@@ -668,13 +692,13 @@ async function run(){
       return JSON.stringify({tab:!!document.querySelector('[data-settings-tab="sound"]'),
         active:getComputedStyle(s).display!=='none'&&s.getBoundingClientRect().height>0,
         master:!!s.querySelector('[data-sound-toggle="enabled"]'),range:!!s.querySelector('[data-sound="volume"]'),
-        classes:['typing','creation','movement'].filter(k=>s.querySelector('[data-sound-toggle="'+k+'"]')).length,
+        classes:['typing','deletion','creation','movement'].filter(k=>s.querySelector('[data-sound-toggle="'+k+'"]')).length,
         previews:s.querySelectorAll('[data-sound-preview]').length,
         voices:s.querySelector('[data-sound="theme"]')?[...s.querySelector('[data-sound="theme"]').options].map(o=>o.value):[]});
     })()`,{missing:true});
-  log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===3&&sec.previews===3?'pass':'fail',
+  log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===4&&sec.previews===4?'pass':'fail',
     `sound settings: a Sound section carries the master toggle, volume, one control per cue class and a preview each (classes=${sec.classes} previews=${sec.previews})`);
-  log((sec.voices||[]).join(',')==='soft,crisp,deep,glass,jarvis,mechanical,typewriter'?'pass':'fail',`sound settings: seven voices (${(sec.voices||[]).join(', ')})`);
+  log((sec.voices||[]).join(',')==='typing,scifi,soft,crisp,deep,glass,mechanical,typewriter'?'pass':'fail',`sound settings: Typing and Sci-fi lead the list, eight voices (${(sec.voices||[]).join(', ')})`);
 
   const sOffVoice=await je(`
     (function(){const sel=document.querySelector('[data-section="sound"] [data-sound="theme"]');
@@ -685,21 +709,21 @@ async function run(){
   log(sOffVoice.theme==='deep'&&sOffVoice.enabled===false&&sOffVoice.ctx===false&&(sOffVoice.counts||{}).creation===0?'pass':'fail',
     `sound: changing the voice while sound is off neither plays a cue nor seizes a context (voice=${sOffVoice.theme} context=${sOffVoice.ctx} cues=${JSON.stringify(sOffVoice.counts)})`);
 
-  const sDisabled=await je(`
+    const sDisabled=await je(`
     (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
       return JSON.stringify({n:b.length,off:b.filter(x=>x.disabled).length,all:!!all&&all.disabled})})()`,{});
-  log(sDisabled.n===3&&sDisabled.off===3&&sDisabled.all?'pass':'fail',
+  log(sDisabled.n===4&&sDisabled.off===4&&sDisabled.all?'pass':'fail',
     `sound: the audition buttons are inert while sound is off (${sDisabled.off}/${sDisabled.n} previews disabled, preview-all disabled=${sDisabled.all})`);
 
   await clickSound('[data-section="sound"] [data-sound-toggle="enabled"]');
   const s2=await sProbe();
-  log(!!s2&&s2.enabled&&!s2.hasCtx?'pass':'fail',`sound: the UI switch turns sound on without seizing an audio context until something actually plays (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx})`);
+  log(!!s2&&s2.enabled&&!s2.hasCtx?'pass':'fail',`sound: the UI switch turns sound back on without seizing an audio context until something actually plays (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx})`);
 
   const sAudition=await je(`
     (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
       return JSON.stringify({on:b.filter(x=>!x.disabled).length,all:!!all&&!all.disabled})})()`,{});
-  log(sAudition.on===3&&sAudition.all?'pass':'fail',
-    `sound: turning sound on wakes the audition buttons (${sAudition.on}/3 previews enabled, preview-all enabled=${sAudition.all})`);
+  log(sAudition.on===4&&sAudition.all?'pass':'fail',
+    `sound: turning sound on wakes the audition buttons (${sAudition.on}/4 previews enabled, preview-all enabled=${sAudition.all})`);
 
   await soft('window.__type()');
   await sleep(140);
@@ -722,21 +746,21 @@ async function run(){
   await soft(`(function(){const b=document.querySelector('#soundPreviewAll');if(b)b.click();return 1})()`);
   await sleep(1100);
   const sAllAfter=await sProbe();
-  log(!!sAllBefore&&!!sAllAfter&&sAllAfter.counts.typing===sAllBefore.counts.typing+1&&sAllAfter.counts.creation===sAllBefore.counts.creation+1&&sAllAfter.counts.movement===sAllBefore.counts.movement+1?'pass':'fail',
-    `sound: “Preview all cues” plays one cue from each class (typing ${sAllBefore&&sAllBefore.counts.typing}→${sAllAfter&&sAllAfter.counts.typing}, creation ${sAllBefore&&sAllBefore.counts.creation}→${sAllAfter&&sAllAfter.counts.creation}, movement ${sAllBefore&&sAllBefore.counts.movement}→${sAllAfter&&sAllAfter.counts.movement})`);
+  log(!!sAllBefore&&!!sAllAfter&&sAllAfter.counts.typing===sAllBefore.counts.typing+1&&sAllAfter.counts.creation===sAllBefore.counts.creation+1&&sAllAfter.counts.movement===sAllBefore.counts.movement+1&&sAllAfter.counts.deletion===(sAllBefore.counts.deletion||0)+1?'pass':'fail',
+    `sound: “Preview all cues” plays one cue from each class (typing ${sAllBefore&&sAllBefore.counts.typing}→${sAllAfter&&sAllAfter.counts.typing}, creation ${sAllBefore&&sAllBefore.counts.creation}→${sAllAfter&&sAllAfter.counts.creation}, movement ${sAllBefore&&sAllBefore.counts.movement}→${sAllAfter&&sAllAfter.counts.movement}, deletion ${sAllBefore&&(sAllBefore.counts.deletion||0)}→${sAllAfter&&sAllAfter.counts.deletion})`);
 
   const sDelBefore=await sProbe();
   await soft(`(function(){const e=document.querySelector('#columns .note-editor')||document.querySelector('.note-editor');if(!e)return 0;
     e.focus();e.textContent=(e.textContent||'').replace(/x+$/,'');e.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'deleteContentBackward'}));return 1})()`);
   await sleep(140);
   const sDelAfter=await sProbe();
-  log(!!sDelBefore&&!!sDelAfter&&sDelAfter.counts.typing===sDelBefore.counts.typing?'pass':'fail',
-    `sound: deleting a character does not tick — only characters added do (typing ${sDelBefore&&sDelBefore.counts.typing}→${sDelAfter&&sDelAfter.counts.typing})`);
+  log(!!sDelBefore&&!!sDelAfter&&sDelAfter.counts.typing===sDelBefore.counts.typing&&sDelAfter.counts.deletion===(sDelBefore.counts.deletion||0)+1?'pass':'fail',
+    `sound: a backspace plays the deletion cue, not the typing tick (typing ${sDelBefore&&sDelBefore.counts.typing}→${sDelAfter&&sDelAfter.counts.typing}, deletion ${sDelBefore&&(sDelBefore.counts.deletion||0)}→${sDelAfter&&sDelAfter.counts.deletion})`);
 
   const sClip=await je(`(function(){const T=eval('SOUND_THEMES'),v=Object.values(T);
-    return JSON.stringify({voices:Object.keys(T).length,worst:+Math.max(...v.map(t=>t.pop.gain+t.pop.gain*.45)).toFixed(4)})})()`,{});
-  log(sClip.voices===7&&sClip.worst<1?'pass':'fail',
-    `sound: the two creation tones stay under unity gain in every voice (worst sum ${sClip.worst})`);
+    return JSON.stringify({voices:Object.keys(T).length,worst:+Math.max(...v.map(t=>t.pop.gain+t.pop.gain*.45)).toFixed(4),noDel:Object.keys(T).filter(k=>!T[k].del),first:Object.keys(T)[0],second:Object.keys(T)[1]})})()`,{});
+  log(sClip.voices===8&&sClip.worst<1&&sClip.noDel.length===0?'pass':'fail',
+    `sound: the two creation tones stay under unity gain in every voice, and every voice defines a deletion cue (worst sum ${sClip.worst}, voices without one: ${(sClip.noDel||[]).join(',')||'none'})`);
 
   const vol=await je(`
     (function(){const r=document.querySelector('[data-section="sound"] [data-sound="volume"]');
@@ -809,8 +833,8 @@ async function run(){
     (function(){const r=JSON.parse(localStorage.getItem(eval('STORAGE_KEY')));
       delete r.sound;const n=eval('normalizeState')(JSON.parse(JSON.stringify(r)));
       return JSON.stringify(n?n.sound:null)})()`,null);
-  log(!!legacy&&legacy.enabled===false&&legacy.volume===.5&&legacy.theme==='mechanical'&&legacy.typing&&legacy.creation&&legacy.movement?'pass':'fail',
-    `sound: a save from before this feature normalises to silent defaults, it does not throw (${JSON.stringify(legacy)})`);
+  log(!!legacy&&legacy.enabled===true&&legacy.volume===.5&&legacy.theme==='typing'&&legacy.typing&&legacy.deletion&&legacy.creation&&legacy.movement?'pass':'fail',
+    `sound: a save carrying no sound preferences adopts the shipped defaults — on, Typing voice, every class enabled (${JSON.stringify(legacy)})`);
 
   const noac=await je(`
     (function(){const S=eval('SOUND'),st=eval('state');
@@ -1121,6 +1145,70 @@ async function run(){
 
   await soft(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
   await sleep(200);
+
+  // ---------- the complaints this pass was written for ----------
+  // 1. right-click: the browser menu must not appear anywhere, and our menu must
+  await soft(`eval('zenSet')(false)`);
+  await sleep(700);
+  await soft(`(function(){const S=eval('state');S.documents.find(d=>d.id===S.activeDocumentId).mode='branch';eval('renderAll')();return 1})()`);
+  await sleep(350);
+
+  const rcCard=await je(`(function(){
+    const n=document.querySelector('#columns .note[data-id]');if(!n)return JSON.stringify({err:'no-card'});
+    const r=n.getBoundingClientRect();
+    const ev=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:Math.round(r.left+40),clientY:Math.round(r.top+14)});
+    n.dispatchEvent(ev);
+    const m=document.querySelector('#ctxMenu');
+    return JSON.stringify({prevented:ev.defaultPrevented,open:!!(m&&m.classList.contains('open')),
+      items:m?[...m.querySelectorAll('.ctx-item')].map(x=>x.textContent):[]})})()`,{});
+  log(rcCard.prevented===true&&rcCard.open===true&&(rcCard.items||[]).includes('Inspect element')&&(rcCard.items||[]).includes('Add child')
+      ?'pass':'fail',`right-click: the browser menu is suppressed on a card and our menu takes over (prevented=${rcCard.prevented}, items=${(rcCard.items||[]).join(' / ')||'none'})`);
+
+  const rcAnywhere=await je(`(function(){
+    const spots=['#statusBar','.statusbar','#breadcrumbs','#moreTopBtn','body'];
+    const out=[];
+    for(const sel of spots){const el=document.querySelector(sel);if(!el)continue;
+      const ev=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:40,clientY:40});
+      el.dispatchEvent(ev);out.push([sel,ev.defaultPrevented])}
+    const m=document.querySelector('#ctxMenu');if(m)m.classList.remove('open');
+    return JSON.stringify(out)})()`,{});
+  log(Array.isArray(rcAnywhere)&&rcAnywhere.length>=4&&rcAnywhere.every(x=>x[1]===true)?'pass':'fail',
+    `right-click: the browser menu is suppressed across the whole app (${JSON.stringify(rcAnywhere)})`);
+
+  const rcWord=await je(`(function(){
+    const eds=[...document.querySelectorAll('#columns .note-editor')];
+    if(!eds.length)return JSON.stringify({err:'no-editor'});
+    const ed=eds[0];ed.focus();
+    // give the note a known word so the probe does not depend on whatever the fixtures left behind
+    ed.textContent='think about this';
+    const tn=ed.firstChild;
+    if(!tn)return JSON.stringify({err:'no-text-node'});
+    const word='think';
+    if(!eval('dictLookup')(word))return JSON.stringify({err:'word-not-in-dictionary'});
+    const rg=document.createRange();rg.setStart(tn,0);rg.setEnd(tn,word.length);
+    const s=getSelection();s.removeAllRanges();s.addRange(rg);
+    ed.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:60,clientY:60}));
+    const m=document.querySelector('#ctxMenu');
+    const items=m?[...m.querySelectorAll('.ctx-item')].map(x=>x.textContent):[];
+    s.removeAllRanges();
+    ed.textContent='';
+    return JSON.stringify({items,word,hasDef:items.some(x=>x.indexOf('Definition:')===0)})})()`,{});
+  log(rcWord.hasDef===true?'pass':'fail',
+    `right-click: right-clicking a word looks it up in the bundled offline dictionary (word="${rcWord.word||'?'}", items=${(rcWord.items||[]).slice(0,3).join(' / ')||'none'})`);
+
+  // 2. zen must ask for real fullscreen, not just hide the chrome with CSS
+  const zenFs=await je(`(function(){
+    let asked=0;
+    const el=document.documentElement;const orig=el.requestFullscreen;
+    el.requestFullscreen=function(){asked++;return Promise.resolve()};
+    try{eval('zenSet')(true)}catch(e){}
+    el.requestFullscreen=orig;
+    return JSON.stringify({asked,zen:eval('ZEN').on})})()`,{});
+  await sleep(500);
+  await soft(`(function(){eval('zenSet')(false);return 1})()`);
+  await sleep(600);
+  log(zenFs.asked===1&&zenFs.zen===true?'pass':'fail',
+    `zen: entering asks the browser for real fullscreen, so its own bars go away (requestFullscreen calls=${zenFs.asked})`);
 
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
