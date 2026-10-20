@@ -4470,15 +4470,15 @@ html.vf-reduced .vf-stage .vf-node.lv0 .vf-card{animation:sol-fade 150ms linear 
 
 /* 1. tokens: ours and the app's */
 :root,html,body{
-  --r-inner:0px !important; --r-outer:0px !important;
-  --ui-border-radius:0px !important;
+  --r-inner:var(--tk-card-radius,0px) !important; --r-outer:var(--tk-ui-radius,0px) !important;
+  --ui-border-radius:var(--tk-ui-radius,0px) !important;
 }
 
 /* 2. global sweep. The id-chain :not() lifts specificity to (3,0,1) so it beats
    every class selector (with !important) in the app CSS and solitude.css. */
 html:not(#sq-a#sq-b#sq-c) *,
 html:not(#sq-a#sq-b#sq-c) *::before,
-html:not(#sq-a#sq-b#sq-c) *::after{border-radius:0 !important}
+html:not(#sq-a#sq-b#sq-c) *::after{border-radius:var(--tk-ui-radius,0px) !important}
 
 /* 3. explicit list (documents intent; also covers shadow-part hosts) */
 html:not(#sq-a#sq-b#sq-c) :is(
@@ -4489,7 +4489,7 @@ html:not(#sq-a#sq-b#sq-c) :is(
   .app-tooltip,.toast,.aa-sheet,.aa-chip,.aa-done,.menu-pop,.menu-item,.modal,.drawer,
   .imp-tree,.imp-row,.imp-badge,.imp-seg,.imp-seg button,.imp-src,.imp-src textarea,
   .document-item,.branch-card,.card,kbd,.keycap,.swatch,.aa-swatch,.katex,math-field
-){border-radius:0 !important}
+){border-radius:var(--tk-ui-radius,0px) !important}
 html:not(#sq-a#sq-b#sq-c) math-field::part(container),
 html:not(#sq-a#sq-b#sq-c) math-field::part(content){border-radius:0 !important}
 
@@ -4641,8 +4641,101 @@ html.zen .split .branch-pane{width:auto!important}
 #zenExit:hover{background:var(--glass-tip,rgba(16,19,21,.8))}
 @media (prefers-reduced-motion:reduce){#zenExit{transition:none}}
 </style>
+<style id="theme-engine">
+/* ============================ theme engine ============================
+   Sits last in the cascade on purpose. The glass layer above pins several
+   colours with !important and its own variable names; this block re-points
+   those names at the live appearance tokens and adds the surfaces the older
+   layer never had: ambient glow, atmospheric particles, adjustable type. */
+#fxLayer{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;display:block;
+  opacity:var(--fx-opacity,0);transition:opacity .45s ease}
+html[data-fx="off"] #fxLayer{display:none}
+body{background:var(--bg)!important;color:var(--text)!important;font-family:var(--font-note)!important}
+.app{position:relative;z-index:1;background:transparent!important}
+.workspace{background:transparent!important}
+/* the panes sat on opaque fills, which hid the atmosphere entirely */
+.branch-pane,.columns,.document-main,.document-list,.write-scroll{background:transparent!important}
+/* ambient wash — driven by the glow dial, behind everything */
+body::before{content:"";position:fixed;inset:-12%;z-index:0;pointer-events:none;
+  opacity:calc(var(--glow,0)/100);transition:opacity .35s ease;
+  background:
+    radial-gradient(46% 36% at 12% 2%,var(--glow-color,transparent),transparent 68%),
+    radial-gradient(44% 34% at 90% 98%,var(--glow-color-2,transparent),transparent 70%)}
+/* the colours the older layer hard-coded */
+.note-body{background:var(--card-quiet)!important;border-color:var(--line)!important}
+.note-body:hover{border-color:color-mix(in srgb,var(--accent) 42%,var(--line))!important}
+.note.active .note-body{background:var(--card-strong)!important;border-color:var(--accent)!important;
+  border-left:3px solid var(--accent)!important;
+  box-shadow:0 0 var(--glow-blur,0) var(--glow-color,transparent),0 12px 28px rgba(0,0,0,.22)!important}
+.read-block.selected,.read-node.selected>.read-head,.vf-chip.focus,.vf-node.lv0 .vf-card,
+.vf-read .read-node.selected>.read-head{background:var(--card-strong)!important;border-color:var(--accent)!important}
+.read-wrap{max-width:var(--read-width,860px)}
+.read-pane{background:color-mix(in srgb,var(--panel) 55%,transparent)!important;
+  border-left-color:color-mix(in srgb,var(--line) 80%,transparent)!important}
+.modal,.drawer,.menu-pop,.px-dialog,.aa-sheet,.sheet-body,.toast,.app-tooltip{background:var(--glass-sheet)!important}
+.modal::backdrop,.overlay{background:color-mix(in srgb,var(--bg) 55%,transparent)!important}
+/* glow on the things you touch */
+.vs-pill{box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 2px 6px rgba(0,0,0,.18),0 0 var(--glow-size,0) var(--glow-color,transparent)!important}
+.topbar .icon-btn:hover,.view-switch button:hover{box-shadow:0 0 var(--glow-size,0) var(--glow-color,transparent)}
+button:not(.toggle):active{box-shadow:0 0 var(--glow-size,0) var(--glow-color,transparent)}
+:focus-visible{outline-color:var(--accent)!important}
+/* type: the note face drives prose, the chrome face drives labels and keys */
+.note-editor,.read-editor,.read-title,.read-block,.note.heading .note-editor,
+.note-body [contenteditable],.writing-input{font-family:var(--font-note)!important}
+.breadcrumbs,.statusbar,.keycap,.shortcut-table .keycap,.badge,.kb-alias,.px-hint,.sound-group-title,
+.document-meta,.note-meta,.field-hint{font-family:var(--font-chrome)}
+.view-switch button,.topbar .icon-btn,.settings-nav button,.menu-item,.ctx-item,.setting-row strong{font-family:var(--font-ui)}
+
+/* appearance panel */
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:8px}
+.preset-chip{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);text-align:left;transition:border-color .15s,box-shadow .15s}
+.preset-chip:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.preset-chip.active{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 70%,transparent) inset,0 0 var(--glow-size,0) var(--glow-color,transparent)}
+.preset-dot{width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.16);flex:none;box-shadow:0 1px 3px rgba(0,0,0,.3) inset}
+.preset-copy{display:flex;flex-direction:column;min-width:0}
+.preset-copy strong{font-size:12.5px;color:var(--text);line-height:1.25}
+.preset-copy small{font-size:11px;color:var(--muted);line-height:1.25}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.shape-chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);font-size:12px;transition:.15s}
+.shape-chip:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.shape-chip.active{color:var(--accent-fg);background:var(--accent);border-color:var(--accent)}
+.glow-preview{position:relative;height:44px;border-radius:10px;border:1px solid var(--line);overflow:hidden;background:var(--bg);margin-top:4px}
+.glow-preview span{position:absolute;inset:-22%;opacity:calc(var(--glow)/100);background:radial-gradient(45% 60% at 22% 30%,var(--glow-color),transparent 70%),radial-gradient(45% 60% at 78% 72%,var(--glow-color-2),transparent 70%);transition:opacity .2s}
+input[type="color"]{width:46px;height:28px;padding:2px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);cursor:pointer}
+select.text-input{min-width:150px}
+
+/* The glass layer above pins these with !important. Re-point each pinned name at the live
+   token carrier (--tk-*), which is written inline by applyAppearance, so the appearance
+   controls actually reach the surfaces they claim to control. */
+:root,html,html:root{
+  --panel-2:var(--tk-panel-2,#101315) !important;
+  --panel-3:var(--tk-panel-3,#212121) !important;
+  --text:var(--tk-text,#cacccc) !important;
+  --muted:var(--tk-muted,#949494) !important;
+  --line:var(--tk-line,#2f353b) !important;
+  --accent-soft:var(--tk-accent-soft,#2f353b) !important;
+  --danger:var(--tk-danger,#de6145) !important;
+  --faded-text:var(--tk-muted,#a3a6a7) !important;
+  --related-text:var(--tk-text,#cacccc) !important;
+  --r-inner:var(--tk-card-radius,0px) !important;
+  --r-outer:var(--tk-ui-radius,0px) !important;
+  --ui-border-radius:var(--tk-ui-radius,0px) !important;
+  --glass-bar:var(--tk-glass-bar,rgba(12,14,16,.72)) !important;
+  --glass-sheet:var(--tk-glass-sheet,rgba(16,19,21,.62)) !important;
+  --glass-tip:var(--tk-glass-tip,rgba(12,14,16,.8)) !important;
+  --glass-card:var(--tk-glass-card,rgba(16,19,21,.62)) !important;
+}
+/* the square-corner sweep writes these three on body as well; anything inside body inherits
+   body's value, so the root override above is not enough on its own */
+body{
+  --r-inner:var(--tk-card-radius,0px) !important;
+  --r-outer:var(--tk-ui-radius,0px) !important;
+  --ui-border-radius:var(--tk-ui-radius,0px) !important;
+}
+</style>
 </head>
 <body>
+<canvas id="fxLayer" aria-hidden="true"></canvas>
 <div class="app">
   <header class="topbar">
     <div class="view-switch" role="tablist" aria-label="View mode">
@@ -4714,7 +4807,62 @@ function icon(name,cls='icon'){const bi=BOOTSTRAP_ICONS[name]||'circle';return `
 function setIcon(el,name,label){el.innerHTML=icon(name);if(label)el.setAttribute('aria-label',label)}
 function uid(prefix='n'){return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function deep(x){return typeof structuredClone==='function'?structuredClone(x):JSON.parse(JSON.stringify(x))}
-const DEFAULT_APPEARANCE={animations:true,cardRadius:8,uiRadius:8,buttonRadius:7,cardGap:8,columnWidth:276,cardPadding:13,fontSize:14,lineHeight:1.55,inactiveOpacity:28,viewerOpacity:100,accent:'#9b86e8',bg:'#232634',panel:'#292c3d'};
+// ---- appearance: one token set drives colour, shape, glow, atmosphere and type -----------
+// Every value here ends up as a CSS custom property, so a theme is just data. The bundled
+// faces are IBM Plex Sans and JetBrains Mono (inlined above); the rest are system stacks,
+// which keeps the single-file, offline promise intact.
+const FONTS={
+ plex:{label:'IBM Plex Sans',note:'"IBM Plex Sans",system-ui,-apple-system,sans-serif',chrome:'"IBM Plex Sans",system-ui,sans-serif'},
+ mono:{label:'JetBrains Mono',note:'"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace',chrome:'"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace'},
+ system:{label:'System',note:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',chrome:'system-ui,-apple-system,sans-serif'},
+ serif:{label:'Serif',note:'ui-serif,Georgia,"Iowan Old Style",Palatino,"Times New Roman",serif',chrome:'ui-serif,Georgia,serif'},
+ rounded:{label:'Rounded',note:'ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN",system-ui,sans-serif',chrome:'ui-rounded,system-ui,sans-serif'},
+ grotesk:{label:'Grotesk',note:'"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif',chrome:'"Helvetica Neue",Helvetica,Arial,sans-serif'}
+};
+const FX_PRESETS=[['off','Off'],['stars','Stars'],['dust','Dust'],['grid','Grid'],['orbs','Nebula']];
+const COLOR_UTIL={
+ hex(h){h=String(h||'').trim();if(/^#[0-9a-f]{3}$/i.test(h))h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];let m=/^#([0-9a-f]{6})$/i.exec(h);if(!m)return null;let n=parseInt(m[1],16);return [n>>16&255,n>>8&255,n&255]},
+ rgb(h,fallback){return COLOR_UTIL.hex(h)||COLOR_UTIL.hex(fallback)||[0,0,0]},
+ mix(a,b,t,fa,fb){let A=COLOR_UTIL.rgb(a,fa),B=COLOR_UTIL.rgb(b,fb);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('').toUpperCase()},
+ alpha(h,a){let c=COLOR_UTIL.rgb(h,'#ffffff');return 'rgba('+c[0]+','+c[1]+','+c[2]+','+(+a).toFixed(3)+')'},
+ luma(h){let c=COLOR_UTIL.rgb(h,'#000000');return (0.2126*c[0]+0.7152*c[1]+0.0722*c[2])/255}
+};
+const DEFAULT_APPEARANCE={animations:true,cardRadius:0,uiRadius:0,buttonRadius:0,cardGap:4,columnWidth:276,cardPadding:12,fontSize:14,lineHeight:1.55,inactiveOpacity:28,viewerOpacity:100,
+ accent:'#798186',accent2:'#5c6a6f',bg:'#101315',panel:'#161a1d',text:'#cacccc',muted:'#8b9096',line:'#2f353b',danger:'#de6145',
+ glow:0,fx:'off',fxDensity:45,fxSpeed:18,fxParallax:55,fxOpacity:55,borderWidth:2,blur:8,readWidth:860,
+ fontNote:'plex',fontChrome:'mono',theme:'solitude'};
+// A preset is just a bag of tokens. Applying one writes every value, so nothing is left
+// half-themed — which is exactly what made the old colour pickers feel inert.
+const THEME_PRESETS=[
+ {id:'solitude',label:'Solitude',note:'Graphite, square, quiet',
+  accent:'#798186',accent2:'#5c6a6f',bg:'#101315',panel:'#161a1d',text:'#cacccc',muted:'#8b9096',line:'#2f353b',danger:'#de6145',
+  glow:0,fx:'off',fxDensity:45,fxSpeed:18,fxParallax:55,fxOpacity:55,fontNote:'plex',fontChrome:'mono',cardRadius:0,uiRadius:0,buttonRadius:0,cardGap:4,cardPadding:12},
+ {id:'nebula',label:'Nebula',note:'Violet, deep, starlit',
+  accent:'#8b5cf6',accent2:'#22d3ee',bg:'#0a0913',panel:'#151227',text:'#ece9ff',muted:'#9a93c4',line:'#2a2344',danger:'#fb7185',
+  glow:62,fx:'stars',fxDensity:72,fxSpeed:14,fxParallax:70,fxOpacity:70,fontNote:'plex',fontChrome:'mono',cardRadius:12,uiRadius:12,buttonRadius:10,cardGap:10,cardPadding:14},
+ {id:'paper',label:'Paper',note:'Warm, printed, quiet',
+  accent:'#a85b2b',accent2:'#2f7d6d',bg:'#efe9dd',panel:'#fffdf7',text:'#1f1b16',muted:'#6f665a',line:'#d9d0bf',danger:'#b3402f',
+  glow:0,fx:'dust',fxDensity:30,fxSpeed:9,fxParallax:30,fxOpacity:22,fontNote:'serif',fontChrome:'plex',cardRadius:3,uiRadius:3,buttonRadius:3,cardGap:8,cardPadding:14},
+ {id:'terminal',label:'Terminal',note:'Phosphor, lattice, sharp',
+  accent:'#35ff8a',accent2:'#00d4ff',bg:'#05070a',panel:'#0a1117',text:'#c8f7dc',muted:'#5f8f76',line:'#173024',danger:'#ff5f56',
+  glow:45,fx:'grid',fxDensity:64,fxSpeed:10,fxParallax:40,fxOpacity:62,fontNote:'mono',fontChrome:'mono',cardRadius:0,uiRadius:0,buttonRadius:0,cardGap:4,cardPadding:12},
+ {id:'solar',label:'Solar',note:'Amber, warm, drifting',
+  accent:'#ffb347',accent2:'#ff6b35',bg:'#171009',panel:'#221708',text:'#f7e8c8',muted:'#b99a63',line:'#3d2c12',danger:'#e05252',
+  glow:40,fx:'dust',fxDensity:36,fxSpeed:20,fxParallax:50,fxOpacity:26,fontNote:'grotesk',fontChrome:'mono',cardRadius:8,uiRadius:8,buttonRadius:8,cardGap:8,cardPadding:13},
+ {id:'frost',label:'Frost',note:'Ice, soft, high sky',
+  accent:'#38bdf8',accent2:'#a78bfa',bg:'#08111a',panel:'#0f1b26',text:'#dcecf8',muted:'#7f9ab0',line:'#1d3446',danger:'#fb7185',
+  glow:38,fx:'stars',fxDensity:56,fxSpeed:12,fxParallax:60,fxOpacity:40,fontNote:'system',fontChrome:'plex',cardRadius:14,uiRadius:14,buttonRadius:10,cardGap:10,cardPadding:15},
+ {id:'rosewood',label:'Rosewood',note:'Burgundy, paper, slow',
+  accent:'#e0708a',accent2:'#c9a0ff',bg:'#170f14',panel:'#22141c',text:'#f3dfe6',muted:'#b08a99',line:'#3a2230',danger:'#ff6b6b',
+  glow:30,fx:'orbs',fxDensity:24,fxSpeed:8,fxParallax:35,fxOpacity:22,fontNote:'serif',fontChrome:'mono',cardRadius:10,uiRadius:10,buttonRadius:9,cardGap:9,cardPadding:14}
+];
+function applyThemePreset(id,save=true){
+ const p=THEME_PRESETS.find(x=>x.id===id);if(!p)return;
+ const t={...p};delete t.id;delete t.label;delete t.note;
+ Object.assign(state.appearance,t);state.appearance.theme=id;
+ // presets carry shape and type too, but never touch reading geometry the user tuned by hand
+ applyAppearance();if(save)saveState();
+}
 const DEFAULT_BEHAVIOR={showAddButtons:false,showFeedback:true,shortcutsEnabled:true,confirmDelete:false,focusNewNote:true,showTopbar:true,showContextbar:true,showStatusbar:true,nestedReading:false,inputMode:'auto'};
 // ---- sound: synthesised, offline, silent until asked for ----------------------------------
 // Every voice is built from oscillators and generated noise, so the app keeps shipping as one
@@ -5159,7 +5307,187 @@ function restoreSnapshot(stackFrom,stackTo){if(!stackFrom.length)return;stackTo.
 function toast(msg){if(!state.behavior.showFeedback||Date.now()<(forceToast.lockUntil||0))return;forceToast(msg,1200)}
 function forceToast(msg,ms=1200,lock=false){let t=$('#toast');if(!t)return;SOUND.notify();if(lock)forceToast.lockUntil=Date.now()+ms;t.textContent=msg;t.classList.add('show');crossfade(t,{dur:180,blur:5,y:4});clearTimeout(toast.timer);toast.timer=setTimeout(()=>{if(motionOn())exitEl(t,{dur:MOTION.exit,blur:4,y:4,then:()=>{resetEl(t);t.classList.remove('show')}});else t.classList.remove('show')},ms)}
 function escapeHTML(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function applyAppearance(){let a=state.appearance,r=document.documentElement.style;r.setProperty('--card-radius',a.cardRadius+'px');r.setProperty('--ui-radius',a.uiRadius+'px');r.setProperty('--button-radius',a.buttonRadius+'px');r.setProperty('--inactive-opacity',a.inactiveOpacity/100);r.setProperty('--viewer-mix',a.viewerOpacity+'%');r.setProperty('--card-gap',a.cardGap+'px');r.setProperty('--column-width',a.columnWidth+'px');r.setProperty('--card-padding',a.cardPadding+'px');r.setProperty('--font-size',a.fontSize+'px');r.setProperty('--line-height',a.lineHeight);r.setProperty('--accent',a.accent);r.setProperty('--bg',a.bg);r.setProperty('--panel',a.panel);$('#custom-style').textContent=state.customCSS||''}
+function applyAppearance(){
+ let a=state.appearance||{},r=document.documentElement.style;
+ // shape and rhythm
+ r.setProperty('--card-radius',a.cardRadius+'px');r.setProperty('--ui-radius',a.uiRadius+'px');r.setProperty('--button-radius',a.buttonRadius+'px');
+ r.setProperty('--r-outer',a.uiRadius+'px');r.setProperty('--r-inner',a.cardRadius+'px');
+ r.setProperty('--inactive-opacity',a.inactiveOpacity/100);r.setProperty('--viewer-mix',a.viewerOpacity+'%');
+ r.setProperty('--read-width',(a.readWidth||860)+'px');
+ r.setProperty('--card-gap',a.cardGap+'px');r.setProperty('--column-width',a.columnWidth+'px');r.setProperty('--card-padding',a.cardPadding+'px');
+ r.setProperty('--font-size',a.fontSize+'px');r.setProperty('--line-height',a.lineHeight);
+ // colour: the core five, then everything derived from them
+ const text=a.text||'#e6e8f0',bg=a.bg||'#232634',panel=a.panel||'#292c3d';
+ const accent=a.accent||'#9b86e8',accent2=a.accent2||accent,danger=a.danger||'#e4747e';
+ const muted=a.muted||COLOR_UTIL.mix(text,bg,.42,'#e6e8f0','#232634');
+ const line=a.line||COLOR_UTIL.mix(bg,text,.16,'#232634','#e6e8f0');
+ const panel2=COLOR_UTIL.mix(panel,text,.07,'#292c3d','#e6e8f0');
+ const panel3=COLOR_UTIL.mix(panel,text,.13,'#292c3d','#e6e8f0');
+ const accentFg=COLOR_UTIL.luma(accent)>.62?bg:'#0b0d0e';
+ r.setProperty('--bg',bg);r.setProperty('--panel',panel);r.setProperty('--panel-2',panel2);r.setProperty('--panel-3',panel3);
+ r.setProperty('--text',text);r.setProperty('--muted',muted);r.setProperty('--line',line);
+ r.setProperty('--accent',accent);r.setProperty('--accent-2',accent2);r.setProperty('--accent-soft',COLOR_UTIL.alpha(accent,.22));r.setProperty('--accent-fg',accentFg);
+ r.setProperty('--danger',danger);
+ // the glass layer that predates this engine reads its own names; point them at the same values
+ r.setProperty('--sol-bg',bg);r.setProperty('--sol-bg-deep',COLOR_UTIL.mix(bg,'#000000',.4));
+ r.setProperty('--sol-surface',panel2);r.setProperty('--sol-border',line);
+ r.setProperty('--sol-focus',accent);r.setProperty('--sol-text',text);r.setProperty('--sol-text-glass',muted);
+ r.setProperty('--sol-text-2',COLOR_UTIL.mix(text,muted,.5));r.setProperty('--sol-muted',muted);
+ r.setProperty('--sol-accent',accent);r.setProperty('--sol-accent-fg',accentFg);r.setProperty('--sol-danger',danger);
+ r.setProperty('--glass-bar',COLOR_UTIL.alpha(bg,.74));r.setProperty('--glass-sheet',COLOR_UTIL.alpha(panel,.76));
+ r.setProperty('--glass-tip',COLOR_UTIL.alpha(bg,.88));r.setProperty('--glass-card',COLOR_UTIL.alpha(panel,.62));
+ r.setProperty('--glass-line',COLOR_UTIL.alpha(text,.14));r.setProperty('--glass-line-2',COLOR_UTIL.alpha(text,.26));
+ r.setProperty('--glass-hi',COLOR_UTIL.alpha(text,.06));
+ r.setProperty('--border-width',(a.borderWidth??2)+'px');
+ r.setProperty('--bw',(a.borderWidth??2)+'px');
+ const bl=Math.max(0,+a.blur||0);
+ const dark=COLOR_UTIL.luma(bg)<.5;
+ r.setProperty('--glass-blur',dark?'blur('+bl+'px) brightness(.72) contrast(.86)':'blur('+bl+'px) saturate(1.08)');
+ r.setProperty('--glass-blur-sm','blur('+Math.round(bl*.55)+'px)');
+ r.setProperty('--card-strong',COLOR_UTIL.alpha(panel,.97));
+ r.setProperty('--card-quiet',COLOR_UTIL.alpha(panel,.72));
+ // the older glass layer pins a dozen of its own variables with !important, so the live
+ // values travel through a parallel set that its pinned declarations point at (see the
+ // final layer in the stylesheet). Without this, text, borders, radii and card fills stay
+ // stuck on the graphite defaults no matter what the pickers say.
+ r.setProperty('--tk-panel-2',panel2);r.setProperty('--tk-panel-3',panel3);
+ r.setProperty('--tk-text',text);r.setProperty('--tk-muted',muted);r.setProperty('--tk-line',line);
+ r.setProperty('--tk-accent-soft',COLOR_UTIL.alpha(accent,.22));r.setProperty('--tk-danger',danger);
+ r.setProperty('--tk-card-radius',a.cardRadius+'px');r.setProperty('--tk-ui-radius',a.uiRadius+'px');
+ r.setProperty('--tk-glass-bar',COLOR_UTIL.alpha(bg,.74));r.setProperty('--tk-glass-sheet',COLOR_UTIL.alpha(panel,.78));
+ r.setProperty('--tk-glass-tip',COLOR_UTIL.alpha(bg,.9));r.setProperty('--tk-glass-card',COLOR_UTIL.alpha(panel,.66));
+ // glow: 0 disables every shadow below
+ const g=Math.max(0,Math.min(100,+a.glow||0));
+ r.setProperty('--glow',g);
+ r.setProperty('--glow-color',COLOR_UTIL.alpha(accent,(.06+g/100*.5).toFixed(3)));
+ r.setProperty('--glow-color-2',COLOR_UTIL.alpha(accent2,(.05+g/100*.34).toFixed(3)));
+ r.setProperty('--glow-size',Math.round(4+g*.36)+'px');
+ r.setProperty('--glow-blur',Math.round(6+g*.9)+'px');
+ // type
+ const f=FONTS[a.fontNote]||FONTS.plex,c=FONTS[a.fontChrome]||FONTS.mono;
+ r.setProperty('--font-note',f.note);r.setProperty('--font-ui',f.note);r.setProperty('--font-chrome',c.chrome);r.setProperty('--font-label',f.note);
+ // atmosphere
+ document.documentElement.dataset.fx=a.fx||'off';
+ r.setProperty('--fx-opacity',(+a.fxOpacity||0)/100);
+ $('#custom-style').textContent=state.customCSS||'';
+ try{FX.sync()}catch(e){}
+}
+
+// ---- atmosphere: a parallax particle field behind the app -------------------------------
+// One canvas, one rAF loop, paused whenever it cannot be seen. Depth is per particle, so
+// scrolling the workspace and moving the pointer separate the layers and the cards appear
+// to sit in front of them. Presets are drawn, not loaded: no assets, no network.
+const FX={
+ cv:null,ctx:null,w:0,h:0,dpr:1,parts:[],raf:0,last:0,sig:'',on:false,reduced:false,
+ scroll:0,px:0,py:0,tpx:0,tpy:0,par:.55,acc:'#ffffff',acc2:'#ffffff',
+ sync(){
+  const a=state.appearance||{},cv=document.getElementById('fxLayer');
+  if(!cv)return;this.cv=cv;this.ctx=cv.getContext('2d');
+  const sig=[a.fx,a.fxDensity,a.fxSpeed,a.fxParallax,a.fxOpacity,a.accent,a.accent2,a.bg,innerWidth,innerHeight].join('|');
+  this.reduced=!a.animations||matchMedia('(prefers-reduced-motion: reduce)').matches;
+  this.par=Math.max(0,Math.min(120,+a.fxParallax||0))/100;
+  this.acc=a.accent||'#ffffff';this.acc2=a.accent2||this.acc;
+  cv.style.opacity=String(Math.max(0,Math.min(100,+a.fxOpacity||0))/100);
+  document.documentElement.dataset.fx=a.fx||'off';
+  if((a.fx||'off')==='off'){this.stop();return}
+  if(sig!==this.sig||!this.parts.length||this.w!==innerWidth||this.h!==innerHeight){this.sig=sig;this.resize();this.build()}
+  if(this.reduced){this.stop();this.draw(0,0,true);return}
+  this.start()
+ },
+ resize(){
+  const cv=this.cv;if(!cv)return;
+  this.w=innerWidth;this.h=innerHeight;this.dpr=Math.min(2,devicePixelRatio||1);
+  cv.width=Math.round(this.w*this.dpr);cv.height=Math.round(this.h*this.dpr);
+  this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
+ },
+ rnd(a,b){return a+Math.random()*(b-a)},
+ build(){
+  const a=state.appearance||{},mode=a.fx||'off',dens=Math.max(5,Math.min(100,+a.fxDensity||45));
+  const area=this.w*this.h,base=Math.max(12,Math.round(area/12500*(dens/50)));
+  const P=this.parts=[];
+  if(mode==='grid'){
+   const step=Math.max(30,Math.round(72-dens*.35));
+   for(let y=0;y<this.h+step;y+=step)for(let x=0;x<this.w+step;x+=step)
+    P.push({x,y,depth:this.rnd(.35,1),r:this.rnd(.8,1.7),ph:this.rnd(0,6.28),sp:this.rnd(.4,1),col:Math.random()<.72?0:1});
+   return
+  }
+  if(mode==='orbs'){
+   const n=Math.max(3,Math.round(3+dens/14));
+   for(let i=0;i<n;i++)P.push({x:this.rnd(0,this.w),y:this.rnd(0,this.h),depth:this.rnd(.2,.8),r:this.rnd(90,240),ph:this.rnd(0,6.28),sp:this.rnd(.15,.45),col:i%2,vx:this.rnd(-.06,.06),vy:this.rnd(-.05,.05)});
+   return
+  }
+  const dust=mode==='dust';
+  const n=Math.max(8,Math.round(base*(dust?1.15:1)));
+  for(let i=0;i<n;i++)P.push({
+   x:this.rnd(0,this.w),y:this.rnd(0,this.h),depth:this.rnd(.22,1),
+   r:dust?this.rnd(1.4,3.8):this.rnd(.7,2.3),
+   ph:this.rnd(0,6.28),sp:this.rnd(.35,1.15),tw:this.rnd(.6,2.1),
+   vy:dust?this.rnd(-.14,-.03):this.rnd(-.05,.05),
+   vx:this.rnd(-.05,.05),col:Math.random()<.74?0:1});
+ },
+ start(){if(this.on||this.reduced)return;this.on=true;this.last=0;this.raf=requestAnimationFrame(t=>this.tick(t))},
+ stop(){this.on=false;if(this.raf)cancelAnimationFrame(this.raf);this.raf=0},
+ readScroll(){
+  let v=0;for(const sel of ['.workspace','.read-pane','.columns','.write-scroll','.document-main']){
+   const el=document.querySelector(sel);if(el&&el.scrollTop>v)v=el.scrollTop}
+  return v
+ },
+ tick(ts){
+  if(!this.on)return;
+  if(document.hidden){this.stop();return}
+  const dt=this.last?Math.min(3,Math.max(.2,(ts-this.last)/16.67)):1;this.last=ts;
+  const target=this.readScroll();this.scroll+=(target-this.scroll)*.12;
+  this.px+=(this.tpx-this.px)*.05;this.py+=(this.tpy-this.py)*.05;
+  this.draw(ts,dt,false);
+  this.raf=requestAnimationFrame(t=>this.tick(t))
+ },
+ draw(ts,dt,still){
+  const c=this.ctx;if(!c)return;
+  c.clearRect(0,0,this.w,this.h);
+  const mode=(state.appearance||{}).fx||'off',speed=Math.max(0,+state.appearance.fxSpeed||0)/100;
+  const col=i=>COLOR_UTIL.alpha(i?this.acc2:this.acc,1);
+  const t=ts/1000;
+  for(const p of this.parts){
+   if(!still){p.x+=(p.vx||0)*dt*speed*3;p.y+=(p.vy||0)*dt*speed*3}
+   const ox=this.px*p.depth*this.par*26,oy=this.py*p.depth*this.par*16;
+   let x=p.x+ox,y=p.y+oy-this.scroll*p.depth*this.par*.22;
+   if(mode==='grid'){
+    x=((x%(this.w+120))+this.w+120)%(this.w+120)-60;
+    y=((y%(this.h+120))+this.h+120)%(this.h+120)-60;
+    const pulse=.55+.45*Math.sin(t*p.sp+p.ph);
+    c.globalAlpha=.5*pulse*this.par+.12;
+    if(Math.abs(p.depth-.35)<.001)c.globalAlpha=.16;
+    c.fillStyle=col(p.col);
+    c.beginPath();c.arc(x,y,p.r,0,6.2832);c.fill();
+    continue
+   }
+   if(mode==='orbs'){
+    const r=p.r*(1+.06*Math.sin(t*p.sp+p.ph));
+    const g=c.createRadialGradient(x,y,0,x,y,r);
+    const base=col(p.col);
+    g.addColorStop(0,base.replace(/,[\d.]+\)$/,',.20)'));
+    g.addColorStop(.55,base.replace(/,[\d.]+\)$/,',.07)'));
+    g.addColorStop(1,base.replace(/,[\d.]+\)$/,',0)'));
+    c.globalAlpha=1;c.fillStyle=g;
+    c.beginPath();c.arc(x,y,r,0,6.2832);c.fill();
+    continue
+   }
+   // wrap so a particle never pops at an edge
+   const pad=40;
+   x=((x+pad)%(this.w+pad*2)+this.w+pad*2)%(this.w+pad*2)-pad;
+   y=((y+pad)%(this.h+pad*2)+this.h+pad*2)%(this.h+pad*2)-pad;
+   const twinkle=mode==='dust'?1:(.45+.55*(.5+.5*Math.sin(t*p.tw+p.ph)));
+   c.globalAlpha=Math.min(1,(mode==='dust'?.30:.82)*twinkle*(.55+p.depth*.45));
+   c.fillStyle=col(p.col);
+   c.beginPath();c.arc(x,y,p.r*(.6+p.depth*.6),0,6.2832);c.fill();
+  }
+  c.globalAlpha=1
+ }
+};
+addEventListener('pointermove',e=>{FX.tpx=(e.clientX/innerWidth-.5)*2;FX.tpy=(e.clientY/innerHeight-.5)*2},{passive:true});
+addEventListener('resize',()=>{if(FX.cv)FX.sync()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)FX.stop();else FX.sync()});
+
 function focusNodeEditor(id,atEnd=false){let d=doc(),sel=d.mode==='read'?`[data-read-edit="${id}"]`:`[data-edit-id="${id}"]`;let ed=document.querySelector(sel)||document.querySelector(`[data-edit-id="${id}"]`)||document.querySelector(`[data-read-edit="${id}"]`);if(!ed)return;ed.focus({preventScroll:true});if(atEnd){try{let r=document.createRange();r.selectNodeContents(ed);r.collapse(false);let sel=getSelection();sel.removeAllRanges();sel.addRange(r)}catch(e){}}}
 function selectNode(id,{focus=false}={}){if(!locate(id))return;let moved=doc().selectedId!==id;doc().selectedId=id;if(moved)SOUND.select();doc().updatedAt=Date.now();saveState();renderWorkspace();renderContext();if(focus)requestAnimationFrame(()=>focusNodeEditor(id))}
 function pathIds(){let r=locate(doc().selectedId);return r?r.path.map(n=>n.id):[]}
@@ -5500,7 +5828,78 @@ function renderSettings(){let nav=$('#settingsNav');nav.innerHTML=SETTINGS_TABS.
  renderAppearanceSettings();renderLayoutSettings();renderKeyboardSettings();renderBehaviorSettings();renderSoundSettings();renderDocumentSettings();renderCSSSettings()}
 function row(label,desc,control){return `<div class="setting-row"><div class="setting-copy"><strong>${label}</strong><small>${desc}</small></div><div>${control}</div></div>`}
 function slider(id,val,min,max,step=1,suffix=''){return `<div style="display:flex;align-items:center;gap:8px"><input type="range" data-appearance="${id}" value="${val}" min="${min}" max="${max}" step="${step}"><span style="width:55px;text-align:right;color:var(--muted)" data-value-for="${id}">${val}${suffix}</span></div>`}
-function renderAppearanceSettings(){let s=$('[data-section="appearance"]');if(!s)return;let a=state.appearance;s.innerHTML=`<h3>Appearance</h3><p>Change the visual system without touching the document data.</p><div class="setting-group">${row('Card radius','Roundness of note cards.',slider('cardRadius',a.cardRadius,0,24,1,'px'))}${row('Interface radius','Panels, dialogs and larger controls.',slider('uiRadius',a.uiRadius,0,24,1,'px'))}${row('Button radius','Independent rounding for buttons and key controls.',slider('buttonRadius',a.buttonRadius,0,24,1,'px'))}${row('Card spacing','Space between notes and columns.',slider('cardGap',a.cardGap,2,24,1,'px'))}${row('Column width','Width of each branch column.',slider('columnWidth',a.columnWidth,200,440,4,'px'))}${row('Card padding','Internal note spacing.',slider('cardPadding',a.cardPadding,6,28,1,'px'))}${row('Font size','Base app text size.',slider('fontSize',a.fontSize,11,20,1,'px'))}${row('Line height','Base text line spacing.',slider('lineHeight',a.lineHeight,1.2,2,.05,''))}${row('Inactive note visibility','Opacity of branches outside the active path.',slider('inactiveOpacity',a.inactiveOpacity,5,100,1,'%'))}${row('Reading surface strength','How strongly the reading pane separates from the workspace.',slider('viewerOpacity',a.viewerOpacity,0,100,1,'%'))}</div><div class="setting-group">${row('Accent color','Selection, focus and drag indicators.',`<input type="color" data-appearance="accent" value="${a.accent}">`)}${row('App background','Main chrome background.',`<input type="color" data-appearance="bg" value="${a.bg}">`)}${row('Card background','Note and reading surfaces.',`<input type="color" data-appearance="panel" value="${a.panel}">`)}</div><div class="button-row"><button class="secondary" id="resetAppearance">Reset appearance</button></div>`;s.querySelectorAll('[data-appearance]').forEach(i=>i.oninput=()=>{let k=i.dataset.appearance,v=i.type==='range'?Number(i.value):i.value;state.appearance[k]=v;let out=s.querySelector(`[data-value-for="${k}"]`);if(out)out.textContent=v+(['cardRadius','uiRadius','buttonRadius','cardGap','columnWidth','cardPadding','fontSize'].includes(k)?'px':['inactiveOpacity','viewerOpacity'].includes(k)?'%':'');applyAppearance();saveState()});$('#resetAppearance').onclick=()=>{state.appearance=deep(DEFAULT_APPEARANCE);saveState();renderAll();renderSettings()}}
+function appearanceSwatch(p){return `<span class="preset-dot" style="background:linear-gradient(140deg,${p.bg} 0%,${p.panel} 46%,${p.accent} 100%)"></span>`}
+function renderAppearanceSettings(){
+ let s=$('[data-section="appearance"]');if(!s)return;let a=state.appearance;
+ const colorRow=(k,l,d)=>row(l,d,`<input type="color" data-appearance="${k}" value="${a[k]||'#000000'}">`);
+ const fontSel=(k,label)=>row(label,'The face used for this part of the app.',`<select class="text-input" data-appearance="${k}">${Object.entries(FONTS).map(([id,f])=>`<option value="${id}" ${a[k]===id?'selected':''}>${f.label}</option>`).join('')}</select>`);
+ const shapeChip=(id,label,r)=>`<button class="shape-chip ${(a.cardRadius===r&&a.uiRadius===r)?'active':''}" data-shape="${r}">${label}</button>`;
+ s.innerHTML=`
+ <h3>Appearance</h3>
+ <p>One token set drives colour, shape, glow, atmosphere and type. A preset writes every one of them at once; change any value afterwards and the theme becomes yours.</p>
+ <div class="setting-group">
+  <h4 class="sound-group-title">Themes</h4>
+  <div class="preset-grid">${THEME_PRESETS.map(p=>`<button class="preset-chip ${a.theme===p.id?'active':''}" data-preset="${p.id}" title="${p.note}">${appearanceSwatch(p)}<span class="preset-copy"><strong>${p.label}</strong><small>${p.note}</small></span></button>`).join('')}</div>
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Colour</h4>
+  ${colorRow('accent','Accent','Selection, focus, the active card and every glow.')}
+  ${colorRow('accent2','Second accent','The far end of gradients, the atmosphere and the second glow.')}
+  ${colorRow('bg','App background','The page behind everything.')}
+  ${colorRow('panel','Surface','Cards, panels, dialogs and the reading surface.')}
+  ${colorRow('text','Text','Primary text.')}
+  ${colorRow('muted','Muted text','Secondary copy, hints and metadata.')}
+  ${colorRow('line','Borders','Hairlines between cards, bars and panels.')}
+  ${colorRow('danger','Danger','Delete and destructive states.')}
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Shape</h4>
+  <div class="chip-row">${shapeChip('sharp','Sharp',0)}${shapeChip('soft','Soft',8)}${shapeChip('round','Rounded',16)}</div>
+  ${row('Card radius','Roundness of note cards.',slider('cardRadius',a.cardRadius,0,24,1,'px'))}
+  ${row('Interface radius','Panels, dialogs and larger controls.',slider('uiRadius',a.uiRadius,0,24,1,'px'))}
+  ${row('Button radius','Independent rounding for buttons and key controls.',slider('buttonRadius',a.buttonRadius,0,24,1,'px'))}
+  ${row('Border width','Weight of every hairline and card edge.',slider('borderWidth',a.borderWidth??2,0,4,.5,'px'))}
+  ${row('Surface blur','Frosted-glass strength behind bars, menus and cards.',slider('blur',a.blur??8,0,24,1,'px'))}
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Glow</h4>
+  ${row('Glow strength','Accent light on the active card, controls and the ambient wash.',slider('glow',a.glow,0,100,1,''))}
+  <div class="glow-preview" style="--glow:${a.glow};--glow-color:${COLOR_UTIL.alpha(a.accent,.5)};--glow-color-2:${COLOR_UTIL.alpha(a.accent2,.34)}"><span></span></div>
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Atmosphere</h4>
+  <div class="chip-row">${FX_PRESETS.map(([id,label])=>`<button class="shape-chip ${a.fx===id?'active':''}" data-fx="${id}">${label}</button>`).join('')}</div>
+  ${row('Density','How many particles the field carries.',slider('fxDensity',a.fxDensity,5,100,1,''))}
+  ${row('Drift speed','How quickly the field moves on its own.',slider('fxSpeed',a.fxSpeed,0,60,1,''))}
+  ${row('Parallax depth','How far the layers travel as you scroll and move the pointer.',slider('fxParallax',a.fxParallax,0,120,1,''))}
+  ${row('Particle opacity','Presence of the field behind the cards.',slider('fxOpacity',a.fxOpacity,5,100,1,'%'))}
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Type</h4>
+  ${fontSel('fontNote','Note face')}
+  ${fontSel('fontChrome','Interface face')}
+  ${row('Font size','Base app text size.',slider('fontSize',a.fontSize,11,20,1,'px'))}
+  ${row('Line height','Base text line spacing.',slider('lineHeight',a.lineHeight,1.2,2,.05,''))}
+ </div>
+ <div class="setting-group"><h4 class="sound-group-title">Layout</h4>
+  ${row('Card spacing','Space between notes and columns.',slider('cardGap',a.cardGap,2,24,1,'px'))}
+  ${row('Column width','Width of each branch column.',slider('columnWidth',a.columnWidth,200,440,4,'px'))}
+  ${row('Card padding','Internal note spacing.',slider('cardPadding',a.cardPadding,6,28,1,'px'))}
+  ${row('Inactive note visibility','Opacity of branches outside the active path.',slider('inactiveOpacity',a.inactiveOpacity,5,100,1,'%'))}
+  ${row('Reading width','The measure of the reading column.',slider('readWidth',a.readWidth||860,520,1100,10,'px'))}
+  ${row('Reading surface strength','How strongly the reading pane separates from the workspace.',slider('viewerOpacity',a.viewerOpacity,0,100,1,'%'))}
+ </div>
+ <div class="button-row"><button class="secondary" id="resetAppearance">Reset to Solitude</button></div>`;
+ const markCustom=()=>{a.theme='custom';s.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('active',false))};
+ s.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{applyThemePreset(b.dataset.preset);SOUND.tab();renderSettings()});
+ s.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{let r=+b.dataset.shape;a.cardRadius=r;a.uiRadius=r;a.buttonRadius=Math.max(0,r-1);markCustom();applyAppearance();saveState();renderSettings()});
+ s.querySelectorAll('[data-fx]').forEach(b=>b.onclick=()=>{a.fx=b.dataset.fx;markCustom();applyAppearance();saveState();renderSettings()});
+ s.querySelectorAll('[data-appearance]').forEach(i=>{
+  const handler=()=>{
+   let k=i.dataset.appearance,v=i.type==='range'?Number(i.value):i.value;
+   a[k]=v;markCustom();
+   let out=s.querySelector(`[data-value-for="${k}"]`);if(out)out.textContent=v+(['cardRadius','uiRadius','buttonRadius','cardGap','columnWidth','cardPadding','fontSize','borderWidth','blur','readWidth'].includes(k)?'px':['inactiveOpacity','viewerOpacity','fxOpacity'].includes(k)?'%':'');
+   applyAppearance();saveState();
+  };
+  i.oninput=handler;i.onchange=handler;
+ });
+ $('#resetAppearance').onclick=()=>{applyThemePreset('solitude');saveState();renderAll();renderSettings()};
+}
 function renderLayoutSettings(){let s=$('[data-section="layout"]');if(!s)return;s.innerHTML=`<h3>Layout</h3><p>Choose which note actions appear and arrange them in your preferred order.</p><div class="toolbar-list" id="toolbarList"></div><div class="button-row"><button class="secondary" id="addToolbarAction">Add hidden action</button><button class="secondary" id="resetToolbar">Reset toolbar</button></div>`;let list=$('#toolbarList');list.innerHTML=state.toolbar.map((id,i)=>`<div class="toolbar-item" draggable="true" data-toolbar-item="${id}"><span class="drag-mini">${icon('grip')}</span><span>${COMMANDS[id]?.label||id}</span><div class="move-pair"><button class="icon-btn" data-toolbar-up="${id}" title="Move up">${icon('arrowUp')}</button><button class="icon-btn" data-toolbar-down="${id}" title="Move down">${icon('arrowDown')}</button></div><button class="icon-btn danger" data-toolbar-remove="${id}" title="Hide">${icon('x')}</button></div>`).join('');list.querySelectorAll('[data-toolbar-up]').forEach(b=>b.onclick=()=>shiftToolbar(b.dataset.toolbarUp,-1));list.querySelectorAll('[data-toolbar-down]').forEach(b=>b.onclick=()=>shiftToolbar(b.dataset.toolbarDown,1));list.querySelectorAll('[data-toolbar-remove]').forEach(b=>b.onclick=()=>{state.toolbar=state.toolbar.filter(x=>x!==b.dataset.toolbarRemove);saveState();renderContext();renderSettings()});list.querySelectorAll('[data-toolbar-item]').forEach(item=>{item.ondragstart=()=>{toolbarDrag=item.dataset.toolbarItem;item.classList.add('dragging')};item.ondragend=()=>{toolbarDrag=null;item.classList.remove('dragging')};item.ondragover=e=>{e.preventDefault()};item.ondrop=e=>{e.preventDefault();let target=item.dataset.toolbarItem;if(!toolbarDrag||target===toolbarDrag)return;let arr=state.toolbar,from=arr.indexOf(toolbarDrag),to=arr.indexOf(target);arr.splice(to,0,arr.splice(from,1)[0]);saveState();renderContext();renderSettings()}});$('#resetToolbar').onclick=()=>{state.toolbar=deep(DEFAULT_TOOLBAR);saveState();renderContext();renderSettings()};$('#addToolbarAction').onclick=()=>{let hidden=Object.keys(COMMANDS).filter(id=>!state.toolbar.includes(id)&&!['newDocument','navUp','navDown','navParent','navChild','branchView','splitView','readView','undo','redo','settings','documents','exportMd','shortcutsHelp'].includes(id));if(!hidden.length){toast('No hidden note actions');return}let label=hidden.map((id,i)=>`${i+1}. ${COMMANDS[id].label}`).join('\n'),choice=prompt('Enter the number of the action to add:\n'+label);let id=hidden[Number(choice)-1];if(id){state.toolbar.push(id);saveState();renderContext();renderSettings()}}}
 function shiftToolbar(id,dir){let i=state.toolbar.indexOf(id),j=i+dir;if(i<0||j<0||j>=state.toolbar.length)return;[state.toolbar[i],state.toolbar[j]]=[state.toolbar[j],state.toolbar[i]];saveState();renderContext();renderSettings()}
 function builtinShortcutRows(){let rows=[['Save now',prettyShortcut(SAVE_CHORD)],['Leave a note or math field, close dialogs',IS_MAC?'Esc  or  ⌘.':'Esc'],['Move between math placeholders / out of a math field','← → Tab'],['Show this list',prettyShortcut(state.shortcuts.shortcutsHelp)||'—']];return rows.map(([a,k])=>`<tr><td>${a}</td><td><span class="keycap">${k}</span></td><td></td></tr>`).join('')}
@@ -7439,7 +7838,7 @@ renderAll=function(){document.documentElement.dataset.view=doc().mode;return _re
 // ======================= Solitude theme (Variant A-square, 64% glass) =======================
 // New appearance defaults; people who never changed the old purple defaults move over once.
 const OLD_APPEARANCE={accent:'#9b86e8',bg:'#232634',panel:'#292c3d',cardRadius:8,uiRadius:8,buttonRadius:7,cardGap:8,cardPadding:13};
-const SOLITUDE_APPEARANCE={accent:'#798186',bg:'#101315',panel:'#101315',cardRadius:0,uiRadius:0,buttonRadius:0,cardGap:4,cardPadding:12};
+const SOLITUDE_APPEARANCE={accent:'#798186',accent2:'#5c6a6f',bg:'#101315',panel:'#161a1d',text:'#cacccc',muted:'#8b9096',line:'#2f353b',danger:'#de6145',cardRadius:0,uiRadius:0,buttonRadius:0,cardGap:4,cardPadding:12,glow:0,fx:'off',fontNote:'plex',fontChrome:'mono',theme:'solitude'};
 Object.assign(DEFAULT_APPEARANCE,SOLITUDE_APPEARANCE);
 function migrateAppearance(s){
   if(!s||!s.appearance||(s.appearanceVersion||1)>=2)return s;

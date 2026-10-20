@@ -1300,6 +1300,102 @@ async function run(){
   log(zenFs.asked===1&&zenFs.zen===true?'pass':'fail',
     `zen: entering asks the browser for real fullscreen, so its own bars go away (requestFullscreen calls=${zenFs.asked})`);
 
+  // ---- appearance engine ---------------------------------------------------------------
+  await soft(`(function(){eval('openSettings')('appearance');return 1})()`);
+  await sleep(500);
+  const ap=await je(`(function(){
+    const sec=document.querySelector('[data-section="appearance"]');
+    return JSON.stringify({
+      presets:[...sec.querySelectorAll('[data-preset]')].map(b=>b.dataset.preset),
+      colours:sec.querySelectorAll('input[type="color"]').length,
+      fonts:sec.querySelectorAll('select[data-appearance^="font"]').length,
+      sliders:sec.querySelectorAll('input[type="range"]').length,
+      fx:[...sec.querySelectorAll('[data-fx]')].filter(b=>b.tagName==='BUTTON').map(b=>b.dataset.fx)
+    })})()`,{});
+  log((ap.presets||[]).length>=6&&ap.colours>=8&&ap.fonts===2&&ap.sliders>=18&&(ap.fx||[]).length>=5?'pass':'fail',
+    `themes: the panel exposes presets, eight colour tokens, type, shape and atmosphere (presets=${(ap.presets||[]).length}, colours=${ap.colours}, fonts=${ap.fonts}, sliders=${ap.sliders}, atmosphere=${(ap.fx||[]).length})`);
+
+  const apply=await je(`(function(){
+    const before={bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+                  accent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()};
+    document.querySelector('[data-preset="nebula"]').click();
+    const cs=getComputedStyle(document.documentElement);
+    const card=document.querySelector('.note-body');
+    return JSON.stringify({before,bg:cs.getPropertyValue('--bg').trim(),accent:cs.getPropertyValue('--accent').trim(),
+      text:cs.getPropertyValue('--text').trim(),theme:eval('state').appearance.theme,
+      active:document.querySelectorAll('[data-preset].active').length,
+      radius:card?getComputedStyle(card).borderTopLeftRadius:null,
+      fx:document.documentElement.dataset.fx,
+      canvas:getComputedStyle(document.getElementById('fxLayer')).display})})()`,{});
+  log(apply.bg!==apply.before.bg&&apply.accent!==apply.before.accent&&apply.theme==='nebula'&&apply.active===1&&apply.radius==='12px'&&apply.fx==='stars'&&apply.canvas!=='none'?'pass':'fail',
+    `themes: applying Nebula rewrites the whole token set at once (bg ${apply.before.bg}→${apply.bg}, accent ${apply.before.accent}→${apply.accent}, text=${apply.text}, radius=${apply.radius}, atmosphere=${apply.fx})`);
+
+  const brush=await je(`(function(){
+    const i=document.querySelector('[data-appearance="text"]');i.value='#ff2d55';i.dispatchEvent(new Event('input',{bubbles:true}));
+    const cs=getComputedStyle(document.documentElement);
+    const ed=document.querySelector('.note-editor');
+    return JSON.stringify({token:cs.getPropertyValue('--text').trim(),
+      note:ed?getComputedStyle(ed).color:null,
+      theme:eval('state').appearance.theme,
+      active:document.querySelectorAll('[data-preset].active').length})})()`,{});
+  log(brush.token==='#ff2d55'&&brush.note==='rgb(255, 45, 85)'&&brush.theme==='custom'&&brush.active===0?'pass':'fail',
+    `themes: a colour edit reaches the text that uses it and flips the theme to custom (token=${brush.token}, note=${brush.note})`);
+
+  const typeface=await je(`(function(){
+    const s=document.querySelector('[data-appearance="fontNote"]');s.value='serif';s.dispatchEvent(new Event('change',{bubbles:true}));
+    const ed=document.querySelector('.note-editor');
+    return JSON.stringify({font:ed?getComputedStyle(ed).fontFamily:null})})()`,{});
+  log(/serif|Georgia|Iowan|Palatino|Times/i.test(typeface.font||'')?'pass':'fail',
+    `themes: the note face follows the type choice (${String(typeface.font).slice(0,44)})`);
+
+  const atmos=await je(`(async function(){
+    document.querySelector('[data-fx="stars"]').click();
+    await new Promise(r=>setTimeout(r,420));
+    const F=eval('FX');
+    const cv=document.getElementById('fxLayer');
+    const d=cv.getContext('2d').getImageData(0,0,Math.min(cv.width,900),Math.min(cv.height,500)).data;
+    let lit=0;for(let i=3;i<d.length;i+=4)if(d[i]>8)lit++;
+    return JSON.stringify({parts:F.parts.length,on:F.on,opacity:cv.style.opacity,lit})})()`,{});
+  log(atmos.parts>20&&atmos.on===true&&atmos.lit>40?'pass':'fail',
+    `atmosphere: the star field is drawn behind the cards (${atmos.parts} particles, ${atmos.lit} lit pixels, opacity ${atmos.opacity})`);
+
+  const grid=await je(`(async function(){
+    document.querySelector('[data-fx="grid"]').click();
+    await new Promise(r=>setTimeout(r,520));
+    const F=eval('FX'),cv=document.getElementById('fxLayer');
+    const d=cv.getContext('2d').getImageData(0,0,Math.min(cv.width,900),Math.min(cv.height,500)).data;
+    let lit=0;for(let i=3;i<d.length;i+=4)if(d[i]>6)lit++;
+    return JSON.stringify({mode:eval('state').appearance.fx,parts:F.parts.length,lit})})()`,{});
+  log(grid.mode==='grid'&&grid.parts>50&&grid.lit>200?'pass':'fail',
+    `atmosphere: the grid preset paints its lattice (${grid.parts} points, ${grid.lit} lit pixels)`);
+
+  const drift=await je(`(async function(){
+    const d=eval('doc')();
+    d.tree=Array.from({length:26},(_,i)=>({id:'fx'+i,text:'Paragraph '+i+' — the field should drift behind every card in both views.',children:[]}));
+    d.selectedId='fx0';eval('saveState')();eval('renderAll')();eval('setMode')('read');
+    await new Promise(r=>setTimeout(r,500));
+    const F=eval('FX');
+    const before={scroll:F.scroll,px:F.px};
+    const el=document.querySelector('.read-pane')||document.querySelector('.workspace');
+    if(el)el.scrollTop=420;
+    window.dispatchEvent(new PointerEvent('pointermove',{clientX:innerWidth-40,clientY:innerHeight-40}));
+    await new Promise(r=>setTimeout(r,900));
+    const out={before,scroll:F.scroll,px:F.px,py:F.py};
+    eval('setMode')('branch');
+    return JSON.stringify(out)})()`,{});
+  log(drift.scroll>80&&drift.px>0.2?'pass':'fail',
+    `atmosphere: the field tracks scroll and pointer, so it parallaxes past the cards (scroll ${Math.round(drift.before.scroll)}→${Math.round(drift.scroll)}, pointer=${drift.px.toFixed(2)})`);
+
+  const off=await je(`(function(){
+    document.querySelector('[data-fx="off"]').click();
+    const cv=document.getElementById('fxLayer');
+    return JSON.stringify({fx:eval('state').appearance.fx,display:getComputedStyle(cv).display,on:eval('FX').on})})()`,{});
+  log(off.fx==='off'&&off.display==='none'&&off.on===false?'pass':'fail',
+    `atmosphere: switching it off removes the canvas and stops the loop (display=${off.display}, running=${off.on})`);
+
+  await soft(`(function(){eval('applyThemePreset')('solitude');const d=document.querySelector('#settingsDialog');if(d&&d.open)d.close();eval('renderAll')();return 1})()`);
+  await sleep(300);
+
   const fails=results.filter(c=>c==='fail').length;
   verdict.textContent=fails?`${fails} FAILED`:'all passed';
   verdict.className=fails?'fail':'pass';
