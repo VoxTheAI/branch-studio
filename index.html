@@ -3328,6 +3328,9 @@ body.sidebar-open .app{padding-left:268px}
 .vault-node[draggable="true"]:active{opacity:.6}
 .vault-node.renaming input{height:24px;border:1px solid var(--accent);border-radius:4px;background:var(--bg);color:var(--text);padding:0 6px;font:inherit;width:100%}
 @media(max-width:780px){body.sidebar-open .app{padding-left:0}.vault-rail{z-index:80}}
+@keyframes branchBoot{0%{opacity:0;transform:translateY(8px) scale(.992)}100%{opacity:1;transform:none}}
+body.booting .app{animation:branchBoot .55s cubic-bezier(.2,.8,.2,1) both}
+body.booting #vaultRail{animation:branchBoot .45s cubic-bezier(.2,.8,.2,1) both}
 .toast{position:fixed;right:18px;bottom:42px;z-index:100;background:#191b25;border:1px solid var(--line);border-radius:10px;padding:10px 13px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.14s}.toast.show{opacity:1;transform:translateY(0)}
 math-field{display:inline-block;min-width:22px;background:transparent;color:inherit;border:0;padding:0;vertical-align:middle;--caret-color:var(--accent);--selection-background-color:var(--accent-soft)}math-field::part(virtual-keyboard-toggle),math-field::part(menu-toggle){display:none}
 @media(max-width:780px){.settings-shell{grid-template-columns:1fr}.settings-nav{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;overflow:auto}.settings-nav button{white-space:nowrap}.context-actions .action-label{display:none}.read-wrap{padding:24px}.column{width:240px;min-width:240px}.topbar .view-switch button span{display:none}.doc-chip{max-width:160px}}
@@ -4843,10 +4846,6 @@ body{
     </div>
   </div>
 </dialog>
-<dialog class="modal welcome" id="welcomeDialog" aria-label="Welcome to Branch Studio">
-  <div class="modal-head"><h2>Welcome to Branch Studio</h2><button class="icon-btn" data-close="welcomeDialog" title="Close"></button></div>
-  <div class="welcome-body" id="welcomeBody"></div>
-</dialog>
 <div class="toast" id="toast"></div>
 <button id="zenExit" type="button" title="Leave zen mode (Esc)" aria-label="Leave zen mode">Leave zen <span aria-hidden="true">Esc</span></button>
 <input type="file" id="cssFileInput" accept=".css,text/css" hidden>
@@ -5329,8 +5328,43 @@ function starterTree(){return [
  {id:uid(),text:'A branching document',children:[
   {id:uid(),text:'Main idea',children:[{id:uid(),text:'Write details here. Every note can have children.',children:[]},{id:uid(),text:'Drag notes by the grip (or long-press on touch) or move them with shortcuts.',children:[]}]},
   {id:uid(),text:'Another branch',children:[{id:uid(),text:'Reading view is editable too.',children:[]}]}]}];}
+function welcomeTree(){
+  let n=(text,children=[])=>({id:uid(),text,children});
+  return [
+    n('Welcome to Branch Studio',[
+      n('Why this exists',[
+        n('Most writing tools make you think in a straight line. Branch Studio lets ideas branch as they form, so structure and prose grow together. It is built from personal experience, and it is moving toward more visual understanding tools that help you trace patterns in how you think and write.')
+      ]),
+      n('How it works',[
+        n('Branches: each idea becomes a node. Add children, siblings, move them up and down. The tree shows the shape of your argument as you write.'),
+        n('Three views: Branch view for structure, split view side by side, reading view for the finished piece. Switch any time.'),
+        n('Zen mode: one column, full screen, no chrome. For when you need to think.'),
+        n('Command palette: every action from the keyboard. Press Ctrl+K and type what you want.'),
+        n('Themes: seven presets, fully editable tokens - colours, radii, glow, particles, fonts.'),
+        n('Sound: on by default. A distinct cue for typing, deleting, moving, success and error. Mute any time.'),
+        n('Import and export: .docx, .txt, .md and PDF with declared losses. Export Markdown or a full backup .json. Nothing leaves your machine.'),
+        n('Keyboard first: hold the backtick and use the arrows to walk the tree. Every button has a shortcut.')
+      ]),
+      n('Inspired by',[
+        n('Branch Writing by Santi Younger - the visual writing system this app grows from. santiyounger.com/branch-writing'),
+        n('Omarchy by DHH - keyboard-first, opinionated, local-first. omarchy.org'),
+        n('Built by Vox. Icons: Bootstrap Icons.')
+      ]),
+      n('If something goes wrong',[
+        n('Use More, Export backup (.json) before big changes - it holds every document and setting.'),
+        n('Report issues on GitHub: github.com/VoxTheAI/branch-studio'),
+        n('Support the project: platform.santiyounger.com/branch-writing')
+      ])
+    ])
+  ];
+}
+function openWelcomeDoc(){
+  let existing=(state.documents||[]).find(d=>d.title==='Welcome to Branch Studio');
+  if(!existing){snapshot();let d=makeDocument('Welcome to Branch Studio',false,state.activeVaultId);d.tree=welcomeTree();d.mode='split';state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();SOUND.creation();toast('Welcome note opened')}
+  else{state.activeDocumentId=existing.id;existing.mode='split';saveState();renderAll();SOUND.select()}
+}
 function makeDocument(title='Untitled',blank=false,vaultId=null){let tree=blank?[{id:uid(),text:'',children:[]}]:starterTree();return {id:uid('d'),title,vaultId:vaultId||state?.activeVaultId||'v1',folderId:null,createdAt:Date.now(),updatedAt:Date.now(),tree,selectedId:tree[0]?.id||null,mode:'branch'};}
-function defaultState(){let vaults=[{id:'v1',name:'My Vault'}];let d=makeDocument('Untitled',true,'v1');return {version:1,vaults,activeVaultId:'v1',folders:[],documents:[d],activeDocumentId:d.id,appearance:deep(DEFAULT_APPEARANCE),behavior:deep(DEFAULT_BEHAVIOR),sound:deep(DEFAULT_SOUND),shortcuts:deep(DEFAULT_SHORTCUTS),toolbar:deep(DEFAULT_TOOLBAR),customCSS:'',behavior:{...deep(DEFAULT_BEHAVIOR),showSidebar:true}}}
+function defaultState(){let vaults=[{id:'v1',name:'My Vault'}];let d=makeDocument('Welcome to Branch Studio',false,'v1');d.tree=welcomeTree();d.mode='split';d.selectedId=d.tree[0]?.id||null;return {version:1,vaults,activeVaultId:'v1',folders:[],documents:[d],activeDocumentId:d.id,appearance:deep(DEFAULT_APPEARANCE),behavior:{...deep(DEFAULT_BEHAVIOR),showSidebar:true},sound:deep(DEFAULT_SOUND),shortcuts:deep(DEFAULT_SHORTCUTS),toolbar:deep(DEFAULT_TOOLBAR),customCSS:''}}
 const IDB_NAME='branch-studio',IDB_STORE='kv';
 const Store={ls:false,idb:null,idbTried:false,status:'pending',lastError:'',dirtySinceLoad:false,lastSavedJSON:'',backupNeeded:false};
 Store.ls=(()=>{try{let k='__branch_studio_probe__';localStorage.setItem(k,'1');let ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}})();
@@ -5792,7 +5826,7 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();e.stopPropagation();zenSet(false);
 },true);
 function insertTable(){let ed=editorFrom(document.activeElement)||document.querySelector('.note-editor,.read-editor');if(!ed){toast('Put the cursor in a note first');return}let tpl='| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n| Cell 3   | Cell 4   |';snapshot();let r=getSelection();let range;if(r&&r.rangeCount&&ed.contains(r.anchorNode))range=r.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});range.deleteContents();let node=document.createTextNode(tpl);range.insertNode(node);range.setStartAfter(node);range.collapse(true);let sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);let id=ed.dataset.editId||ed.dataset.readEdit;if(id){let rec=locate(id);if(rec){rec.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}}toast('Table inserted — edit the cells in the text');renderAll()}
-function newDocument(){snapshot();let d=makeDocument('Untitled',true,state.activeVaultId);state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();SOUND.creation();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
+function newDocument(){snapshot();let d=makeDocument('Untitled',true,state.activeVaultId);d.mode='split';state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();SOUND.creation();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
 function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;if(state.activeDocumentId!==id)SOUND.select();state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
 function duplicateDocument(id){let source=state.documents.find(d=>d.id===id);if(!source)return;snapshot();let copy=deep(source),map=new Map();function newid(nodes){for(let n of nodes){let old=n.id;n.id=uid();map.set(old,n.id);newid(n.children)}}newid(copy.tree);copy.id=uid('d');copy.title=(source.title||'Untitled')+' copy';copy.createdAt=copy.updatedAt=Date.now();copy.selectedId=map.get(source.selectedId)||copy.tree[0]?.id;state.documents.push(copy);state.activeDocumentId=copy.id;saveState();renderAll();toast('Document duplicated')}
 function deleteDocument(id){if(state.documents.length===1){SOUND.error();toast('Keep at least one document');return}let d=state.documents.find(x=>x.id===id);if(!d)return;if(!confirm(`Delete “${d.title||'Untitled'}”?`))return;snapshot();state.documents=state.documents.filter(x=>x.id!==id);if(state.activeDocumentId===id)state.activeDocumentId=state.documents[0].id;saveState();renderAll();SOUND.remove();toast('Document deleted')}
@@ -6196,7 +6230,7 @@ function phoneBarAction(k,b){if(k==='indent')return runCommand('indent');if(k===
  if(k==='move')return openMenu(b,[cmdItem('moveUp'),cmdItem('moveDown'),{sep:1},cmdItem('indent',{label:'Indent (make child of note above)'}),cmdItem('outdent')],{title:'Move — or long-press a note and drag',sheet:true});
  if(k==='more')return openMenu(b,[cmdItem('navParent',{label:'Go to parent note'}),cmdItem('navChild',{label:'Go to first child'}),{sep:1},...noteClipItems(),{sep:1},cmdItem('image'),cmdItem('math'),{sep:1},cmdItem('deleteNode')],{title:'This note',sheet:true})}
 function renderPhoneBar(){let bar=$('#phoneBar');if(!bar){bar=document.createElement('nav');bar.id='phoneBar';bar.className='phone-bar';bar.setAttribute('aria-label','Note actions');document.body.appendChild(bar)}if(bar.dataset.built)return positionBottomUI();bar.dataset.built='1';bar.innerHTML=[['add','plus','Add'],['indent','indent','Indent'],['outdent','outdent','Outdent'],['move','move','Move'],['more','more','More']].map(([k,ic,l])=>`<button type="button" data-bar="${k}" aria-label="${l}"${['add','move','more'].includes(k)?' aria-haspopup="menu"':''}>${icon(ic)}<span>${l}</span></button>`).join('');bar.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onmousedown=e=>e.preventDefault();b.onclick=()=>phoneBarAction(b.dataset.bar,b)});positionBottomUI()}
-function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('table'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),{icon:'question',label:'Welcome & help',run:()=>openWelcome(true)},{sep:1},...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
+function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('table'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),{icon:'question',label:'Welcome & help',run:()=>openWelcomeDoc()},{sep:1},...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
  if(!$('#helpChip')){document.body.insertAdjacentHTML('beforeend','<button class="help-chip" id="helpChip" title="Keyboard shortcuts" aria-label="Keyboard shortcuts"></button>');$('#helpChip').onclick=openShortcutSheet}setIcon($('#helpChip'),'question','Keyboard shortcuts');$('#helpChip').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'')}
 function renderModeChrome(){ensureChrome();renderPhoneBar();requestAnimationFrame(fitToolbar)}
 // --- shortcut sheet (read-only overview; "Change shortcuts…" opens Settings) ---
@@ -6338,8 +6372,8 @@ function initInputModes(){UI.auto=detectInitialMode();applyMode(UI.auto,{force:t
 initInputModes();
 
 function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');
-  requestAnimationFrame(()=>openWelcome(false));
-  $$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();renderAll();applySidebar();
+  // welcome is now an in-app document; see welcomeTree()
+  $$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();renderAll();applySidebar();document.body.classList.add('booting');setTimeout(()=>document.body.classList.remove('booting'),700);
   let nvf=$('#newVaultFile');if(nvf&&!nvf.dataset.wired){nvf.dataset.wired='1';nvf.onclick=()=>vaultNewFile()};setIcon(nvf,'file-earmark-plus');
   let nvfld=$('#newVaultFolder');if(nvfld&&!nvfld.dataset.wired){nvfld.dataset.wired='1';nvfld.onclick=()=>vaultNewFolder()};setIcon(nvfld,'folder-plus');
   let tvt=$('#toggleVaultRail');if(tvt&&!tvt.dataset.wired){tvt.dataset.wired='1';tvt.onclick=()=>{state.behavior.showSidebar=false;saveState();applySidebar()}};setIcon(tvt,'x');
@@ -8232,7 +8266,7 @@ document.addEventListener('pointerdown',e=>{let b=e.target.closest&&e.target.clo
 function pxTopMenu(anchor){
   let items=[...PX.topItems.map(f=>typeof f==='function'?f():f).flat().filter(Boolean),{sep:1},
     cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},
-    {icon:'zen',label:'Zen mode',hint:prettyShortcut(state.shortcuts.zen||''),run:()=>zenSet()},{sep:1},cmdItem('settings',{label:'Settings'}),
+    {icon:'zen',label:'Zen mode',hint:prettyShortcut(state.shortcuts.zen||''),run:()=>zenSet()},{sep:1},cmdItem('settings',{label:'Settings'}),{icon:'question',label:'Welcome & help',run:()=>openWelcomeDoc()},{icon:'sidebar',label:'Toggle file sidebar',run:()=>{state.behavior.showSidebar=!state.behavior.showSidebar;saveState();applySidebar()}},{sep:1},
     ...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])];
   openMenu(anchor,items,{title:'More'});
 }
