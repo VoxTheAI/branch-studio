@@ -3264,8 +3264,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .icon-btn{width:34px;height:34px;display:grid;place-items:center;color:var(--muted);padding:0}
 .icon-btn:hover,.icon-btn.active{background:var(--panel-3);color:var(--text)}
 .icon-btn.danger:hover{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger)}
-.app{height:100%;display:grid;grid-template-rows:48px auto 1fr 28px}
-.topbar{height:48px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:0 10px;background:var(--bg);z-index:30}
+.app{height:100%;display:grid;grid-template-rows:54px auto 1fr 28px}
+.topbar{height:54px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--bg);z-index:30}
 .topbar .spacer{flex:1}.divider{width:1px;height:22px;background:var(--line);margin:0 2px}.view-switch{display:flex;padding:3px;background:var(--panel);border:1px solid var(--line);border-radius:10px;gap:2px}.view-switch button{height:28px;padding:0 10px;color:var(--muted);display:flex;gap:6px;align-items:center}.view-switch button.active{background:var(--panel-3);color:var(--text)}
 .doc-chip{max-width:260px;height:34px;padding:0 10px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);overflow:hidden}.doc-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.doc-chip:hover{background:var(--panel-3)}
 .contextbar{min-height:43px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--bg)}
@@ -3296,12 +3296,24 @@ math-field{display:inline-block;min-width:22px;background:transparent;color:inhe
 }
 
 .topbar,.contextbar,.statusbar{background:color-mix(in srgb,var(--bg) 92%, black 8%)}
-.topbar{padding:0 14px;gap:10px;box-shadow:0 1px 0 rgba(255,255,255,.015) inset}
-.contextbar{padding:7px 12px;gap:10px;overflow-x:auto;scrollbar-width:none}
+.topbar{padding:0 12px;gap:8px;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:saturate(150%) blur(14px);-webkit-backdrop-filter:saturate(150%) blur(14px);box-shadow:0 1px 0 rgba(255,255,255,.02) inset;position:relative}
+.tb-actions{display:flex;align-items:center;gap:2px}
+.topbar .divider{width:1px;height:18px;background:var(--line);opacity:.85;margin:0 6px;flex:none}
+.topbar .icon-btn{width:32px;height:32px;border-radius:9px;transition:background .14s ease,color .14s ease,transform .1s ease,opacity .14s ease}
+.topbar .icon-btn:hover{background:rgba(255,255,255,.055);color:var(--text)}
+.topbar .icon-btn:active{transform:scale(.93)}
+.topbar .icon-btn:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:1px}
+.topbar .icon-btn[aria-pressed="false"]{opacity:.5}
+.topbar .icon-btn[aria-pressed="false"]:hover{opacity:.85}
+.topbar .icon-btn:disabled{opacity:.3;pointer-events:none}
+.contextbar{padding:7px 12px;gap:10px;overflow-x:auto;scrollbar-width:none;background:color-mix(in srgb,var(--bg) 94%, black 6%)}
 .contextbar::-webkit-scrollbar{display:none}
-.view-switch{background:color-mix(in srgb,var(--panel) 94%, white 6%);border-radius:12px;padding:4px}
-.view-switch button{height:30px;padding:0 12px;border-radius:9px}
-.view-switch button.active{background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 1px 3px rgba(0,0,0,.15)}
+.view-switch{position:relative;display:flex;align-items:center;gap:2px;padding:3px;border-radius:11px;background:color-mix(in srgb,var(--panel) 72%, transparent);border:1px solid color-mix(in srgb,var(--line) 85%, transparent)}
+.vs-pill{position:absolute;top:0;left:0;height:0;width:0;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.03));box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 2px 6px rgba(0,0,0,.18);transition:transform .24s cubic-bezier(.22,.72,.28,1),width .24s cubic-bezier(.22,.72,.28,1);pointer-events:none}
+.view-switch button{position:relative;z-index:1;height:28px;padding:0 11px;border-radius:8px;display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px;letter-spacing:.005em;transition:color .14s ease}
+.view-switch button:hover{color:var(--text)}
+.view-switch button.active{color:var(--text)}
+.view-switch button:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-1px}
 .doc-chip{height:36px;border-radius:11px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
 .icon-btn{border-radius:10px}
 .context-actions{display:flex;gap:6px;flex-wrap:nowrap}
@@ -3315,6 +3327,8 @@ math-field{display:inline-block;min-width:22px;background:transparent;color:inhe
 .note:hover .grip,.note.active .grip{opacity:.72}
 .note-body{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.008));box-shadow:0 10px 24px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.03)}
 .note.active .note-body{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent), 0 12px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03)}
+html.nav-hold .note.active .note-body{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 62%,transparent), 0 14px 32px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04);transition:box-shadow .12s ease}
+html.nav-hold .note.active .note-body::after{content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 10%,transparent)}
 .note-tools{gap:4px;margin-top:10px}
 .note-tools button{border-radius:9px;background:rgba(255,255,255,.02)}
 .add-row{border-radius:10px;background:rgba(255,255,255,.015)}
@@ -3373,8 +3387,8 @@ math-field{display:inline-block;min-width:22px;background:transparent;color:inhe
 /* iPad / tablet interaction layer. Desktop geometry remains the source layout; tablet adds touch sizing and adaptive workspace density. */
 @media (min-width:601px) and (max-width:1100px){
   :root{--tablet-edge:22px;--tablet-column-width:320px}
-  .topbar{height:52px;padding:0 14px;gap:8px}
-  .topbar .icon-btn{width:40px;height:40px;min-width:40px}
+  .topbar{height:56px;padding:0 14px;gap:8px}
+  .topbar .icon-btn{width:38px;height:38px;min-width:38px}
   .view-switch button{height:34px;padding:0 11px}
   .contextbar{min-height:48px;padding:6px 14px;gap:8px}
   .context-actions{gap:4px;overflow-x:auto;scrollbar-width:none}
@@ -3416,8 +3430,8 @@ math-field{display:inline-block;min-width:22px;background:transparent;color:inhe
 /* Mobile interaction layer. Desktop geometry above remains untouched. */
 @media (max-width: 600px){
   :root{--mobile-bar:58px;--mobile-edge:12px;--column-width:calc(100vw - 28px);--doc-pad:18px}
-  .app{grid-template-rows:48px auto 1fr 0}
-  .topbar{height:48px;padding:0 8px;gap:4px;overflow:hidden}
+  .app{grid-template-rows:54px auto 1fr 0}
+  .topbar{height:54px;padding:0 8px;gap:4px;overflow:hidden}
   .topbar .divider{display:none}
   .topbar .icon-btn{width:36px;height:36px;min-width:36px}
   #exportBtn,#shortcutsBtn{display:none}
@@ -4631,19 +4645,24 @@ html.zen .split .branch-pane{width:auto!important}
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="view-switch" aria-label="View mode">
-      <button data-mode="branch" title="Branch view"></button>
-      <button data-mode="split" title="Split view"></button>
-      <button data-mode="read" title="Reading view"></button>
+    <div class="view-switch" role="tablist" aria-label="View mode">
+      <span class="vs-pill" aria-hidden="true"></span>
+      <button data-mode="branch" role="tab" title="Branch view"></button>
+      <button data-mode="split" role="tab" title="Split view"></button>
+      <button data-mode="read" role="tab" title="Reading view"></button>
     </div>
     <span class="spacer"></span>
-    <button class="icon-btn" id="undoBtn" title="Undo"></button>
-    <button class="icon-btn" id="redoBtn" title="Redo"></button>
-    <div class="divider"></div>
-    <button class="icon-btn" id="documentsBtn" title="Documents" aria-label="Documents"></button>
-    <button class="icon-btn" id="exportBtn" title="Export Markdown"></button>
-    <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts"></button>
-    <button class="icon-btn" id="settingsBtn" title="Settings"></button>
+    <div class="tb-actions">
+      <button class="icon-btn" id="undoBtn" title="Undo"></button>
+      <button class="icon-btn" id="redoBtn" title="Redo"></button>
+      <span class="divider"></span>
+      <button class="icon-btn" id="documentsBtn" title="Documents" aria-label="Documents"></button>
+      <button class="icon-btn" id="exportBtn" title="Export Markdown"></button>
+      <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts"></button>
+      <span class="divider"></span>
+      <button class="icon-btn" id="soundBtn" title="Sound on" aria-pressed="true"></button>
+      <button class="icon-btn" id="settingsBtn" title="Settings"></button>
+    </div>
   </header>
   <div class="contextbar">
     <div class="breadcrumbs" id="breadcrumbs"></div>
@@ -4689,7 +4708,7 @@ const BOOTSTRAP_ICONS={
   plus:'plus-lg',trash:'trash',grip:'grid-3x2-gap',arrowUp:'arrow-up',arrowDown:'arrow-down',
   indent:'text-indent-left',outdent:'text-indent-right',photo:'image',math:'plus-slash-minus',
   copy:'clipboard',edit:'pencil',x:'x-lg',palette:'palette',layout:'window-sidebar',code:'braces',
-  switch:'arrow-left-right',files:'files',reset:'arrow-repeat',more:'three-dots',question:'question-lg',move:'arrows-move',topic:'plus-circle',child:'arrow-return-right',input:'hand-index',copyNote:'files',cutNote:'scissors',pasteNote:'clipboard',search:'search',resetOne:'arrow-counterclockwise',warn:'exclamation-triangle',volume:'volume-up',play:'play-fill',cmd:'command'
+  switch:'arrow-left-right',files:'files',reset:'arrow-repeat',more:'three-dots',question:'question-lg',move:'arrows-move',topic:'plus-circle',child:'arrow-return-right',input:'hand-index',copyNote:'files',cutNote:'scissors',pasteNote:'clipboard',search:'search',resetOne:'arrow-counterclockwise',warn:'exclamation-triangle',volume:'volume-up',volumeMute:'volume-mute',volumeDown:'volume-down',play:'play-fill',cmd:'command'
 };
 function icon(name,cls='icon'){const bi=BOOTSTRAP_ICONS[name]||'circle';return `<i class="bi bi-${bi} ${cls}" aria-hidden="true"></i>`}
 function setIcon(el,name,label){el.innerHTML=icon(name);if(label)el.setAttribute('aria-label',label)}
@@ -4747,8 +4766,8 @@ const SOUND_THEMES={
 // A dedicated deletion cue: a backspace should not sound like a keystroke. Short, dull,
 // lower than the typing tick, so the ear can tell them apart without looking.
 // every cue class the app can play, in the order the settings panel lists them
-const SOUND_CLASSES=['typing','deletion','remove','creation','movement','click','menu','close','toggle'];
-const DEFAULT_SOUND={enabled:true,volume:.5,theme:'typing',typing:true,deletion:true,creation:true,movement:true,remove:true,click:true,menu:true,close:true,toggle:true};
+const SOUND_CLASSES=['typing','deletion','remove','creation','movement','select','drop','click','tab','menu','open','close','toggle','success','error','notify'];
+const DEFAULT_SOUND={enabled:true,volume:.6,theme:'typing',typing:true,deletion:true,creation:true,movement:true,remove:true,click:true,menu:true,close:true,toggle:true,select:true,drop:true,tab:true,open:true,success:true,error:true,notify:true};
 const SOUND_TYPING_GAP=26; // ms — faster than this and ticks merge into one
 const SOUND_DEL_GAP=40;   // ms — a backspace can be held, but not into a buzz
 const SOUND_CLICK_GAP=45; // ms — a button must feel instant, not machine-gunned
@@ -4781,7 +4800,29 @@ function soundKit(id){
    noise:.05,noiseFreq:(mv.noiseFreq||1100),noiseDecay:.04,sat:sat*.4,reverb:rev+.03},
   // a toggle: two quick clicks, the second a step up, like a switch seating itself
   toggle:{wave,f0:(tk.f0||1200)*.5,f1:(tk.f0||1200)*.66,decay:.04,gain:.15,attack:.001,
-   noise:(tk.noise||.4)*.35,noiseFreq:(tk.noiseFreq||2400)*.9,noiseDecay:.014,sat:sat*.6}
+   noise:(tk.noise||.4)*.35,noiseFreq:(tk.noiseFreq||2400)*.9,noiseDecay:.014,sat:sat*.6},
+  // landing on a note: a soft tick, brighter and quieter than a button
+  select:{wave,f0:(tk.f0||1200)*.72,f1:(tk.f0||1200)*.52,decay:.045,gain:.15,attack:.001,
+   noise:(tk.noise||.4)*.22,noiseFreq:(tk.noiseFreq||2400)*.75,noiseDecay:.014,sat:sat*.45,reverb:rev*.5},
+  // opening something bigger than a menu: a dialog, the drawer, the palette
+  open:{wave:'sine',f0:(mv.f0||600)*.72,f1:(mv.f1||300)*2.6,decay:.21,gain:.22,attack:.003,
+   noise:.08,noiseFreq:(mv.noiseFreq||1100)*1.4,noiseDecay:.07,sat:sat*.5,reverb:rev+.1},
+  // saved, exported, imported: a short three-note rise
+  success:{wave:'sine',f0:(p.f1||900)*.8,f1:(p.f1||900)*.82,decay:.17,gain:.19,attack:.002,
+   body:{wave:'sine',freq:((p.body&&p.body.freq)||200)*.9,gain:.12,decay:.2},sat:sat*.4,reverb:rev+.05},
+  // refused: two notes down, dry and slightly detuned
+  error:{wave:'triangle',f0:(dl.f0||420)*.9,f1:(dl.f1||230)*.62,decay:.13,gain:.2,attack:.002,
+   noise:(dl.noise||.3)*.5,noiseFreq:(dl.noiseFreq||900)*.8,noiseDecay:.06,sat:sat*1.2},
+  // a toast: one soft bell
+  notify:{wave:'sine',f0:(p.f1||900)*1.15,f1:(p.f1||900)*1.05,decay:.24,gain:.16,attack:.004,
+   body:{wave:'sine',freq:((p.body&&p.body.freq)||200)*1.4,gain:.1,decay:.28},reverb:rev+.06},
+  // switching settings tabs or view modes: a hair above the button click
+  tab:{wave,f0:(tk.f0||1200)*.62,f1:(tk.f0||1200)*.5,decay:.035,gain:.14,attack:.001,
+   noise:(tk.noise||.4)*.26,noiseFreq:(tk.noiseFreq||2400)*.85,noiseDecay:.012,sat:sat*.5},
+  // a note landing after a drag
+  drop:{wave:'sine',f0:(dl.f0||420)*1.1,f1:(dl.f1||230)*.7,decay:.12,gain:.2,attack:.002,
+   body:{wave:'sine',freq:(df.freq||120)*.9,gain:.16,decay:.15},noise:.2,
+   noiseFreq:(dl.noiseFreq||900)*.6,noiseDecay:.05,sat:sat*.8,reverb:rev*.4}
  };
 }
 const SOUND={
@@ -4860,6 +4901,20 @@ const SOUND={
     // two quick clicks, the second a step up: a switch seating itself
     let c=v.toggle;this.tone({...c});
     this.tone({...c,at:.055,f0:c.f1,f1:c.f1*1.08,gain:c.gain*.8,noise:0})}
+   else if(kind==='success'){
+    // three notes up: done, saved, exported
+    let c=v.success,a=c.f0,b=a*1.19,d=a*1.5;
+    this.tone({...c,f0:a,f1:a*1.01});
+    this.tone({...c,at:.075,f0:b,f1:b*1.01});
+    this.tone({...c,at:.15,f0:d,f1:d*1.01,gain:c.gain*1.05,decay:c.decay*1.2})}
+   else if(kind==='error'){
+    // two notes down: refused, and it does not sound pleasant on purpose
+    let c=v.error;this.tone({...c});
+    this.tone({...c,at:.085,f0:c.f1,f1:c.f1*.72,gain:c.gain*.85,noise:0})}
+   else if(kind==='open'){
+    // a wider two-step rise than a menu: this is a whole surface arriving
+    let c=v.open;this.tone({...c});
+    this.tone({...c,at:.09,f0:c.f1,f1:c.f1*1.5,gain:c.gain*.5,noise:0,decay:c.decay*.7})}
    else{
     // remove / click / menu / close: one shape from the theme's own kit, plus a tail where the
     // gesture calls for one (a menu opening answers itself, a note being deleted falls away)
@@ -4877,6 +4932,13 @@ const SOUND={
  creation(){return this.emit('creation')},
  movement(){return this.emit('movement')},
  remove(){return this.emit('remove')},
+ select(){return this.emit('select')},
+ drop(){return this.emit('drop')},
+ tab(){return this.emit('tab')},
+ open(){return this.emit('open')},
+ success(){return this.emit('success')},
+ error(){return this.emit('error')},
+ notify(){return this.emit('notify')},
  menu(){return this.emit('menu')},
  close(){return this.emit('close')},
  toggle(){return this.emit('toggle')},
@@ -4902,8 +4964,40 @@ function dictLookup(w){let d=dictInflate();let key=String(w||'').toLowerCase().r
 // Every button makes its smallest sound, unless whatever it triggered already made a richer
 // one. The timer defers this until after the element's own handler has run, so delete/menu/
 // creation cues set the guard first and the click stays quiet underneath them.
+// ---------- hold the key below Escape to navigate -------------------------------------------
+// Backquote (ANSI) and IntlBackslash (ISO, the § key) both sit directly under Escape. Holding
+// one turns the arrows into tree navigation with the caret left alone; letting go focuses the
+// note you landed on, caret at the end, so the gesture ends with you typing.
+const NAV_HOLD_CODES=new Set(['Backquote','IntlBackslash']);
+addEventListener('keydown',e=>{
+  if(!NAV_HOLD_CODES.has(e.code)||e.metaKey||e.ctrlKey||e.altKey||e.shiftKey)return;
+  // a text field needs its own punctuation: never steal the key from an input
+  if(e.target&&e.target.closest&&e.target.closest('input,textarea,select'))return;
+  e.preventDefault();
+  if(UI.navHold)return;
+  UI.navHold=true;UI.navMoved=false;
+  document.documentElement.classList.add('nav-hold');
+},true);
+addEventListener('keydown',e=>{
+  if(!UI.navHold)return;
+  if(!/^Arrow(Up|Down|Left|Right)$/.test(e.key))return;
+  e.preventDefault();e.stopImmediatePropagation();
+  UI.navMoved=true;
+  navigate(e.key);
+},true);
+addEventListener('keyup',e=>{
+  if(!NAV_HOLD_CODES.has(e.code)||!UI.navHold)return;
+  e.preventDefault();
+  UI.navHold=false;
+  document.documentElement.classList.remove('nav-hold');
+  if(UI.navMoved){UI.navMoved=false;focusNodeEditor(doc().selectedId,true)}
+  else SOUND.select();
+},true);
+addEventListener('blur',()=>{UI.navHold=false;UI.navMoved=false;document.documentElement.classList.remove('nav-hold')});
+addEventListener('resize',()=>positionViewPill());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>positionViewPill()).catch(()=>{});
 document.addEventListener('click',e=>{
-  const b=e.target.closest&&e.target.closest('button,[role="button"],.toggle,.menu-item');
+  const b=e.target.closest&&e.target.closest('button,[role="button"],.toggle,.menu-item,.ctx-item,.doc-row,.seg-btn,[data-settings-tab],[data-mode],a[href^="#"]');
   if(!b||b.disabled)return;
   if(b.closest('.note-editor,.read-editor,.math-field'))return;
   if(b.hasAttribute('data-sound-none'))return;
@@ -5063,17 +5157,23 @@ function countNodes(){return flatten().length}
 function snapshot(){lastTextSnap={id:null,time:0};undoStack.push(JSON.stringify({documents:state.documents,activeDocumentId:state.activeDocumentId}));if(undoStack.length>80)undoStack.shift();redoStack=[]}
 function restoreSnapshot(stackFrom,stackTo){if(!stackFrom.length)return;stackTo.push(JSON.stringify({documents:state.documents,activeDocumentId:state.activeDocumentId}));let snap=JSON.parse(stackFrom.pop());let refocus=!!document.activeElement?.closest?.('.note-editor,.read-editor,math-field');state.documents=snap.documents;state.activeDocumentId=snap.activeDocumentId;saveState();renderAll();if(refocus)requestAnimationFrame(()=>focusNodeEditor(doc().selectedId,true));return true}
 function toast(msg){if(!state.behavior.showFeedback||Date.now()<(forceToast.lockUntil||0))return;forceToast(msg,1200)}
-function forceToast(msg,ms=1200,lock=false){let t=$('#toast');if(!t)return;if(lock)forceToast.lockUntil=Date.now()+ms;t.textContent=msg;t.classList.add('show');crossfade(t,{dur:180,blur:5,y:4});clearTimeout(toast.timer);toast.timer=setTimeout(()=>{if(motionOn())exitEl(t,{dur:MOTION.exit,blur:4,y:4,then:()=>{resetEl(t);t.classList.remove('show')}});else t.classList.remove('show')},ms)}
+function forceToast(msg,ms=1200,lock=false){let t=$('#toast');if(!t)return;SOUND.notify();if(lock)forceToast.lockUntil=Date.now()+ms;t.textContent=msg;t.classList.add('show');crossfade(t,{dur:180,blur:5,y:4});clearTimeout(toast.timer);toast.timer=setTimeout(()=>{if(motionOn())exitEl(t,{dur:MOTION.exit,blur:4,y:4,then:()=>{resetEl(t);t.classList.remove('show')}});else t.classList.remove('show')},ms)}
 function escapeHTML(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function applyAppearance(){let a=state.appearance,r=document.documentElement.style;r.setProperty('--card-radius',a.cardRadius+'px');r.setProperty('--ui-radius',a.uiRadius+'px');r.setProperty('--button-radius',a.buttonRadius+'px');r.setProperty('--inactive-opacity',a.inactiveOpacity/100);r.setProperty('--viewer-mix',a.viewerOpacity+'%');r.setProperty('--card-gap',a.cardGap+'px');r.setProperty('--column-width',a.columnWidth+'px');r.setProperty('--card-padding',a.cardPadding+'px');r.setProperty('--font-size',a.fontSize+'px');r.setProperty('--line-height',a.lineHeight);r.setProperty('--accent',a.accent);r.setProperty('--bg',a.bg);r.setProperty('--panel',a.panel);$('#custom-style').textContent=state.customCSS||''}
 function focusNodeEditor(id,atEnd=false){let d=doc(),sel=d.mode==='read'?`[data-read-edit="${id}"]`:`[data-edit-id="${id}"]`;let ed=document.querySelector(sel)||document.querySelector(`[data-edit-id="${id}"]`)||document.querySelector(`[data-read-edit="${id}"]`);if(!ed)return;ed.focus({preventScroll:true});if(atEnd){try{let r=document.createRange();r.selectNodeContents(ed);r.collapse(false);let sel=getSelection();sel.removeAllRanges();sel.addRange(r)}catch(e){}}}
-function selectNode(id,{focus=false}={}){if(!locate(id))return;doc().selectedId=id;doc().updatedAt=Date.now();saveState();renderWorkspace();renderContext();if(focus)requestAnimationFrame(()=>focusNodeEditor(id))}
+function selectNode(id,{focus=false}={}){if(!locate(id))return;let moved=doc().selectedId!==id;doc().selectedId=id;if(moved)SOUND.select();doc().updatedAt=Date.now();saveState();renderWorkspace();renderContext();if(focus)requestAnimationFrame(()=>focusNodeEditor(id))}
 function pathIds(){let r=locate(doc().selectedId);return r?r.path.map(n=>n.id):[]}
 function isRelated(n,path){return n.children?.some(c=>path.includes(c.id))}
 function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
 function applyChrome(){let b=state.behavior;document.querySelector('.topbar').style.display=b.showTopbar?'flex':'none';document.querySelector('.contextbar').style.display=b.showContextbar?'flex':'none';document.querySelector('.statusbar').style.display=b.showStatusbar?'flex':'none';let chip=$('#restoreChrome');let hidden=!b.showTopbar||!b.showContextbar||!b.showStatusbar;chip.classList.toggle('show',hidden);chip.innerHTML=icon('reset')+'Restore interface'}
 function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
-function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
+// the segmented control's active pill slides between the three modes rather than snapping
+function positionViewPill(){let sw=document.querySelector('.view-switch'),p=sw&&sw.querySelector('.vs-pill'),a=sw&&sw.querySelector('button.active');
+ if(!p||!a||!a.offsetWidth)return;p.style.width=a.offsetWidth+'px';p.style.height=a.offsetHeight+'px';p.style.top=a.offsetTop+'px';p.style.transform='translateX('+a.offsetLeft+'px)'}
+function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));$$('[data-mode]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===d.mode)));positionViewPill();
+ let sb=$('#soundBtn');
+ if(sb){setIcon(sb,state.sound.enabled?'volume':'volumeMute');sb.setAttribute('aria-pressed',String(!!state.sound.enabled));sb.title=state.sound.enabled?'Sound on — click to mute':'Sound muted — click to turn on';
+  if(!sb.dataset.wired){sb.dataset.wired='1';sb.onclick=()=>{state.sound.enabled=!state.sound.enabled;saveState();if(state.sound.enabled)SOUND.toggle();renderHeader();if($('#settingsDialog')?.open)renderSettings();toast(state.sound.enabled?'Sound on':'Sound off')}}}setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
 let CRUMB_SIG=null;
 function renderContext(){let bc=$('#breadcrumbs'),r=locate(doc().selectedId);bc.innerHTML=r?r.path.map((n,i)=>`<button class="crumb" data-select="${n.id}" title="${escapeHTML(readableText(n.text)||'Untitled note')}" aria-label="${escapeHTML(readableText(n.text)||'Untitled note')}"><span class="crumb-label">${crumbLabelHTML(n.text)}</span></button>${i<r.path.length-1?'<span class="chev">›</span>':''}`).join(''):'';bc.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectNode(b.dataset.select));
  let sig=r?r.path.map(n=>n.id).join('/'):'';
@@ -5176,7 +5276,7 @@ function bindEditors(root,reading=false){root.querySelectorAll(reading?'[data-re
 function bindNoteTools(root){root.querySelectorAll('.note').forEach(card=>{card.onclick=e=>{if(card.contains(document.activeElement)&&document.activeElement.closest('.note-editor'))return;if(!e.target.closest('button,[contenteditable],.grip,.image-editor'))selectNode(card.dataset.id)};card.querySelectorAll('[data-mini]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;runCommand(b.dataset.mini)}});card.querySelectorAll('[data-note-more]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();doc().selectedId=card.dataset.id;openNoteMenu(b)}});card.querySelectorAll('[data-swipe-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();card.classList.remove('swiped');doc().selectedId=card.dataset.id;runCommand('deleteNode')});card.querySelectorAll('[data-remove-image]').forEach(b=>b.onclick=e=>{e.stopPropagation();let r=locate(card.dataset.id);if(!r)return;snapshot();r.node.images.splice(Number(b.dataset.removeImage),1);doc().updatedAt=Date.now();saveState();renderAll();SOUND.remove();toast('Image removed')})})}
 function clearDrop(){$$('.drop-before,.drop-after').forEach(x=>x.classList.remove('drop-before','drop-after'));dropTarget=null}
 function bindDrag(root){root.querySelectorAll('[data-grip]').forEach(g=>{g.ondragstart=e=>{draggedId=g.dataset.grip;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggedId);setTimeout(()=>g.closest('.note')?.classList.add('dragging'),0)};g.ondragend=()=>{$$('.dragging').forEach(x=>x.classList.remove('dragging'));draggedId=null;clearDrop()}});root.querySelectorAll('.note').forEach(card=>{card.ondragover=e=>{if(!draggedId||card.dataset.id===draggedId)return;e.preventDefault();let before=e.clientY<card.getBoundingClientRect().top+card.offsetHeight/2;clearDrop();card.classList.add(before?'drop-before':'drop-after');dropTarget={targetId:card.dataset.id,before}};card.ondrop=e=>{e.preventDefault();if(!draggedId||!dropTarget)return;moveByDrop(draggedId,dropTarget.targetId,dropTarget.before)}})}
-function moveByDrop(fromId,targetId,before){let from=locate(fromId),to=locate(targetId);if(!from||!to||fromId===targetId)return;if(isDescendant(from.node,targetId)){toast('Cannot move a note into its own branch');clearDrop();return}snapshot();from.list.splice(from.index,1);to=locate(targetId);let idx=to.index+(before?0:1);to.list.splice(idx,0,from.node);doc().selectedId=fromId;doc().updatedAt=Date.now();saveState();clearDrop();renderAll();toast('Note moved')}
+function moveByDrop(fromId,targetId,before){let from=locate(fromId),to=locate(targetId);if(!from||!to||fromId===targetId)return;if(isDescendant(from.node,targetId)){SOUND.error();toast('Cannot move a note into its own branch');clearDrop();return}snapshot();from.list.splice(from.index,1);to=locate(targetId);let idx=to.index+(before?0:1);to.list.splice(idx,0,from.node);doc().selectedId=fromId;doc().updatedAt=Date.now();saveState();clearDrop();renderAll();SOUND.drop();toast('Note moved')}
 function isDescendant(node,id){return node.children.some(c=>c.id===id||isDescendant(c,id))}
 function imageHTML(n){return (n.images||[]).map((img,i)=>{let dim=(img.w&&img.h)?` width="${img.w|0}" height="${img.h|0}"`:'';return `<figure class="image-editor" style="margin:10px 0 0"><img src="${escapeHTML(img.src)}" alt="${escapeHTML(img.name||'Image')}"${dim} style="max-width:100%;max-height:260px;border-radius:6px"><button class="icon-btn danger" data-remove-image="${i}" title="Remove image">${icon('trash')}</button></figure>`}).join('')}
 // resolve intrinsic size once so the card reserves its space before the data URL decodes (no post-paint reflow)
@@ -5199,6 +5299,7 @@ function zenSet(on){
   on=on??!ZEN.on;
   if(on===ZEN.on)return;
   ZEN.on=on;
+  if(on)SOUND.open();else SOUND.close();
   const h=document.documentElement,chrome=zenChrome();
   if(on){
     // html.zen is what actually flips the layout, so it has to be asserted whenever the
@@ -5296,9 +5397,9 @@ document.addEventListener('keydown',e=>{
 },true);
 function insertTable(){let ed=editorFrom(document.activeElement)||document.querySelector('.note-editor,.read-editor');if(!ed){toast('Put the cursor in a note first');return}let tpl='| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n| Cell 3   | Cell 4   |';snapshot();let r=getSelection();let range;if(r&&r.rangeCount&&ed.contains(r.anchorNode))range=r.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});range.deleteContents();let node=document.createTextNode(tpl);range.insertNode(node);range.setStartAfter(node);range.collapse(true);let sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);let id=ed.dataset.editId||ed.dataset.readEdit;if(id){let rec=locate(id);if(rec){rec.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}}toast('Table inserted — edit the cells in the text');renderAll()}
 function newDocument(){snapshot();let d=makeDocument('Untitled',true);state.documents.push(d);state.activeDocumentId=d.id;saveState();renderAll();SOUND.creation();closeDocuments();focusNodeEditor(d.selectedId);toast('New document')}
-function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
+function switchDocument(id){if(!state.documents.some(d=>d.id===id))return;if(state.activeDocumentId!==id)SOUND.select();state.activeDocumentId=id;undoStack=[];redoStack=[];saveState();renderAll();closeDocuments()}
 function duplicateDocument(id){let source=state.documents.find(d=>d.id===id);if(!source)return;snapshot();let copy=deep(source),map=new Map();function newid(nodes){for(let n of nodes){let old=n.id;n.id=uid();map.set(old,n.id);newid(n.children)}}newid(copy.tree);copy.id=uid('d');copy.title=(source.title||'Untitled')+' copy';copy.createdAt=copy.updatedAt=Date.now();copy.selectedId=map.get(source.selectedId)||copy.tree[0]?.id;state.documents.push(copy);state.activeDocumentId=copy.id;saveState();renderAll();toast('Document duplicated')}
-function deleteDocument(id){if(state.documents.length===1){toast('Keep at least one document');return}let d=state.documents.find(x=>x.id===id);if(!d)return;if(!confirm(`Delete “${d.title||'Untitled'}”?`))return;snapshot();state.documents=state.documents.filter(x=>x.id!==id);if(state.activeDocumentId===id)state.activeDocumentId=state.documents[0].id;saveState();renderAll();SOUND.remove();toast('Document deleted')}
+function deleteDocument(id){if(state.documents.length===1){SOUND.error();toast('Keep at least one document');return}let d=state.documents.find(x=>x.id===id);if(!d)return;if(!confirm(`Delete “${d.title||'Untitled'}”?`))return;snapshot();state.documents=state.documents.filter(x=>x.id!==id);if(state.activeDocumentId===id)state.activeDocumentId=state.documents[0].id;saveState();renderAll();SOUND.remove();toast('Document deleted')}
 function renameDocument(id){let d=state.documents.find(x=>x.id===id);if(!d)return;let name=prompt('Document name',d.title||'Untitled');if(name===null)return;d.title=name.trim()||'Untitled';d.updatedAt=Date.now();saveState();renderAll()}
 function renderDocuments(){let list=$('#documentList');if(!list)return;list.innerHTML=state.documents.map(d=>`<div class="document-item ${d.id===state.activeDocumentId?'active':''}"><button class="document-main" data-switch-doc="${d.id}"><strong>${escapeHTML(d.title||'Untitled')}</strong><small>${countDocNodes(d.tree)} notes</small></button><button class="icon-btn" data-rename-doc="${d.id}" title="Rename">${icon('edit')}</button><button class="icon-btn" data-copy-doc="${d.id}" title="Duplicate">${icon('copy')}</button><button class="icon-btn danger" data-delete-doc="${d.id}" title="Delete">${icon('trash')}</button></div>`).join('');list.querySelectorAll('[data-switch-doc]').forEach(b=>b.onclick=()=>switchDocument(b.dataset.switchDoc));list.querySelectorAll('[data-rename-doc]').forEach(b=>b.onclick=()=>renameDocument(b.dataset.renameDoc));list.querySelectorAll('[data-copy-doc]').forEach(b=>b.onclick=()=>duplicateDocument(b.dataset.copyDoc));list.querySelectorAll('[data-delete-doc]').forEach(b=>b.onclick=()=>deleteDocument(b.dataset.deleteDoc))}
 function countDocNodes(nodes){let c=0;for(let n of nodes){c++;c+=countDocNodes(n.children)}return c}
@@ -5307,9 +5408,9 @@ function closeDocuments(){let ov=$('#documentOverlay');if(!ov.classList.contains
 function markdown(nodes,depth=0){return nodes.map(n=>{let text=richToMarkdown(n.text||'');let body=depth===0?'## '+text:depth===1?'### '+text:`${'  '.repeat(Math.max(0,depth-2))}- ${text.replace(/\n/g,' ')}`;let imgs=(n.images||[]).map(img=>`\n\n${depth>=2?'  '.repeat(Math.max(0,depth-2))+'  ':''}![${(img.name||'image').replace(/[\[\]]/g,'')}](${img.src})`).join('');let child=markdown(n.children,depth+1);return body+imgs+(child?'\n\n'+child:'')}).join('\n\n')}
 function safeName(n){return (n||'Untitled').replace(/[\\/:*?"<>|]/g,'-').trim()||'Untitled'}
 function downloadFile(name,content,type){let blob=new Blob([content],{type});if(window.navigator&&navigator.msSaveOrOpenBlob){navigator.msSaveOrOpenBlob(blob,name);return}let url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},60000)}
-function exportMarkdown(){let d=doc(),content=`# ${d.title||'Untitled'}\n\n${markdown(d.tree)}`;downloadFile(safeName(d.title)+'.md',content,'text/markdown;charset=utf-8');toast('Markdown exported')}
-function exportBackup(){flushSave();let stamp=new Date().toISOString().slice(0,10);downloadFile(`branch-studio-backup-${stamp}.json`,JSON.stringify({app:'branch-studio',format:1,exportedAt:new Date().toISOString(),state},null,1),'application/json');Store.backupNeeded=false;forceToast('Backup exported',1500)}
-function importBackup(){let input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;let reader=new FileReader();reader.onload=()=>{let data;try{data=JSON.parse(reader.result)}catch(e){forceToast('That file is not a Branch Studio backup',2500);return}let incoming=normalizeState(deep(data&&data.state?data.state:data));if(!incoming){forceToast('That file is not a Branch Studio backup',2500);return}snapshot();let added=0;for(let d of incoming.documents){let existing=state.documents.find(x=>x.id===d.id);if(existing&&JSON.stringify(existing.tree)===JSON.stringify(d.tree)&&existing.title===d.title)continue;if(existing){d.id=uid('d');d.title=(d.title||'Untitled')+' (restored)'}state.documents.push(d);added++}if(added)state.activeDocumentId=state.documents[state.documents.length-1].id;saveState();renderAll();forceToast(added?`Restored ${added} document${added===1?'':'s'}`:'Backup already up to date',2000)};reader.readAsText(f)};input.click()}
+function exportMarkdown(){let d=doc(),content=`# ${d.title||'Untitled'}\n\n${markdown(d.tree)}`;downloadFile(safeName(d.title)+'.md',content,'text/markdown;charset=utf-8');SOUND.success();toast('Markdown exported')}
+function exportBackup(){flushSave();let stamp=new Date().toISOString().slice(0,10);downloadFile(`branch-studio-backup-${stamp}.json`,JSON.stringify({app:'branch-studio',format:1,exportedAt:new Date().toISOString(),state},null,1),'application/json');Store.backupNeeded=false;SOUND.success();forceToast('Backup exported',1500)}
+function importBackup(){let input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.style.display='none';document.body.appendChild(input);input.onchange=()=>{let f=input.files?.[0];input.remove();if(!f)return;let reader=new FileReader();reader.onload=()=>{let data;try{data=JSON.parse(reader.result)}catch(e){SOUND.error();forceToast('That file is not a Branch Studio backup',2500);return}let incoming=normalizeState(deep(data&&data.state?data.state:data));if(!incoming){SOUND.error();forceToast('That file is not a Branch Studio backup',2500);return}snapshot();let added=0;for(let d of incoming.documents){let existing=state.documents.find(x=>x.id===d.id);if(existing&&JSON.stringify(existing.tree)===JSON.stringify(d.tree)&&existing.title===d.title)continue;if(existing){d.id=uid('d');d.title=(d.title||'Untitled')+' (restored)'}state.documents.push(d);added++}if(added)state.activeDocumentId=state.documents[state.documents.length-1].id;saveState();renderAll();SOUND.success();forceToast(added?`Restored ${added} document${added===1?'':'s'}`:'Backup already up to date',2000)};reader.readAsText(f)};input.click()}
 // minimal .docx -> text: unzip word/document.xml via DecompressionStream and pull <w:t> runs
 async function docxToText(buf){
   try{
@@ -5353,7 +5454,7 @@ function addImageToNode(id,img){let r=locate(id)||locate(doc().selectedId);if(!r
 function insertMath(){let id=doc().selectedId,sel=getSelection(),anchorEd=sel?.anchorNode?(sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentElement)?.closest?.('.note-editor,.read-editor'):null;let ed=(anchorEd&&(anchorEd.dataset.editId||anchorEd.dataset.readEdit)===id?anchorEd:null)||(doc().mode==='read'?document.querySelector(`[data-read-edit="${id}"]`):document.querySelector(`[data-edit-id="${id}"]`))||document.querySelector(`[data-read-edit="${id}"]`);if(!ed||!window.customElements?.get('math-field')){toast('Math editor unavailable');return}snapshot();let range;if(sel?.rangeCount&&ed.contains(sel.anchorNode)&&!sel.anchorNode.parentElement?.closest?.('.math-container'))range=sel.getRangeAt(0);else{range=document.createRange();range.selectNodeContents(ed);range.collapse(false)}ed.focus({preventScroll:true});let wrap=document.createElement('span');wrap.className='math-container';wrap.contentEditable='false';let mf=document.createElement('math-field');mf.dataset.display='false';wrap.appendChild(mf);range.deleteContents();let spacer=document.createTextNode('\u200B');range.insertNode(spacer);range.insertNode(wrap);if(ed.innerHTML.startsWith('<br>'))ed.querySelector('br')?.remove();bindMath(ed);requestAnimationFrame(()=>{try{mf.focus()}catch{}});let r=locate(doc().selectedId);if(r){r.node.text=serializeEditor(ed);doc().updatedAt=Date.now();saveState()}toast('Math field inserted')}
 function renderStatus(){$('#modeStatus').textContent=({branch:'Branch view',split:'Split view',read:'Reading view'})[doc().mode];$('#nodeStatus').textContent=countNodes()+' note'+(countNodes()===1?'':'s')}
 function runCommand(id){let wasEditing=!!document.activeElement?.closest?.('.note-editor,.read-editor,math-field');runCommandInner(id);if(wasEditing&&!['image','settings','documents','exportMd','math','newDocument','palette','shortcutsHelp','copyNote','cutNote','pasteNote'].includes(id))requestAnimationFrame(()=>{if(!document.activeElement?.closest?.('.note-editor,.read-editor,math-field')&&!$('#settingsDialog').open)focusNodeEditor(doc().selectedId,true)})}
-function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>{if(restoreSnapshot(undoStack,redoStack))SOUND.close()},redo:()=>{if(restoreSnapshot(redoStack,undoStack))SOUND.menu()},settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu(),zen:()=>zenSet(),palette:openPalette};if(id==='table'){insertTable();return}map[id]?.()}
+function runCommandInner(id){let map={newDocument,addTopic:()=>addNode(null),addSibling,addChild,deleteNode,moveUp:()=>moveVertical(-1),moveDown:()=>moveVertical(1),indent:indentNode,outdent:outdentNode,image:chooseImage,math:insertMath,navUp:()=>navigate('ArrowUp'),navDown:()=>navigate('ArrowDown'),navParent:()=>navigate('ArrowLeft'),navChild:()=>navigate('ArrowRight'),branchView:()=>setMode('branch'),splitView:()=>setMode('split'),readView:()=>setMode('read'),undo:()=>{if(restoreSnapshot(undoStack,redoStack))SOUND.close();else SOUND.error()},redo:()=>{if(restoreSnapshot(redoStack,undoStack))SOUND.menu();else SOUND.error()},settings:openSettings,documents:openDocuments,exportMd:exportMarkdown,shortcutsHelp:openShortcutSheet,copyNote:()=>copyNote(),cutNote:()=>cutNote(),pasteNote:()=>pasteNoteFromMenu(),zen:()=>zenSet(),palette:openPalette};if(id==='table'){insertTable();return}map[id]?.()}
 const CODE_KEYS={Comma:',',Period:'.',Slash:'/',Semicolon:';',Quote:"'",BracketLeft:'[',BracketRight:']',Backslash:'\\',Minus:'-',Equal:'=',Backquote:'`',Backspace:'Backspace',Delete:'Delete',Enter:'Enter',NumpadEnter:'Enter',Tab:'Tab',ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight',Space:'Space',Escape:'Escape',Home:'Home',End:'End',PageUp:'PageUp',PageDown:'PageDown'};
 function keyName(e){let k=e.key||'';if(/^[a-z]$/i.test(k))return k.toUpperCase();let c=e.code||'';if(CODE_KEYS[c])return CODE_KEYS[c];if(c.startsWith('Key'))return c.slice(3);if(c.startsWith('Digit'))return c.slice(5);if(/^Numpad\d$/.test(c))return c.slice(6);if(/^F\d+$/.test(c))return c;if(k===' ')return 'Space';if(k.length===1)return k.toUpperCase();return k}
 function shortcutFromEvent(e){if(!e||e.isComposing||e.keyCode===229)return null;let parts=[];let primary=e.ctrlKey,secondary=e.metaKey;if(primary)parts.push('Ctrl');if(e.altKey)parts.push('Alt');if(e.shiftKey)parts.push('Shift');if(secondary)parts.push('Meta');let key=keyName(e);if(!key||['Control','Alt','Shift','Meta','AltGraph','OS','Unidentified','Dead','Process'].includes(key))return null;parts.push(key);return parts.join('+')}
@@ -5392,7 +5493,7 @@ document.addEventListener('keydown',e=>{
 const SETTINGS_TABS=[['appearance','palette','Appearance'],['layout','layout','Layout'],['keyboard','keyboard','Keyboard'],['behavior','switch','Behavior'],['sound','volume','Sound'],['documents','files','Documents'],['css','code','Custom CSS']];
 function openSettings(section='appearance'){closeMenu(true);SOUND.menu();settingsSection=section;renderSettings();let dlg=$('#settingsDialog');if(!dlg.dataset.soundWired){dlg.dataset.soundWired='1';dlg.addEventListener('close',()=>SOUND.close())}dlg.showModal();enterEl(dlg,{dur:MOTION.enter,blur:9,y:14,scale:.985})}
 let SETTINGS_SIG=null;
-function renderSettings(){let nav=$('#settingsNav');nav.innerHTML=SETTINGS_TABS.map(([id,ic,label])=>`<button data-settings-tab="${id}" class="${settingsSection===id?'active':''}">${icon(ic)}${label}</button>`).join('');nav.querySelectorAll('[data-settings-tab]').forEach(b=>b.onclick=()=>{settingsSection=b.dataset.settingsTab;renderSettings()});$$('.settings-section').forEach(s=>s.classList.toggle('active',s.dataset.section===settingsSection));
+function renderSettings(){let nav=$('#settingsNav');nav.innerHTML=SETTINGS_TABS.map(([id,ic,label])=>`<button data-settings-tab="${id}" class="${settingsSection===id?'active':''}">${icon(ic)}${label}</button>`).join('');nav.querySelectorAll('[data-settings-tab]').forEach(b=>b.onclick=()=>{if(settingsSection!==b.dataset.settingsTab)SOUND.tab();settingsSection=b.dataset.settingsTab;renderSettings()});$$('.settings-section').forEach(s=>s.classList.toggle('active',s.dataset.section===settingsSection));
  let act=$('.settings-section.active');
  if(act&&SETTINGS_SIG!==null&&SETTINGS_SIG!==settingsSection)crossfade(act,{dur:200,blur:5,x:8});
  SETTINGS_SIG=settingsSection;
@@ -5430,15 +5531,16 @@ function renderSoundSettings(){let s=$('[data-section="sound"]');if(!s)return;le
  ${row('Test voice','Play a short run in this voice: a click, two keystrokes, a menu, a deletion.',`<button class="secondary" id="soundTestVoice" ${so.enabled?'':'disabled'}>Play test</button>`)}
  <p class="sound-blurb" data-sound-blurb>${escapeHTML(SOUND_BLURB[so.theme]||'')}</p></div>
  <div class="setting-group"><h4 class="sound-group-title">Typing</h4>${cls('typing','Typing','One keystroke per character, eased down across a burst so fast typing stays readable.')}${cls('deletion','Backspace','A dull, low thud while deleting characters — deliberately unlike a keystroke.')}</div>
- <div class="setting-group"><h4 class="sound-group-title">Notes</h4>${cls('creation','Creation','A rising cue when a note is created.')}${cls('movement','Movement','A short sweep when a note moves, indents or outdents.')}${cls('remove','Delete note','The heaviest cue in the app: a note being removed, lowered and allowed to fall away.')}</div>
- <div class="setting-group"><h4 class="sound-group-title">Interface</h4>${cls('click','Buttons','A small dry click on buttons and controls.')}${cls('menu','Menus','Two rising steps when a menu or dialog opens.')}${cls('close','Closing','One falling step when a menu or dialog closes.')}${cls('toggle','Toggles','Two quick clicks when a setting is switched.')}</div>
+ <div class="setting-group"><h4 class="sound-group-title">Notes</h4>${cls('creation','Creation','A rising cue when a note is created.')}${cls('movement','Movement','A short sweep when a note moves, indents or outdents.')}${cls('select','Selecting','A soft tick as you land on a note with the keyboard or the mouse.')}${cls('drop','Dropping','A low landing when a dragged note settles into a new place.')}${cls('remove','Delete note','The heaviest cue in the app: a note being removed, lowered and allowed to fall away.')}</div>
+ <div class="setting-group"><h4 class="sound-group-title">Interface</h4>${cls('click','Buttons','A small dry click on every button and control in the app.')}${cls('tab','Tabs','A hair higher than a button: switching settings tabs and views.')}${cls('menu','Menus','Two rising steps when a menu opens.')}${cls('open','Opening','A wider rise for a dialog, the documents drawer or the command palette.')}${cls('close','Closing','One falling step when a surface closes.')}${cls('toggle','Toggles','Two quick clicks when a setting is switched.')}</div>
+ <div class="setting-group"><h4 class="sound-group-title">Feedback</h4>${cls('success','Success','Three notes up when something is saved, exported or imported.')}${cls('error','Refused','Two notes down when an action is refused or fails.')}${cls('notify','Messages','A soft bell under a toast.')}</div>
  <div class="button-row"><button class="secondary" id="soundPreviewAll" ${so.enabled?'':'disabled'}>Preview every cue</button></div>`;
  s.querySelectorAll('[data-sound-toggle]').forEach(b=>b.onclick=()=>{let k=b.dataset.soundToggle;state.sound[k]=!state.sound[k];saveState();if(state.sound.enabled)SOUND.toggle();renderSettings()});
  let vol=s.querySelector('[data-sound="volume"]');if(vol)vol.oninput=()=>{let pct=Number(vol.value);SOUND.setVolume(pct/100);let out=s.querySelector('[data-sound-value]');if(out)out.textContent=pct+'%';saveState()};
  let th=s.querySelector('[data-sound="theme"]');if(th)th.onchange=()=>{SOUND.setTheme(th.value);saveState();SOUND.menu();let bl=s.querySelector('[data-sound-blurb]');if(bl)bl.textContent=SOUND_BLURB[th.value]||''};
  s.querySelectorAll('[data-sound-preview]').forEach(b=>b.onclick=()=>SOUND.preview(b.dataset.soundPreview));
- let test=$('#soundTestVoice');if(test)test.onclick=()=>{SOUND.preview('click');setTimeout(()=>SOUND.preview('typing'),130);setTimeout(()=>SOUND.preview('typing'),210);setTimeout(()=>SOUND.preview('menu'),330);setTimeout(()=>SOUND.preview('deletion'),520)};
- $('#soundPreviewAll').onclick=()=>['click','typing','deletion','creation','movement','menu','close','toggle','remove'].forEach((k,i)=>setTimeout(()=>SOUND.preview(k),i*230));
+ let test=$('#soundTestVoice');if(test)test.onclick=()=>{SOUND.preview('click');setTimeout(()=>SOUND.preview('typing'),120);setTimeout(()=>SOUND.preview('typing'),190);setTimeout(()=>SOUND.preview('tab'),280);setTimeout(()=>SOUND.preview('menu'),360);setTimeout(()=>SOUND.preview('select'),470);setTimeout(()=>SOUND.preview('deletion'),540);setTimeout(()=>SOUND.preview('success'),640)};
+ $('#soundPreviewAll').onclick=()=>{let all=[...SOUND_CLASSES];all.forEach((k,i)=>setTimeout(()=>SOUND.preview(k),i*210));SOUND.sweeping=all.length*210+320;setTimeout(()=>{SOUND.sweeping=0},SOUND.sweeping)};
 }
 function renderDocumentSettings(){let s=$('[data-section="documents"]');if(!s)return;s.innerHTML=`<h3>Documents</h3><p>Documents stay inside the app until you export one as Markdown for Obsidian.</p><div class="setting-group">${row('Current document',doc().title||'Untitled',`<button class="secondary" id="renameCurrent">Rename</button>`)}${row('Documents stored',`${state.documents.length} internal document${state.documents.length===1?'':'s'}.`,`<button class="secondary" id="openDocumentDrawer">Manage</button>`)}</div><div class="button-row"><button class="primary" id="settingsNewDocument">New document</button><button class="secondary" id="settingsDuplicateDocument">Duplicate current</button><button class="secondary" id="settingsExportDocument">Export current .md</button></div><h3 style="margin-top:22px">Backup</h3><p>${storageDescription()}</p><div class="button-row"><button class="primary" id="settingsExportBackup">Export backup (.json)</button><button class="secondary" id="settingsImportBackup">Import backup</button></div>`;$('#settingsExportBackup').onclick=exportBackup;$('#settingsImportBackup').onclick=importBackup;$('#renameCurrent').onclick=()=>renameDocument(doc().id);$('#openDocumentDrawer').onclick=()=>{$('#settingsDialog').close();openDocuments()};$('#settingsNewDocument').onclick=newDocument;$('#settingsDuplicateDocument').onclick=()=>duplicateDocument(doc().id);$('#settingsExportDocument').onclick=exportMarkdown}
 function renderCSSSettings(){let s=$('[data-section="css"]');if(!s)return;s.innerHTML=`<h3>Custom CSS</h3><p>Write or load CSS that overrides the entire prototype. This is kept separate from document content.</p><textarea class="css-editor" id="customCSSText" spellcheck="false" placeholder="/* Example */\n.note-body { border-width: 2px; }">${escapeHTML(state.customCSS||'')}</textarea><div class="button-row"><button class="primary" id="applyCSS">Apply CSS</button><button class="secondary" id="loadCSS">Load .css file</button><button class="secondary" id="downloadCSS">Download CSS</button><button class="secondary" id="clearCSS">Clear</button></div>`;$('#applyCSS').onclick=()=>{state.customCSS=$('#customCSSText').value;applyAppearance();saveState();toast('CSS applied')};$('#loadCSS').onclick=()=>$('#cssFileInput').click();$('#downloadCSS').onclick=()=>downloadFile('branch-studio-custom.css',state.customCSS||'','text/css');$('#clearCSS').onclick=()=>{state.customCSS='';applyAppearance();saveState();renderSettings()}}
@@ -5545,6 +5647,7 @@ function paletteEntries(q){
 }
 function openPalette(){
  closeMenu();
+ SOUND.open();
  if(PAL&&PAL.dl&&PAL.dl.isConnected)return PAL.dl; // never stack a second palette
  let st={sel:0,items:[],dl:null};
  let dl=pxDialog({title:'Command palette',cls:'px-palette',onClose:()=>{PAL=null},body:
