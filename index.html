@@ -3286,7 +3286,49 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .shortcut-table{width:100%;border-collapse:collapse}.shortcut-table th,.shortcut-table td{text-align:left;border-bottom:1px solid var(--line);padding:9px 7px}.shortcut-table th{font-size:11px;color:var(--muted);font-weight:600}.keycap{display:inline-flex;align-items:center;min-height:28px;padding:0 9px;border:1px solid var(--line);border-bottom-width:2px;background:var(--panel);border-radius:7px;color:var(--text);font-size:12px}.shortcut-capture.capturing{border-color:var(--accent);background:var(--accent-soft)}.conflict{color:#ffadb4;font-size:11px}
 .toolbar-list{display:flex;flex-direction:column;gap:6px}.toolbar-item{display:grid;grid-template-columns:24px 1fr auto auto;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}.toolbar-item .drag-mini{color:var(--muted);cursor:grab}.toolbar-item[draggable=true].dragging{opacity:.4}.toolbar-item .move-pair{display:flex;gap:2px}
 .css-editor{width:100%;min-height:260px;background:#1e202c;color:#e9eaf1;border:1px solid var(--line);border-radius:8px;padding:12px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}.button-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.secondary{height:34px;padding:0 11px;border:1px solid var(--line);background:var(--panel)}.secondary:hover{background:var(--panel-3)}.primary{height:34px;padding:0 12px;background:var(--accent);border:1px solid var(--accent);color:white}.danger-button{height:34px;padding:0 12px;border:1px solid color-mix(in srgb,var(--danger) 55%,var(--line));color:#ffb0b6}.danger-button:hover{background:color-mix(in srgb,var(--danger) 12%,transparent)}
-.restore-chip{position:fixed;left:12px;bottom:12px;z-index:120;height:34px;padding:0 11px;background:var(--panel);border:1px solid var(--line);display:none;align-items:center;gap:7px}.restore-chip.show{display:flex}.toast{position:fixed;right:18px;bottom:42px;z-index:100;background:#191b25;border:1px solid var(--line);border-radius:10px;padding:10px 13px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.14s}.toast.show{opacity:1;transform:translateY(0)}
+.restore-chip{position:fixed;left:12px;bottom:12px;z-index:120;height:34px;padding:0 11px;background:var(--panel);border:1px solid var(--line);display:none;align-items:center;gap:7px}.restore-chip.show{display:flex}.welcome-body{padding:24px 28px 32px;overflow:auto;max-height:74vh}
+.welcome-hero{text-align:center;padding:8px 0 24px}
+.welcome-hero h1{font-size:34px;letter-spacing:-.02em;margin:0 0 6px;font-weight:800}
+.welcome-hero p{color:var(--muted);margin:0;font-size:15px;max-width:560px;margin-inline:auto}
+.welcome-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.welcome-why{max-width:640px;margin:0 auto 26px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--panel) 60%,transparent);color:var(--text);font-size:14px;line-height:1.55}
+.welcome-why strong{display:block;margin-bottom:4px;color:var(--accent)}
+.welcome-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:22px}
+.welcome-card{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--panel);display:flex;flex-direction:column;gap:8px;transition:transform .12s,box-shadow .12s}
+.welcome-card:focus-within,.welcome-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.welcome-card h3{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+.welcome-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.welcome-card .demo{height:74px;border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden;position:relative;display:grid;place-items:center;color:var(--muted);font-size:12px}
+.welcome-card .card-foot{margin-top:auto;display:flex;gap:8px;align-items:center}
+.welcome-card .card-foot button{height:28px;padding:0 10px;font-size:12px}
+.welcome-credits,.welcome-help{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:var(--panel)}
+.welcome-credits h3,.welcome-help h3{margin:0 0 6px;font-size:14px}
+.welcome-credits p,.welcome-help p{margin:0 0 8px;color:var(--muted);font-size:13px;line-height:1.5}
+.welcome-credits a,.welcome-help a{color:var(--accent)}
+.welcome-donate{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;border:0;cursor:pointer}
+.welcome-donate:hover{filter:brightness(1.08)}
+.vault-rail{position:fixed;left:0;top:0;bottom:0;width:268px;z-index:40;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .18s ease;overflow:hidden}
+body.sidebar-open .vault-rail{transform:translateX(0)}
+body.sidebar-open .app{padding-left:268px}
+.vault-rail-head{height:52px;padding:0 10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.vault-switcher{flex:1;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);text-align:left;padding:0 10px;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vault-rail-tools{display:flex;gap:4px}
+.vault-rail-tools .icon-btn{width:30px;height:30px}
+.vault-tree{flex:1;overflow:auto;padding:8px 6px;font-size:13px}
+.vault-node{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border-radius:6px;cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vault-node:hover{background:var(--panel-2,var(--bg))}
+.vault-node.selected{background:var(--accent-soft);color:var(--accent)}
+.vault-node .node-icon{opacity:.85;font-size:13px;width:14px;text-align:center;flex:0 0 14px}
+.vault-node .node-label{flex:1;overflow:hidden;text-overflow:ellipsis}
+.vault-node .node-chev{font-size:10px;opacity:.6;width:10px;flex:0 0 10px}
+.vault-node[aria-expanded="false"] .children{display:none}
+.vault-node .children{padding-left:16px}
+.vault-rail-foot{padding:8px;border-top:1px solid var(--line)}
+.vault-rail-foot .secondary{width:100%;height:30px;font-size:12px}
+.vault-node[draggable="true"]:active{opacity:.6}
+.vault-node.renaming input{height:24px;border:1px solid var(--accent);border-radius:4px;background:var(--bg);color:var(--text);padding:0 6px;font:inherit;width:100%}
+@media(max-width:780px){body.sidebar-open .app{padding-left:0}.vault-rail{z-index:80}}
+.toast{position:fixed;right:18px;bottom:42px;z-index:100;background:#191b25;border:1px solid var(--line);border-radius:10px;padding:10px 13px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.14s}.toast.show{opacity:1;transform:translateY(0)}
 math-field{display:inline-block;min-width:22px;background:transparent;color:inherit;border:0;padding:0;vertical-align:middle;--caret-color:var(--accent);--selection-background-color:var(--accent-soft)}math-field::part(virtual-keyboard-toggle),math-field::part(menu-toggle){display:none}
 @media(max-width:780px){.settings-shell{grid-template-columns:1fr}.settings-nav{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;overflow:auto}.settings-nav button{white-space:nowrap}.context-actions .action-label{display:none}.read-wrap{padding:24px}.column{width:240px;min-width:240px}.topbar .view-switch button span{display:none}.doc-chip{max-width:160px}}
 </style>
@@ -4737,6 +4779,20 @@ body{
 <body>
 <canvas id="fxLayer" aria-hidden="true"></canvas>
 <div class="app">
+  <aside class="vault-rail" id="vaultRail" aria-label="Files and vaults">
+    <div class="vault-rail-head">
+      <button class="vault-switcher" id="vaultSwitcher" aria-haspopup="menu" aria-label="Switch vault"></button>
+      <div class="vault-rail-tools">
+        <button class="icon-btn" id="newVaultFile" title="New note" aria-label="New note"></button>
+        <button class="icon-btn" id="newVaultFolder" title="New folder" aria-label="New folder"></button>
+        <button class="icon-btn" id="toggleVaultRail" title="Hide sidebar" aria-label="Hide sidebar"></button>
+      </div>
+    </div>
+    <div class="vault-tree" id="vaultTree" role="tree" tabindex="0" aria-label="Vault files"></div>
+    <div class="vault-rail-foot">
+      <button class="secondary" id="vaultConnect" title="Open a folder from disk (where supported)">Connect folder</button>
+    </div>
+  </aside>
   <header class="topbar">
     <div class="view-switch" role="tablist" aria-label="View mode">
       <span class="vs-pill" aria-hidden="true"></span>
@@ -4787,6 +4843,10 @@ body{
     </div>
   </div>
 </dialog>
+<dialog class="modal welcome" id="welcomeDialog" aria-label="Welcome to Branch Studio">
+  <div class="modal-head"><h2>Welcome to Branch Studio</h2><button class="icon-btn" data-close="welcomeDialog" title="Close"></button></div>
+  <div class="welcome-body" id="welcomeBody"></div>
+</dialog>
 <div class="toast" id="toast"></div>
 <button id="zenExit" type="button" title="Leave zen mode (Esc)" aria-label="Leave zen mode">Leave zen <span aria-hidden="true">Esc</span></button>
 <input type="file" id="cssFileInput" accept=".css,text/css" hidden>
@@ -4795,7 +4855,7 @@ body{
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const STORAGE_KEY='branch-studio-v1';
 const BOOTSTRAP_ICONS={
- zen:'aspect-ratio',
+ zen:'aspect-ratio',vault:'folder2-open',file:'file-earmark',folder:'folder',folderOpen:'folder2-open',sidebar:'layout-sidebar',
   folder:'folder2-open',file:'file-earmark-plus',branch:'diagram-3',columns:'layout-split',book:'journal-text',
   undo:'arrow-counterclockwise',redo:'arrow-clockwise',download:'download',keyboard:'keyboard',settings:'gear',
   plus:'plus-lg',trash:'trash',grip:'grid-3x2-gap',arrowUp:'arrow-up',arrowDown:'arrow-down',
@@ -5269,8 +5329,8 @@ function starterTree(){return [
  {id:uid(),text:'A branching document',children:[
   {id:uid(),text:'Main idea',children:[{id:uid(),text:'Write details here. Every note can have children.',children:[]},{id:uid(),text:'Drag notes by the grip (or long-press on touch) or move them with shortcuts.',children:[]}]},
   {id:uid(),text:'Another branch',children:[{id:uid(),text:'Reading view is editable too.',children:[]}]}]}];}
-function makeDocument(title='Untitled',blank=false){let tree=blank?[{id:uid(),text:'',children:[]}]:starterTree();return {id:uid('d'),title,createdAt:Date.now(),updatedAt:Date.now(),tree,selectedId:tree[0]?.id||null,mode:'branch'};}
-function defaultState(){let d=makeDocument('Untitled',true);return {version:1,documents:[d],activeDocumentId:d.id,appearance:deep(DEFAULT_APPEARANCE),behavior:deep(DEFAULT_BEHAVIOR),sound:deep(DEFAULT_SOUND),shortcuts:deep(DEFAULT_SHORTCUTS),toolbar:deep(DEFAULT_TOOLBAR),customCSS:''}}
+function makeDocument(title='Untitled',blank=false,vaultId=null){let tree=blank?[{id:uid(),text:'',children:[]}]:starterTree();return {id:uid('d'),title,vaultId:vaultId||state?.activeVaultId||'v1',folderId:null,createdAt:Date.now(),updatedAt:Date.now(),tree,selectedId:tree[0]?.id||null,mode:'branch'};}
+function defaultState(){let vaults=[{id:'v1',name:'My Vault'}];let d=makeDocument('Untitled',true,'v1');return {version:1,vaults,activeVaultId:'v1',folders:[],documents:[d],activeDocumentId:d.id,appearance:deep(DEFAULT_APPEARANCE),behavior:deep(DEFAULT_BEHAVIOR),sound:deep(DEFAULT_SOUND),shortcuts:deep(DEFAULT_SHORTCUTS),toolbar:deep(DEFAULT_TOOLBAR),customCSS:'',behavior:{...deep(DEFAULT_BEHAVIOR),showSidebar:true}}}
 const IDB_NAME='branch-studio',IDB_STORE='kv';
 const Store={ls:false,idb:null,idbTried:false,status:'pending',lastError:'',dirtySinceLoad:false,lastSavedJSON:'',backupNeeded:false};
 Store.ls=(()=>{try{let k='__branch_studio_probe__';localStorage.setItem(k,'1');let ok=localStorage.getItem(k)==='1';localStorage.removeItem(k);return ok}catch(e){return false}})();
@@ -5279,7 +5339,11 @@ function normalizeSound(raw){let d=deep(DEFAULT_SOUND);if(!raw||typeof raw!=='ob
 // v6 turned "Ctrl" into the literal Control key on Apple. A chord someone chose by hand keeps the
 // *physical* key it was on, so its tokens swap rather than its meaning silently moving.
 function flipShortcutMods(s){let n=normalizeShortcut(s);if(!n)return s;let parts=n.split('+'),key=parts.pop();return normalizeShortcut(parts.map(p=>p==='Ctrl'?'Meta':p==='Meta'?'Ctrl':p).concat(key).join('+'))}
-function normalizeState(s){if(!s||typeof s!=='object'||!Array.isArray(s.documents)||!s.documents.length)return null;s.appearance={...DEFAULT_APPEARANCE,...s.appearance};s.behavior={...DEFAULT_BEHAVIOR,...s.behavior};s.sound=normalizeSound(s.sound);let sc={...DEFAULT_SHORTCUTS,...s.shortcuts};if((s.shortcutsVersion||1)<SHORTCUTS_VERSION){for(let id of [...new Set([...Object.keys(DEFAULT_SHORTCUTS),...Object.keys(V5_DEFAULT_SHORTCUTS)])]){let want=normalizeShortcut(DEFAULT_SHORTCUTS[id]);if(!want)continue;let cur=normalizeShortcut(sc[id]);let missing=!s.shortcuts||!(id in s.shortcuts);let oldDefault=cur&&(cur===normalizeShortcut(V1_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V2_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V3_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V4_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V5_DEFAULT_SHORTCUTS[id]));if(!missing&&!oldDefault){if(IS_MAC)sc[id]=flipShortcutMods(sc[id]);continue}let taken=Object.entries(sc).some(([o,v])=>o!==id&&normalizeShortcut(v)===want&&normalizeShortcut(DEFAULT_SHORTCUTS[o])!==want);if(taken){if(missing)sc[id]=''}else sc[id]=DEFAULT_SHORTCUTS[id]}s.shortcutsVersion=SHORTCUTS_VERSION}s.shortcuts=sc;s.toolbar=Array.isArray(s.toolbar)?s.toolbar:deep(DEFAULT_TOOLBAR);s.customCSS=s.customCSS||'';s.documents.forEach(d=>{if(!Array.isArray(d.tree))d.tree=[];if(!d.tree.length)d.tree.push({id:uid(),text:'',children:[]});(function fix(ns){ns.forEach(n=>{n.children=Array.isArray(n.children)?n.children:[];n.text=n.text==null?'':String(n.text);fix(n.children)})})(d.tree);d.mode=['branch','split','read'].includes(d.mode)?d.mode:'branch'});if(!s.documents.some(d=>d.id===s.activeDocumentId))s.activeDocumentId=s.documents[0].id;return s}
+function normalizeState(s){if(!s||typeof s!=='object'||!Array.isArray(s.documents)||!s.documents.length)return null;s.appearance={...DEFAULT_APPEARANCE,...s.appearance};s.behavior={...DEFAULT_BEHAVIOR,...s.behavior};if(s.behavior.showSidebar===undefined)s.behavior.showSidebar=true;s.sound=normalizeSound(s.sound);let sc={...DEFAULT_SHORTCUTS,...s.shortcuts};if((s.shortcutsVersion||1)<SHORTCUTS_VERSION){for(let id of [...new Set([...Object.keys(DEFAULT_SHORTCUTS),...Object.keys(V5_DEFAULT_SHORTCUTS)])]){let want=normalizeShortcut(DEFAULT_SHORTCUTS[id]);if(!want)continue;let cur=normalizeShortcut(sc[id]);let missing=!s.shortcuts||!(id in s.shortcuts);let oldDefault=cur&&(cur===normalizeShortcut(V1_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V2_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V3_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V4_DEFAULT_SHORTCUTS[id])||cur===normalizeShortcut(V5_DEFAULT_SHORTCUTS[id]));if(!missing&&!oldDefault){if(IS_MAC)sc[id]=flipShortcutMods(sc[id]);continue}let taken=Object.entries(sc).some(([o,v])=>o!==id&&normalizeShortcut(v)===want&&normalizeShortcut(DEFAULT_SHORTCUTS[o])!==want);if(taken){if(missing)sc[id]=''}else sc[id]=DEFAULT_SHORTCUTS[id]}s.shortcutsVersion=SHORTCUTS_VERSION}s.shortcuts=sc;s.toolbar=Array.isArray(s.toolbar)?s.toolbar:deep(DEFAULT_TOOLBAR);s.customCSS=s.customCSS||'';
+if(!Array.isArray(s.vaults)||!s.vaults.length)s.vaults=[{id:'v1',name:'My Vault'}];
+if(!s.activeVaultId||!s.vaults.some(v=>v.id===s.activeVaultId))s.activeVaultId=s.vaults[0].id;
+if(!Array.isArray(s.folders))s.folders=[];
+s.documents.forEach(d=>{if(!d.vaultId)d.vaultId=s.activeVaultId;if(d.folderId===undefined)d.folderId=null});s.documents.forEach(d=>{if(!Array.isArray(d.tree))d.tree=[];if(!d.tree.length)d.tree.push({id:uid(),text:'',children:[]});(function fix(ns){ns.forEach(n=>{n.children=Array.isArray(n.children)?n.children:[];n.text=n.text==null?'':String(n.text);fix(n.children)})})(d.tree);d.mode=['branch','split','read'].includes(d.mode)?d.mode:'branch'});if(!s.documents.some(d=>d.id===s.activeDocumentId))s.activeDocumentId=s.documents[0].id;return s}
 function readLocal(){if(!Store.ls)return null;try{let raw=localStorage.getItem(STORAGE_KEY);return raw?JSON.parse(raw):null}catch(e){return null}}
 function loadState(){let s=null;try{s=normalizeState(readLocal())}catch(e){s=null;try{let raw=localStorage.getItem(STORAGE_KEY);if(raw)localStorage.setItem(STORAGE_KEY+'-recovery-'+Date.now(),raw)}catch(err){}}if(s){Store.lastSavedJSON='';return s}let d=defaultState();d.shortcutsVersion=SHORTCUTS_VERSION;return d}
 function idbOpen(){if(Store.idb)return Promise.resolve(Store.idb);return new Promise((res,rej)=>{try{if(!window.indexedDB)return rej(new Error('no indexedDB'));let r=indexedDB.open(IDB_NAME,1);r.onupgradeneeded=()=>{try{r.result.createObjectStore(IDB_STORE)}catch(e){}};r.onsuccess=()=>{Store.idb=r.result;res(r.result)};r.onerror=()=>rej(r.error||new Error('idb error'));r.onblocked=()=>rej(new Error('idb blocked'))}catch(e){rej(e)}})}
@@ -5494,14 +5558,18 @@ function pathIds(){let r=locate(doc().selectedId);return r?r.path.map(n=>n.id):[
 function isRelated(n,path){return n.children?.some(c=>path.includes(c.id))}
 function collectColumns(){let d=doc(),sel=locate(d.selectedId)||locate(tree()[0]?.id);if(!sel)return [];let columns=[];let roots=tree();columns.push({parentId:null,nodes:roots});let p=sel.path;for(let i=0;i<p.length;i++){if(p[i].children?.length)columns.push({parentId:p[i].id,nodes:p[i].children})}return columns}
 function applyChrome(){let b=state.behavior;document.querySelector('.topbar').style.display=b.showTopbar?'flex':'none';document.querySelector('.contextbar').style.display=b.showContextbar?'flex':'none';document.querySelector('.statusbar').style.display=b.showStatusbar?'flex':'none';let chip=$('#restoreChrome');let hidden=!b.showTopbar||!b.showContextbar||!b.showStatusbar;chip.classList.toggle('show',hidden);chip.innerHTML=icon('reset')+'Restore interface'}
-function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
+function renderAll(){applyAppearance();applyChrome();renderHeader();renderContext();renderWorkspace();renderDocuments();renderVaultRail();renderStatus();renderModeChrome();if($('#settingsDialog').open)renderSettings()}
 // the segmented control's active pill slides between the three modes rather than snapping
 function positionViewPill(){let sw=document.querySelector('.view-switch'),p=sw&&sw.querySelector('.vs-pill'),a=sw&&sw.querySelector('button.active');
  if(!p||!a||!a.offsetWidth)return;p.style.width=a.offsetWidth+'px';p.style.height=a.offsetHeight+'px';p.style.top=a.offsetTop+'px';p.style.transform='translateX('+a.offsetLeft+'px)'}
+function applySidebar(){document.body.classList.toggle('sidebar-open',!!state.behavior.showSidebar);let b=$('#sidebarToggleBtn');if(b)setIcon(b,state.behavior.showSidebar?'sidebar':'sidebar');if(state.behavior.showSidebar){let t=$('#vaultTree');if(t)requestAnimationFrame(()=>t.focus({preventScroll:true}))}}
 function renderHeader(){let d=doc();$$('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===d.mode));$$('[data-mode]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.mode===d.mode)));positionViewPill();
  let sb=$('#soundBtn');
  if(sb){setIcon(sb,state.sound.enabled?'volume':'volumeMute');sb.setAttribute('aria-pressed',String(!!state.sound.enabled));sb.title=state.sound.enabled?'Sound on — click to mute':'Sound muted — click to turn on';
-  if(!sb.dataset.wired){sb.dataset.wired='1';sb.onclick=()=>{state.sound.enabled=!state.sound.enabled;saveState();if(state.sound.enabled)SOUND.toggle();renderHeader();if($('#settingsDialog')?.open)renderSettings();toast(state.sound.enabled?'Sound on':'Sound off')}}}setIcon($('#documentsBtn'),'files');setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
+  if(!sb.dataset.wired){sb.dataset.wired='1';sb.onclick=()=>{state.sound.enabled=!state.sound.enabled;saveState();if(state.sound.enabled)SOUND.toggle();renderHeader();if($('#settingsDialog')?.open)renderSettings();toast(state.sound.enabled?'Sound on':'Sound off')}}}setIcon($('#documentsBtn'),'files');
+  if(!$('#sidebarToggleBtn')){let d=document.createElement('button');d.className='icon-btn';d.id='sidebarToggleBtn';d.title='Toggle file sidebar';d.setAttribute('aria-label','Toggle file sidebar');$('#documentsBtn').before(d);d.onclick=()=>{state.behavior.showSidebar=!state.behavior.showSidebar;saveState();applySidebar()}}
+  setIcon($('#sidebarToggleBtn'),'sidebar');
+  if(!$('#sidebarToggleBtn')){let d=document.createElement('button');d.className='icon-btn';d.id='sidebarToggleBtn';d.title='Toggle file sidebar';d.setAttribute('aria-label','Toggle file sidebar');$('#undoBtn').before(d);d.onclick=()=>{state.behavior.showSidebar=!state.behavior.showSidebar;saveState();applySidebar()}}setIcon($('#undoBtn'),'undo');setIcon($('#redoBtn'),'redo');setIcon($('#exportBtn'),'download');setIcon($('#shortcutsBtn'),'keyboard');$('#shortcutsBtn').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'');setIcon($('#settingsBtn'),'settings');$$('[data-mode]').forEach(b=>{let map={branch:['branch','Branches'],split:['columns','Split'],read:['book','Reading']},v=map[b.dataset.mode];b.innerHTML=icon(v[0])+`<span>${v[1]}</span>`})}
 let CRUMB_SIG=null;
 function renderContext(){let bc=$('#breadcrumbs'),r=locate(doc().selectedId);bc.innerHTML=r?r.path.map((n,i)=>`<button class="crumb" data-select="${n.id}" title="${escapeHTML(readableText(n.text)||'Untitled note')}" aria-label="${escapeHTML(readableText(n.text)||'Untitled note')}"><span class="crumb-label">${crumbLabelHTML(n.text)}</span></button>${i<r.path.length-1?'<span class="chev">›</span>':''}`).join(''):'';bc.querySelectorAll('[data-select]').forEach(b=>b.onclick=()=>selectNode(b.dataset.select));
  let sig=r?r.path.map(n=>n.id).join('/'):'';
@@ -5819,6 +5887,123 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();e.stopPropagation();runCommand(id);return}
 },true)
 const SETTINGS_TABS=[['appearance','palette','Appearance'],['layout','layout','Layout'],['keyboard','keyboard','Keyboard'],['behavior','switch','Behavior'],['sound','volume','Sound'],['documents','files','Documents'],['css','code','Custom CSS']];
+
+function activeVault(){return (state.vaults||[]).find(v=>v.id===state.activeVaultId)||state.vaults[0]}
+function vaultDocs(){return (state.documents||[]).filter(d=>d.vaultId===state.activeVaultId)}
+function vaultFolders(){return (state.folders||[]).filter(f=>f.vaultId===state.activeVaultId)}
+function renderVaultRail(){
+  let rail=$('#vaultRail');if(!rail)return;
+  let sw=$('#vaultSwitcher');if(sw){sw.textContent=activeVault().name;sw.onclick=()=>openVaultSwitcher(sw)}
+  let tree=$('#vaultTree');if(!tree)return;
+  let folders=vaultFolders();
+  let docs=vaultDocs();
+  // build tree
+  function childrenOf(parentId){
+    let fs=folders.filter(f=>f.parent===parentId);
+    let ds=docs.filter(d=> (d.folderId||null)===parentId);
+    return {folders:fs,docs:ds};
+  }
+  function folderHTML(f,depth){
+    let kids=childrenOf(f.id);
+    let open=f.open!==false;
+    let chev=open?'▾':'▸';
+    return `<div class="vault-node" role="treeitem" aria-expanded="${open}" data-kind="folder" data-id="${f.id}" data-depth="${depth}" draggable="true" tabindex="-1">
+      <span class="node-chev">${chev}</span><span class="node-icon">${icon('folder')}</span><span class="node-label">${escapeHTML(f.name)}</span>
+    </div>`+(open?`<div class="children" data-parent="${f.id}">${kids.folders.map(x=>folderHTML(x,depth+1)).join('')}${kids.docs.map(d=>docHTML(d,depth+1)).join('')}</div>`:'');
+  }
+  function docHTML(d,depth){
+    return `<div class="vault-node ${d.id===state.activeDocumentId?'selected':''}" role="treeitem" data-kind="doc" data-id="${d.id}" data-depth="${depth}" draggable="true" tabindex="-1">
+      <span class="node-chev"></span><span class="node-icon">${icon('file')}</span><span class="node-label">${escapeHTML(d.title||'Untitled')}</span>
+    </div>`;
+  }
+  let root=childrenOf(null);
+  tree.innerHTML=root.folders.map(f=>folderHTML(f,0)).join('')+root.docs.map(d=>docHTML(d,0)).join('');
+  // wire
+  tree.querySelectorAll('.vault-node').forEach(n=>{
+    n.onclick=e=>{e.stopPropagation();if(n.dataset.kind==='folder'){toggleFolder(n.dataset.id)}else{vaultOpenDoc(n.dataset.id)}};
+    n.ondblclick=e=>{e.stopPropagation();vaultRename(n.dataset.kind,n.dataset.id)};
+    n.oncontextmenu=e=>{e.preventDefault();openVaultNodeMenu(n,e)};
+    n.ondragstart=e=>{e.dataTransfer.setData('text/plain',n.dataset.kind+':'+n.dataset.id);n.classList.add('dragging')};
+    n.ondragend=()=>n.classList.remove('dragging');
+    n.ondragover=e=>{e.preventDefault();n.classList.add('drop-target')};
+    n.ondragleave=()=>n.classList.remove('drop-target');
+    n.ondrop=e=>{e.preventDefault();n.classList.remove('drop-target');let data=e.dataTransfer.getData('text/plain');if(!data)return;let [k,id]=data.split(':');if(n.dataset.kind==='folder'&&k==='doc'){let d=state.documents.find(x=>x.id===id);if(d){d.folderId=n.dataset.id;saveState();renderVaultRail();SOUND.movement();toast('Moved')}}};
+  });
+  // keyboard
+  if(!tree.dataset.wired){tree.dataset.wired='1';tree.addEventListener('keydown',vaultTreeKey)}
+  // connect folder button
+  let cf=$('#vaultConnect');if(cf&&!cf.dataset.wired){cf.dataset.wired='1';cf.onclick=connectFolder}
+}
+function toggleFolder(id){let f=(state.folders||[]).find(x=>x.id===id);if(!f)return;f.open=f.open===false?true:false;saveState();renderVaultRail()}
+function vaultOpenDoc(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;saveState();renderAll();SOUND.select()}
+function vaultNewFile(folderId=null){
+  snapshot();let d=makeDocument('Untitled',true,state.activeVaultId);d.folderId=folderId;state.documents.push(d);state.activeDocumentId=d.id;doc().updatedAt=Date.now();saveState();renderAll();renderVaultRail();SOUND.creation();if(state.behavior.focusNewNote)focusNodeEditor(d.tree[0].id);toast('Note created');vaultRename('doc',d.id)}
+function vaultNewFolder(parentId=null){let name=prompt('Folder name','New folder');if(!name)return;state.folders.push({id:uid('f'),name:name.trim(),vaultId:state.activeVaultId,parent:parentId,open:true});saveState();renderVaultRail();SOUND.creation();toast('Folder created')}
+function vaultRename(kind,id){
+  if(kind==='doc'){let d=state.documents.find(x=>x.id===id);if(!d)return;let name=prompt('Rename note',d.title||'Untitled');if(name===null)return;d.title=name.trim()||'Untitled';d.updatedAt=Date.now();saveState();renderAll();renderVaultRail();toast('Renamed')}
+  else{let f=(state.folders||[]).find(x=>x.id===id);if(!f)return;let name=prompt('Rename folder',f.name);if(name===null)return;f.name=name.trim()||f.name;saveState();renderVaultRail();toast('Renamed')}
+}
+function vaultDelete(kind,id){
+  if(kind==='doc'){
+    let d=state.documents.find(x=>x.id===id);if(!d)return;
+    let kids=0;function count(n){return 1+(n.children||[]).reduce((a,c)=>a+count(c),0)};kids=count({children:d.tree})-1;
+    if(kids&&state.behavior.confirmDelete&&!confirm('Delete this note and its '+kids+' child note(s)?'))return;
+    snapshot();state.documents=state.documents.filter(x=>x.id!==id);if(!state.documents.length){let nd=makeDocument('Untitled',true,state.activeVaultId);state.documents.push(nd)};if(state.activeDocumentId===id)state.activeDocumentId=state.documents[0].id;saveState();renderAll();renderVaultRail();SOUND.remove();toast('Note deleted')
+  } else {
+    let f=(state.folders||[]).find(x=>x.id===id);if(!f)return;
+    if(!confirm('Delete folder "'+f.name+'"? Notes inside move to root.'))return;
+    (state.folders||[]).forEach(x=>{if(x.parent===id)x.parent=f.parent});state.documents.forEach(d=>{if(d.folderId===id)d.folderId=f.parent});state.folders=state.folders.filter(x=>x.id!==id);saveState();renderVaultRail();toast('Folder deleted')
+  }
+}
+function openVaultNodeMenu(node,e){
+  let kind=node.dataset.kind,id=node.dataset.id;
+  let items=[{label:'Rename',icon:'pencil',run:()=>vaultRename(kind,id)},{label:'Delete',icon:'trash',run:()=>vaultDelete(kind,id),danger:true}];
+  if(kind==='folder')items.unshift({label:'New note inside',icon:'file-earmark-plus',run:()=>vaultNewFile(id)},{label:'New subfolder',icon:'folder-plus',run:()=>vaultNewFolder(id)});
+  if(kind==='doc')items.unshift({label:'Open',icon:'file-earmark-text',run:()=>vaultOpenDoc(id)});
+  openMenu(node,items,{title:kind==='doc'?'Note':'Folder'})
+}
+function vaultTreeKey(e){
+  let tree=$('#vaultTree');if(!tree)return;
+  let nodes=Array.from(tree.querySelectorAll('.vault-node'));
+  let idx=nodes.findIndex(n=>n===document.activeElement);
+  if(e.key==='ArrowDown'){e.preventDefault();if(idx<0)nodes[0]?.focus();else nodes[Math.min(nodes.length-1,idx+1)]?.focus()}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(idx>0)nodes[idx-1]?.focus()}
+  else if(e.key==='Enter'){e.preventDefault();let n=nodes[idx];if(n){if(n.dataset.kind==='folder')toggleFolder(n.dataset.id);else vaultOpenDoc(n.dataset.id)}}
+  else if(e.key==='F2'){e.preventDefault();let n=nodes[idx];if(n)vaultRename(n.dataset.kind,n.dataset.id)}
+  else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();let n=nodes[idx];if(n)vaultDelete(n.dataset.kind,n.dataset.id)}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'){e.preventDefault();vaultNewFile()}
+}
+function openVaultSwitcher(anchor){
+  let items=(state.vaults||[]).map(v=>({label:v.name,run:()=>{state.activeVaultId=v.id;saveState();renderVaultRail();renderAll();toast('Vault: '+v.name)}}));
+  items.push({sep:1},{label:'New vault',icon:'plus',run:()=>{let name=prompt('Vault name','New vault');if(!name)return;let id=uid('v');state.vaults.push({id,name:name.trim()});state.activeVaultId=id;state.documents.forEach(d=>{});saveState();renderVaultRail();renderAll();toast('Vault created')}},{label:'Rename vault',icon:'pencil',run:()=>{let v=activeVault();let name=prompt('Rename vault',v.name);if(name===null)return;v.name=name.trim()||v.name;saveState();renderVaultRail();toast('Renamed')}});
+  openMenu(anchor,items,{title:'Vaults'})
+}
+async function connectFolder(){
+  if(!window.showDirectoryPicker){toast('Folder access not supported in this browser');return}
+  try{
+    let handle=await window.showDirectoryPicker();
+    toast('Connected: '+handle.name);
+    // import .md/.txt files
+    let count=0;
+    async function walk(dir,prefix=''){
+      for await(let [name,h] of dir.entries()){
+        if(h.kind==='file'&&(name.endsWith('.md')||name.endsWith('.txt'))){
+          let f=await h.getFile();let text=await f.text();
+          snapshot();let d=makeDocument(name.replace(/\.(md|txt)$/,''),true,state.activeVaultId);d.folderId=null;
+          // put text into first node
+          if(d.tree[0])d.tree[0].text=text;
+          state.documents.push(d);count++
+        } else if(h.kind==='directory'){
+          await walk(h,prefix+name+'/')
+        }
+      }
+    }
+    await walk(handle);
+    saveState();renderAll();renderVaultRail();toast('Imported '+count+' note(s)')
+  }catch(e){if(e&&e.name!=='AbortError')toast('Could not open folder')}
+}
+// toggle sidebar default
+if(state.behavior.showSidebar)document.body.classList.add('sidebar-open');
 function openSettings(section='appearance'){closeMenu(true);SOUND.menu();settingsSection=section;renderSettings();let dlg=$('#settingsDialog');if(!dlg.dataset.soundWired){dlg.dataset.soundWired='1';dlg.addEventListener('close',()=>SOUND.close())}dlg.showModal();enterEl(dlg,{dur:MOTION.enter,blur:9,y:14,scale:.985})}
 let SETTINGS_SIG=null;
 function renderSettings(){let nav=$('#settingsNav');nav.innerHTML=SETTINGS_TABS.map(([id,ic,label])=>`<button data-settings-tab="${id}" class="${settingsSection===id?'active':''}">${icon(ic)}${label}</button>`).join('');nav.querySelectorAll('[data-settings-tab]').forEach(b=>b.onclick=()=>{if(settingsSection!==b.dataset.settingsTab)SOUND.tab();settingsSection=b.dataset.settingsTab;renderSettings()});$$('.settings-section').forEach(s=>s.classList.toggle('active',s.dataset.section===settingsSection));
@@ -6011,7 +6196,7 @@ function phoneBarAction(k,b){if(k==='indent')return runCommand('indent');if(k===
  if(k==='move')return openMenu(b,[cmdItem('moveUp'),cmdItem('moveDown'),{sep:1},cmdItem('indent',{label:'Indent (make child of note above)'}),cmdItem('outdent')],{title:'Move — or long-press a note and drag',sheet:true});
  if(k==='more')return openMenu(b,[cmdItem('navParent',{label:'Go to parent note'}),cmdItem('navChild',{label:'Go to first child'}),{sep:1},...noteClipItems(),{sep:1},cmdItem('image'),cmdItem('math'),{sep:1},cmdItem('deleteNode')],{title:'This note',sheet:true})}
 function renderPhoneBar(){let bar=$('#phoneBar');if(!bar){bar=document.createElement('nav');bar.id='phoneBar';bar.className='phone-bar';bar.setAttribute('aria-label','Note actions');document.body.appendChild(bar)}if(bar.dataset.built)return positionBottomUI();bar.dataset.built='1';bar.innerHTML=[['add','plus','Add'],['indent','indent','Indent'],['outdent','outdent','Outdent'],['move','move','Move'],['more','more','More']].map(([k,ic,l])=>`<button type="button" data-bar="${k}" aria-label="${l}"${['add','move','more'].includes(k)?' aria-haspopup="menu"':''}>${icon(ic)}<span>${l}</span></button>`).join('');bar.querySelectorAll('button').forEach(b=>{b.onpointerdown=e=>e.preventDefault();b.onmousedown=e=>e.preventDefault();b.onclick=()=>phoneBarAction(b.dataset.bar,b)});positionBottomUI()}
-function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('table'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
+function ensureChrome(){if(!$('#moreTopBtn')){let s=$('#settingsBtn');s.insertAdjacentHTML('afterend','<button class="icon-btn" id="moreTopBtn" title="More" aria-label="More" aria-haspopup="menu"></button>');let m=$('#moreTopBtn');m.onclick=()=>openMenu(m,[cmdItem('palette'),cmdItem('documents'),cmdItem('importDoc'),cmdItem('table'),cmdItem('exportMd'),{icon:'download',label:'Export backup (.json)',run:exportBackup},{sep:1},cmdItem('settings',{label:'Settings'}),{icon:'question',label:'Welcome & help',run:()=>openWelcome(true)},{sep:1},...(UI.input!=='touch'?[{icon:'keyboard',label:'Keyboard shortcuts',hint:prettyShortcut(state.shortcuts.shortcutsHelp||''),run:openShortcutSheet}]:[])],{title:'More'})}setIcon($('#moreTopBtn'),'more');
  if(!$('#helpChip')){document.body.insertAdjacentHTML('beforeend','<button class="help-chip" id="helpChip" title="Keyboard shortcuts" aria-label="Keyboard shortcuts"></button>');$('#helpChip').onclick=openShortcutSheet}setIcon($('#helpChip'),'question','Keyboard shortcuts');$('#helpChip').title='Keyboard shortcuts'+(state.shortcuts.shortcutsHelp?' · '+prettyShortcut(state.shortcuts.shortcutsHelp):'')}
 function renderModeChrome(){ensureChrome();renderPhoneBar();requestAnimationFrame(fitToolbar)}
 // --- shortcut sheet (read-only overview; "Change shortcuts…" opens Settings) ---
@@ -6043,6 +6228,61 @@ function paletteEntries(q){
  }
  out.sort((a,b)=>b.rank-a.rank); // stable: equal ranks keep COMMANDS order
  return out;
+}
+function openWelcome(force=false){
+  let d=$('#welcomeDialog');if(!d)return;
+  if(!force&&navigator.webdriver)return;
+  if(!force&&localStorage.getItem('branch-welcome-v1')==='seen')return;
+  if(!d.dataset.wired){d.dataset.wired='1';d.addEventListener('close',()=>{try{localStorage.setItem('branch-welcome-v1','seen')}catch(e){};SOUND.close();renderAll()});d.addEventListener('click',e=>{if(e.target===d)d.close()})}
+  renderWelcome();d.showModal();enterEl(d,{dur:MOTION.enter,blur:9,y:14,scale:.985});SOUND.open();
+  if(!d.dataset.kb){d.dataset.kb='1';d.addEventListener('keydown',e=>{let c=e.target.closest&&e.target.closest('.welcome-card');if(c&& (e.key==='Enter'||e.key===' ')){e.preventDefault();c.querySelector('[data-try]')?.click()}})}
+}
+function renderWelcome(){
+  let b=$('#welcomeBody');if(!b)return;
+  b.innerHTML=
+    '<div class="welcome-hero">'
+      +'<h1>Branch Studio</h1>'
+      +'<p>Revives writing and idea-making. Think faster, map ideas as they form, and keep the shape of your thought visible while you work.</p>'
+      +'<div class="welcome-actions"><button class="primary" id="wStart">Start writing</button><button class="secondary" id="wTour">Take the tour</button></div>'
+    +'</div>'
+    +'<div class="welcome-why"><strong>Why this exists</strong>Most writing tools make you think in a straight line. Branch Studio lets ideas branch as they form, so structure and prose grow together. It is built from personal experience, and it is moving toward more visual understanding tools that help you trace patterns in how you think and write.</div>'
+    +'<div class="welcome-grid">'
+      +card('branch','Branches','Each idea becomes a node. Add children, siblings, move them up and down. The tree shows the shape of your argument as you write.','<div class="demo" id="wDemoBranch">click to grow a branch</div>','addTopic')
+      +card('columns','Three views','Branch view for structure, split view side by side, reading view for the finished piece. Switch any time.','<div class="demo" id="wDemoViews">branch, split, read</div>','branchView')
+      +card('aspect-ratio','Zen mode','One column, full screen, no chrome. For when you need to think.','<div class="demo">press Ctrl+Shift+Z</div>','zen')
+      +card('keyboard','Command palette','Every action reachable from the keyboard. Press Ctrl+K and type what you want.','<div class="demo">Ctrl+K</div>','palette')
+      +card('palette','Themes','Seven presets, fully editable tokens: colours, radii, glow, particles, fonts. Pick one and the whole app follows.','<div class="demo" id="wThemeSwatches"></div>','settings')
+      +card('volume','Sound','On by default. A distinct cue for typing, deleting, moving, success, error. Mute any time.','<div class="demo"><button class="secondary" id="wSoundToggle">Toggle sound</button></div>','settings')
+      +card('download','Import and export','Import .docx, .txt, .md and PDF with declared losses. Export Markdown, or a full backup .json. Nothing leaves your machine.','<div class="demo">.docx .md .txt .pdf</div>','exportMd')
+      +card('search','Keyboard first','Hold the backtick and use the arrows to walk the tree. Every button has a shortcut.','<div class="demo">&#96; + arrows</div>','shortcutsHelp')
+      +card('folder','Files and vaults','A sidebar like Obsidian: folders, notes, multiple vaults, drag to move. Pin it from the top bar.','<div class="demo">sidebar</div>','documents')
+    +'</div>'
+    +'<div class="welcome-credits">'
+      +'<h3>Inspired by</h3>'
+      +'<p>Branch Writing by <a href="https://platform.santiyounger.com/branch-writing" target="_blank" rel="noopener">Santi Younger</a> - the visual writing system this app grows from. <a href="https://www.youtube.com/@SantiYounger" target="_blank" rel="noopener">YouTube</a>.</p>'
+      +'<p>Omarchy by <a href="https://omarchy.org" target="_blank" rel="noopener">DHH</a> - keyboard-first, opinionated, local-first.</p>'
+      +'<p>Built by Vox. Icons: Bootstrap Icons.</p>'
+    +'</div>'
+    +'<div class="welcome-help">'
+      +'<h3>If something goes wrong</h3>'
+      +'<p>Use More, Export backup (.json) before big changes - it holds every document and setting. Report issues on <a href="https://github.com/VoxTheAI/branch-studio/issues" target="_blank" rel="noopener">GitHub</a>.</p>'
+      +'<p>Support the project: <a href="https://platform.santiyounger.com/branch-writing" target="_blank" rel="noopener" class="welcome-donate">Donate</a></p>'
+    +'</div>';
+  function card(iconName,title,body,demo,tryCmd){
+    return '<div class="welcome-card" tabindex="0"><h3>'+icon(iconName)+' '+title+'</h3><p>'+body+'</p>'+demo+'<div class="card-foot"><button class="secondary" data-try="'+tryCmd+'">Try it</button></div></div>';
+  }
+  // wire
+  let ws=$('#wStart');if(ws)ws.onclick=()=>{closeLayer($('#welcomeDialog'))};
+  let wt=$('#wTour');if(wt)wt.onclick=()=>{let el=document.querySelector('.welcome-body');if(el)el.scrollTo({top:260,behavior:'smooth'})};
+  let wst=$('#wSoundToggle');if(wst)wst.onclick=()=>{state.sound.enabled=!state.sound.enabled;saveState();if(state.sound.enabled)SOUND.toggle();renderHeader();toast(state.sound.enabled?'Sound on':'Sound off')};
+  b.querySelectorAll('[data-try]').forEach(btn=>btn.onclick=()=>{let id=btn.dataset.try;closeLayer($('#welcomeDialog'));setTimeout(()=>runCommand(id),60)});
+  let sw=$('#wThemeSwatches');if(sw){
+    sw.innerHTML=THEME_PRESETS.map(p=>'<button class="preset-chip" data-preset="'+p.id+'" title="'+p.label+'" style="border:0;background:transparent;padding:4px">'+appearanceSwatch(p)+'<span style="font-size:11px;color:var(--text)">'+p.label+'</span></button>').join('');
+    sw.querySelectorAll('[data-preset]').forEach(x=>x.onclick=()=>{applyThemePreset(x.dataset.preset);toast(x.dataset.preset+' theme')});
+  }
+  let bd=$('#wDemoBranch');if(bd){bd.style.cursor='pointer';bd.onclick=()=>{bd.textContent='you just branched';SOUND.creation()}};
+  let pd=$('#wDemoPalette');if(pd){pd.style.cursor='pointer';pd.onclick=()=>{closeLayer($('#welcomeDialog'));setTimeout(()=>openPalette(),60)}};
+  let vd=$('#wDemoViews');if(vd){vd.style.cursor='pointer';vd.onclick=()=>{runCommand(doc().mode==='branch'?'splitView':doc().mode==='split'?'readView':'branchView')}};
 }
 function openPalette(){
  closeMenu();
@@ -6097,7 +6337,13 @@ function initTouchGestures(){let ws=$('#workspace');ws.addEventListener('pointer
 function initInputModes(){UI.auto=detectInitialMode();applyMode(UI.auto,{force:true})}
 initInputModes();
 
-function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');$$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();renderAll();UI.ready=true;bootStorage();markAnimReady()}
+function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');
+  requestAnimationFrame(()=>openWelcome(false));
+  $$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();renderAll();applySidebar();
+  let nvf=$('#newVaultFile');if(nvf&&!nvf.dataset.wired){nvf.dataset.wired='1';nvf.onclick=()=>vaultNewFile()};setIcon(nvf,'file-earmark-plus');
+  let nvfld=$('#newVaultFolder');if(nvfld&&!nvfld.dataset.wired){nvfld.dataset.wired='1';nvfld.onclick=()=>vaultNewFolder()};setIcon(nvfld,'folder-plus');
+  let tvt=$('#toggleVaultRail');if(tvt&&!tvt.dataset.wired){tvt.dataset.wired='1';tvt.onclick=()=>{state.behavior.showSidebar=false;saveState();applySidebar()}};setIcon(tvt,'x');
+  UI.ready=true;bootStorage();markAnimReady()}
 // ===================== Branch Studio extras: rich text, paste, note clipboard, tooltips, shortcut manager, animations =====================
 // ---------- rich text: invisible private-use markers (old notes contain none, so they read exactly as before) ----------
 const RT={O:'\uE000',C:'\uE001',U:'\uE002'};
