@@ -692,11 +692,11 @@ async function run(){
       return JSON.stringify({tab:!!document.querySelector('[data-settings-tab="sound"]'),
         active:getComputedStyle(s).display!=='none'&&s.getBoundingClientRect().height>0,
         master:!!s.querySelector('[data-sound-toggle="enabled"]'),range:!!s.querySelector('[data-sound="volume"]'),
-        classes:['typing','deletion','creation','movement'].filter(k=>s.querySelector('[data-sound-toggle="'+k+'"]')).length,
+        classes:['typing','deletion','remove','creation','movement','click','menu','close','toggle'].filter(k=>s.querySelector('[data-sound-toggle="'+k+'"]')).length,
         previews:s.querySelectorAll('[data-sound-preview]').length,
         voices:s.querySelector('[data-sound="theme"]')?[...s.querySelector('[data-sound="theme"]').options].map(o=>o.value):[]});
     })()`,{missing:true});
-  log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===4&&sec.previews===4?'pass':'fail',
+  log(!sec.missing&&sec.tab&&sec.active&&sec.master&&sec.range&&sec.classes===9&&sec.previews===9?'pass':'fail',
     `sound settings: a Sound section carries the master toggle, volume, one control per cue class and a preview each (classes=${sec.classes} previews=${sec.previews})`);
   log((sec.voices||[]).join(',')==='typing,scifi,soft,crisp,deep,glass,mechanical,typewriter'?'pass':'fail',`sound settings: Typing and Sci-fi lead the list, eight voices (${(sec.voices||[]).join(', ')})`);
 
@@ -712,18 +712,20 @@ async function run(){
     const sDisabled=await je(`
     (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
       return JSON.stringify({n:b.length,off:b.filter(x=>x.disabled).length,all:!!all&&all.disabled})})()`,{});
-  log(sDisabled.n===4&&sDisabled.off===4&&sDisabled.all?'pass':'fail',
+  log(sDisabled.n===9&&sDisabled.off===9&&sDisabled.all?'pass':'fail',
     `sound: the audition buttons are inert while sound is off (${sDisabled.off}/${sDisabled.n} previews disabled, preview-all disabled=${sDisabled.all})`);
 
+  const sBeforeOn=await sProbe();
   await clickSound('[data-section="sound"] [data-sound-toggle="enabled"]');
   const s2=await sProbe();
-  log(!!s2&&s2.enabled&&!s2.hasCtx?'pass':'fail',`sound: the UI switch turns sound back on without seizing an audio context until something actually plays (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx})`);
+  log(!!s2&&s2.enabled&&s2.hasCtx&&s2.counts.toggle===(sBeforeOn&&sBeforeOn.counts.toggle||0)+1?'pass':'fail',
+    `sound: turning sound on confirms itself with the toggle cue and builds the context it needs (enabled=${s2&&s2.enabled} context=${s2&&s2.hasCtx} toggle ${sBeforeOn&&(sBeforeOn.counts.toggle||0)}→${s2&&s2.counts.toggle})`);
 
   const sAudition=await je(`
     (function(){const b=[...document.querySelectorAll('[data-sound-preview]')];const all=document.querySelector('#soundPreviewAll');
       return JSON.stringify({on:b.filter(x=>!x.disabled).length,all:!!all&&!all.disabled})})()`,{});
-  log(sAudition.on===4&&sAudition.all?'pass':'fail',
-    `sound: turning sound on wakes the audition buttons (${sAudition.on}/4 previews enabled, preview-all enabled=${sAudition.all})`);
+  log(sAudition.on===9&&sAudition.all?'pass':'fail',
+    `sound: turning sound on wakes the audition buttons (${sAudition.on}/9 previews enabled, preview-all enabled=${sAudition.all})`);
 
   await soft('window.__type()');
   await sleep(140);
@@ -793,6 +795,45 @@ async function run(){
   const afterMove=await sProbe();
   log(!!afterCreate&&!!afterMove&&afterMove.counts.movement===afterCreate.counts.movement+1?'pass':'fail',
     `sound: moving a note plays the movement cue (${afterCreate&&afterCreate.counts.movement} → ${afterMove&&afterMove.counts.movement})`);
+
+  // the expanded library: nine cue classes per voice, and no two voices share a cue
+  const kit=await je(`(function(){
+    const ids=Object.keys(eval('SOUND_THEMES')),cls=eval('SOUND_CLASSES'),kit=eval('soundKit');
+    const missing=[];for(const id of ids)for(const c of cls)if(!kit(id)[c])missing.push(id+':'+c);
+    const shared=[];for(const c of cls){const seen={};for(const id of ids){const v=kit(id)[c]||{};
+      const sig=[v.wave,v.f0,v.f1,v.decay,v.gain,v.noise,v.noiseFreq,v.body&&v.body.freq,v.sat,v.reverb].join('|');
+      (seen[sig]=seen[sig]||[]).push(id)}
+      for(const g of Object.values(seen))if(g.length>1)shared.push(c+'='+g.join('/'))}
+    return JSON.stringify({voices:ids.length,classes:cls.length,missing,shared})})()`,{});
+  log(kit.voices===8&&kit.classes===9&&kit.missing.length===0&&kit.shared.length===0?'pass':'fail',
+    `sound: every voice carries all nine cue classes and no two voices share one (voices ${kit.voices}, classes ${kit.classes}, missing ${(kit.missing||[]).length}, shared ${(kit.shared||[]).join(',')||'none'})`);
+
+  await soft(`(function(){const S=eval('state'),d=S.documents.find(x=>x.id===S.activeDocumentId);
+    d.behavior=S.behavior;S.behavior.confirmDelete=false;d.tree=[{id:'sx1',text:'one',children:[{id:'sx2',text:'two',children:[]}]}];d.selectedId='sx1';eval('saveState')();eval('renderAll')()})()`);
+  await sleep(160);
+  const delBefore=await sProbe();
+  await soft(`eval('runCommand')('deleteNode')`);
+  await sleep(200);
+  const delAfter=await sProbe();
+  log(!!delBefore&&!!delAfter&&delAfter.counts.remove===(delBefore.counts.remove||0)+1&&delAfter.counts.deletion===delBefore.counts.deletion?'pass':'fail',
+    `sound: deleting a note plays the heavy remove cue, not the backspace cue (remove ${delBefore&&(delBefore.counts.remove||0)}→${delAfter&&delAfter.counts.remove}, deletion ${delBefore&&delBefore.counts.deletion}→${delAfter&&delAfter.counts.deletion})`);
+
+  const menuBefore=await sProbe();
+  await soft(`(function(){eval('openMenu')(document.body,[{label:'Probe item',run:()=>{}}]);return 1})()`);
+  await sleep(200);
+  const menuAfter=await sProbe();
+  await soft(`(function(){eval('closeMenu')();return 1})()`);
+  await sleep(220);
+  const menuClosed=await sProbe();
+  log(!!menuBefore&&!!menuAfter&&!!menuClosed&&menuAfter.counts.menu===menuBefore.counts.menu+1&&menuClosed.counts.close===menuBefore.counts.close+1?'pass':'fail',
+    `sound: opening a menu and closing it answer with their own cues (menu ${menuBefore&&menuBefore.counts.menu}→${menuAfter&&menuAfter.counts.menu}, close ${menuBefore&&menuBefore.counts.close}→${menuClosed&&menuClosed.counts.close})`);
+
+  const btnBefore=await sProbe();
+  await soft(`(function(){const b=document.createElement('button');b.id='probeBtn';b.textContent='probe';document.body.appendChild(b);b.click();b.remove();return 1})()`);
+  await sleep(200);
+  const btnAfter=await sProbe();
+  log(!!btnBefore&&!!btnAfter&&btnAfter.counts.click===(btnBefore.counts.click||0)+1?'pass':'fail',
+    `sound: a button makes the click cue (${btnBefore&&(btnBefore.counts.click||0)} → ${btnAfter&&btnAfter.counts.click})`);
 
   await openSound();
   await clickSound('[data-section="sound"] [data-sound-toggle="typing"]');
