@@ -5969,7 +5969,7 @@ function renderVaultRail(){
   let cf=$('#vaultConnect');if(cf&&!cf.dataset.wired){cf.dataset.wired='1';cf.onclick=connectFolder}
 }
 function toggleFolder(id){let f=(state.folders||[]).find(x=>x.id===id);if(!f)return;f.open=f.open===false?true:false;saveState();renderVaultRail()}
-function vaultOpenDoc(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;saveState();renderAll();SOUND.select()}
+function vaultOpenDoc(id){if(!state.documents.some(d=>d.id===id))return;state.activeDocumentId=id;saveState();renderAll();renderVaultRail();SOUND.select();requestAnimationFrame(function(){var d=doc();focusNodeEditor(d&&d.selectedId?d.selectedId:d&&d.tree&&d.tree[0]&&d.tree[0].id,true)})}
 function vaultNewFile(folderId=null){
   snapshot();let d=makeDocument('Untitled',true,state.activeVaultId);d.folderId=folderId;state.documents.push(d);state.activeDocumentId=d.id;doc().updatedAt=Date.now();saveState();renderAll();renderVaultRail();SOUND.creation();if(state.behavior.focusNewNote)focusNodeEditor(d.tree[0].id);toast('Note created');vaultRename('doc',d.id)}
 function vaultNewFolder(parentId=null){let name=prompt('Folder name','New folder');if(!name)return;state.folders.push({id:uid('f'),name:name.trim(),vaultId:state.activeVaultId,parent:parentId,open:true});saveState();renderVaultRail();SOUND.creation();toast('Folder created')}
