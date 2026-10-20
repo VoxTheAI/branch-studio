@@ -5332,28 +5332,44 @@ function welcomeTree(){
   let n=(text,children=[])=>({id:uid(),text,children});
   return [
     n('Welcome to Branch Studio',[
-      n('Why this exists',[
-        n('Most writing tools make you think in a straight line. Branch Studio lets ideas branch as they form, so structure and prose grow together. It is built from personal experience, and it is moving toward more visual understanding tools that help you trace patterns in how you think and write.')
+      n('Start here',[
+        n('You are looking at it. This note is your onboarding. Edit it, branch it, delete it - it is yours.'),
+        n('Enter starts typing a card. Escape stops. Arrow keys move between notes. Hold the backtick and use the arrows to walk the whole tree.'),
+        n('Ctrl+K (or Cmd+K) opens the command palette: every action, one search box.'),
+        n('Open the sidebar on the left to see your files and vaults. Esc closes it; the toggle button brings it back.')
       ]),
-      n('How it works',[
+      n('Why this exists',[
+        n('Most writing tools make you think in a straight line. Branch Studio lets ideas branch as they form, so structure and prose grow together.'),
+        n('It is built from personal experience, and it is moving toward more visual understanding tools that help you trace patterns in how you think and write.'),
+        n('It revives writing and idea-making. It helps you think faster, map things out better, and see the shape of your thought while you work.')
+      ]),
+      n('Writing',[
         n('Branches: each idea becomes a node. Add children, siblings, move them up and down. The tree shows the shape of your argument as you write.'),
         n('Three views: Branch view for structure, split view side by side, reading view for the finished piece. Switch any time.'),
-        n('Zen mode: one column, full screen, no chrome. For when you need to think.'),
+        n('Zen mode: one column, full screen, no chrome. For when you need to think. Toggle from the top bar or Ctrl+Shift+Z.')
+      ]),
+      n('Moving around',[
+        n('Keyboard first: hold the backtick and use the arrows to walk the tree. Enter edits, Escape stops.'),
         n('Command palette: every action from the keyboard. Press Ctrl+K and type what you want.'),
-        n('Themes: seven presets, fully editable tokens - colours, radii, glow, particles, fonts.'),
-        n('Sound: on by default. A distinct cue for typing, deleting, moving, success and error. Mute any time.'),
-        n('Import and export: .docx, .txt, .md and PDF with declared losses. Export Markdown or a full backup .json. Nothing leaves your machine.'),
-        n('Keyboard first: hold the backtick and use the arrows to walk the tree. Every button has a shortcut.')
+        n('Hold-to-navigate: hold Backquote or IntlBackslash and use the arrows to jump across the whole tree.')
+      ]),
+      n('Making it yours',[
+        n('Themes: seven presets, fully editable tokens - colours, radii, glow, particles, fonts. Appearance panel has 28 rows.'),
+        n('Sound: on by default. A distinct cue for typing, deleting, moving, success and error. Mute any time from the top bar.'),
+        n('Files and vaults: a sidebar like Obsidian. Folders, notes, multiple vaults, drag to move, keyboard to manage.')
+      ]),
+      n('Safety',[
+        n('Import: .docx, .txt, .md and PDF with declared losses. Export Markdown, or a full backup .json.'),
+        n('Backup: More, Export backup (.json) before big changes - it holds every document and setting. Nothing leaves your machine.'),
+        n('Report issues on GitHub: github.com/VoxTheAI/branch-studio')
       ]),
       n('Inspired by',[
         n('Branch Writing by Santi Younger - the visual writing system this app grows from. santiyounger.com/branch-writing'),
         n('Omarchy by DHH - keyboard-first, opinionated, local-first. omarchy.org'),
         n('Built by Vox. Icons: Bootstrap Icons.')
       ]),
-      n('If something goes wrong',[
-        n('Use More, Export backup (.json) before big changes - it holds every document and setting.'),
-        n('Report issues on GitHub: github.com/VoxTheAI/branch-studio'),
-        n('Support the project: platform.santiyounger.com/branch-writing')
+      n('Support',[
+        n('If this helps you, support the work: platform.santiyounger.com/branch-writing')
       ])
     ])
   ];
@@ -6374,7 +6390,7 @@ initInputModes();
 
 function init(){setIcon($('#closeDocuments'),'x');let nd=$('#newDocumentBtn');if(nd&&!$('#drawerBackupRow')){nd.insertAdjacentHTML('afterend','<div class="button-row" id="drawerBackupRow" style="margin:0"><button class="secondary" id="drawerExportBackup" title="Download every document and setting as one .json file">Export backup</button><button class="secondary" id="drawerImportBackup" title="Add documents from a backup .json file">Import backup</button></div>');$('#drawerExportBackup').onclick=exportBackup;$('#drawerImportBackup').onclick=importBackup}$('#saveStatus').onclick=()=>{if(Store.status==='error')openSettings('documents')};$('#restoreChrome').onclick=()=>{state.behavior.showTopbar=true;state.behavior.showContextbar=true;state.behavior.showStatusbar=true;saveState();renderAll()};$('#documentsBtn').onclick=openDocuments;$('#closeDocuments').onclick=closeDocuments;$('#documentOverlay').onclick=e=>{if(e.target===$('#documentOverlay'))closeDocuments()};$('#newDocumentBtn').onclick=newDocument;$$('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#undoBtn').onclick=()=>runCommand('undo');$('#redoBtn').onclick=()=>runCommand('redo');$('#exportBtn').onclick=exportMarkdown;$('#shortcutsBtn').onclick=openShortcutSheet;$('#settingsBtn').onclick=()=>openSettings('appearance');
   // welcome is now an in-app document; see welcomeTree()
-  $$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();if(!(state.documents||[]).some(d=>d.title==='Welcome to Branch Studio')){let d=makeDocument('Welcome to Branch Studio',false,state.activeVaultId);d.tree=welcomeTree();d.mode='split';d.selectedId=d.tree[0]?.id||null;state.documents.unshift(d);state.activeDocumentId=d.id;saveState()}
+  $$('[data-close]').forEach(b=>{setIcon(b,'x');b.onclick=()=>closeLayer($('#'+b.dataset.close))});$('#zenExit').onclick=()=>zenSet(false);initTouchGestures();let _w=(state.documents||[]).find(d=>d.title==='Welcome to Branch Studio');if(!_w){let d=makeDocument('Welcome to Branch Studio',false,state.activeVaultId);d.tree=welcomeTree();d.mode='split';d.selectedId=d.tree[0]?.id||null;state.documents.unshift(d);state.activeDocumentId=d.id;saveState()}else if(_w.updatedAt===_w.createdAt){_w.tree=welcomeTree();_w.mode='split';saveState()}
   renderAll();applySidebar();document.body.classList.add('booting');setTimeout(()=>document.body.classList.remove('booting'),700);
   let nvf=$('#newVaultFile');if(nvf&&!nvf.dataset.wired){nvf.dataset.wired='1';nvf.onclick=()=>vaultNewFile()};setIcon(nvf,'file-earmark-plus');
   let nvfld=$('#newVaultFolder');if(nvfld&&!nvfld.dataset.wired){nvfld.dataset.wired='1';nvfld.onclick=()=>vaultNewFolder()};setIcon(nvfld,'folder-plus');
