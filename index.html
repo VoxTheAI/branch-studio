@@ -6213,6 +6213,7 @@ function openMenu(anchor,items,{title='',sheet=null}={}){closeMenu(true);SOUND.m
  if(motionOn())staggerIn(m.querySelectorAll('.menu-item'),{dur:150,step:14,blur:2,y:4});
  return m}
 document.addEventListener('keydown',e=>{if(UI.menu&&e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();closeMenu()}},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!isTypingTarget(e.target)&&state.behavior.showSidebar&&!document.querySelector('dialog[open]')&&!$('#documentOverlay')?.classList?.contains('open')){state.behavior.showSidebar=false;saveState();applySidebar()}},true);
 function cmdItem(id,extra={}){return {icon:COMMANDS[id].icon,label:COMMANDS[id].label,hint:state.shortcuts[id]?prettyShortcut(state.shortcuts[id]):'',danger:id==='deleteNode',run:()=>runCommand(id),...extra}}
 // --- context toolbar: icon + label, overflow into "More", Delete last and separated ---
 function actionLabel(id){if(UI.input==='pointer'&&UI.size!=='phone')return COMMANDS[id].label.replace(' note','').replace(' under previous note','');return SHORT_LABELS[id]||COMMANDS[id].label}
