@@ -40,7 +40,7 @@ BS.forceToast('hello', 1500)   // toast that ignores the feedback toggle
 | view & theme | `setMode('branch'\|'split'\|'read')`, `zenSet(on)`, `applyAppearance`, `applyThemePreset(id,save)`, `THEME_PRESETS`, `DEFAULT_APPEARANCE` |
 | sound | `SOUND`, `DEFAULT_SOUND`, `MOTION`, `motionOn`, `enterEl`, `exitEl` |
 | feedback | `toast`, `forceToast`, `toastAction(msg,label,fn,ms)` |
-| io | `exportMarkdown`, `exportBackup`, `importBackup`, `openImporter(src)`, `downloadFile` |
+| io | `exportMarkdown`, `exportDiagram`, `exportBackup`, `importBackup`, `openImporter(src)`, `downloadFile` |
 | icons | `icon(name,cls)`, `setIcon(el,name,label)`, `BOOTSTRAP_ICONS` |
 | onboarding & vaults | `welcomeTree`, `openWelcomeDoc`, `connectFolder` |
 | plugin layer | `PX`, `pxDialog`, `askDialog`, `pxSelect`, `pxRerender`, `pxChange`, `pxAllNodes`, `pxTitle`, `pxEsc` |
@@ -111,7 +111,7 @@ Key semantics (as declared by the app):
 
 Core commands: `newDocument addTopic addSibling addChild deleteNode moveUp moveDown indent outdent
 image math navUp navDown navParent navChild branchView splitView readView undo redo settings
-documents exportMd shortcutsHelp copyNote cutNote pasteNote zen palette table`.
+documents exportMd exportDiagram shortcutsHelp copyNote cutNote pasteNote zen palette table`.
 
 App-level chords also exist outside `COMMANDS` (formatting, quick jump, search, focus mode).
 
@@ -231,6 +231,12 @@ Unresolvable names fall back to `bi-circle`. Do not ship inline SVG/emoji icons;
 - File button inside it accepts `.txt .md .markdown .docx .pdf` (docx = zip+XML pass, pdf = pdf.js).
 - PDFs: `openPdf` → `pdfPagePicker` pages → text → same importer. Stored in IndexedDB as `pdf:<id>`.
 - `exportMarkdown()` (current doc), `exportBackup()` (all state), `importBackup()`.
+- **`exportDiagram()`** — trail-of-thought export: the current doc's tree as a standalone themed
+  SVG. Depth → columns (left-to-right), tidy-tree vertical layout, elbow connectors, numbered step
+  badges in pre-order, `done`/`draft` status styling, wrapped text per box. Colors and font are
+  baked from the live theme (`--bg/--panel/--text/--line/--accent/--accent-soft/--font-note`), so
+  the file matches what the user sees. Zero deps, no canvas. Empty tree → error toast, no file.
+  Shortcut: `Alt+Shift+G` (PC) / `Ctrl+Meta+G` (Apple). Builder is internal (`diagramSVG()`).
 - Declared losses are shown in the UI before anything is converted — keep them declared.
 
 ---
